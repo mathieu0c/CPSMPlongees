@@ -50,3 +50,30 @@ compile_commands.json
 
 # QtCreator local machine specific files for imported projects
 *creator.user*
+
+
+# QtCreator build directories
+*-Release/
+*-release/
+*-Debug/
+*-debug/
+build-*/
+*.pro.user
+
+*.ignore
+
+
+#deploy files
+BrokenTC2v*.*.*/
+*setup*.exe
+deployLog.txt
+*.exe
+*.update
+*.log
+DEPLOY_OUTPUT/
+
+*.private
+
+AutoDoc/
+
+CPSMUpdateKeys/

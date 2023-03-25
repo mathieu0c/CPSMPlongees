@@ -1,0 +1,3 @@
+[submodule "CPSMPlongees/Libs/QtSimpleUpdater"]
+	path = CPSMPlongees/Libs/QtSimpleUpdater
+	url = https://github.com/mathieu0c/QtSimpleUpdater.git
