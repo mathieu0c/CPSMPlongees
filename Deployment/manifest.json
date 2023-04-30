@@ -1,12 +1,12 @@
 {
     "finalizeUpdateCommand": "",
     "minVersionRequired": {
-        "major": 1,
+        "major": 0,
         "minor": 0,
         "patch": 0
     },
     "updateFileList": [
-        "BrokenTC2.exe"
+        "CPSMPlongees.exe"
     ],
     "updatedTagFile": "UPDATED.TAG"
 }

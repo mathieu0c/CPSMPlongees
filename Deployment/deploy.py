@@ -7,6 +7,9 @@ import inspect
 import pathlib
 import shutil
 import subprocess
+import time
+
+GLOB_TARGET_EXE_NAME = ""
 
 def filterListWithRegex(inVar : list, regex : str):
     return list(filter(re.compile(regex).match,inVar))
@@ -43,8 +46,8 @@ def mkpathOverwrite(path : str) -> bool:
 def checkFile(path : str)->bool:
     tmpPath = pathlib.Path(path)
     isFile = tmpPath.is_file()
-    exis = tmpPath.exists()
-    if((not tmpPath.is_file()) or (not tmpPath.exists())):
+    exist = tmpPath.exists()
+    if((not isFile) or (not exist)):
         return False
     return True
 
@@ -54,8 +57,8 @@ def getReleaseDir(rootPath : str = ".") -> str:
     tmpList = ls(rootPath,".*build-.*Desktop_Qt_6.*MinGW.*_64.*-Release")
     # tmpList = ls()
     for i, dir in enumerate(tmpList):
-        tmpList[i] = dir + "/bin"
-    if(len(tmpList) != 1):
+        tmpList[i] = dir + "/Bin"
+    if(len(tmpList) > 1):
         errorOccured("Too many build-release folder :\n{}".format(str(tmpList)),False)
         return None
     if(len(tmpList) == 0):
@@ -63,7 +66,10 @@ def getReleaseDir(rootPath : str = ".") -> str:
     return tmpList[0]
 
 
-def getExePath(releaseDir : str,exeRegex:str = ".*CPSMPlongees\.exe") -> str:
+def getExePath(releaseDir : str,exeRegex:str = None) -> str:
+    global GLOB_TARGET_EXE_NAME
+    if exeRegex == None:
+        exeRegex = f".*{GLOB_TARGET_EXE_NAME}\.exe"
     tmpList = ls(releaseDir,exeRegex)
     # tmpList = ls(releaseDir)
     if(len(tmpList) > 1):
@@ -75,36 +81,61 @@ def getExePath(releaseDir : str,exeRegex:str = ".*CPSMPlongees\.exe") -> str:
     return tmpList[0]
 
 
-def main():
-    CONFIG_outputDir = "AUTO"#the dir will have the name of the found executable
-    CONFIG_WINDEPLOYQT_PATH = "C:/Qt/6.2.4/mingw_64/bin/windeployqt.exe"
-    CONFIG_DEPENDENCY_DIR = "../CPSMPlongees/Assets/dependency"
-    CONFIG_INNOSETUP_SCRIPT = "./buildSetup.iss"
-    CONFIG_DEPLOY_OUTPUT_DIR = "./DEPLOY_OUTPUT"
+def getAbsolute(path: str)->str:
+    return str(pathlib.Path(path).absolute())
 
-    CONFIG_PRIVATE_SIGNER_KEY_FILE = "../CPSMUpdateKeys/CPSMPlongees.private"
-    CONFIG_PUBLIC_VERIFIER_KEY_FILE = "../CPSMUpdateKeys/CPSMPlongees.public"
+def main():
+    global GLOB_TARGET_EXE_NAME
+    CONFIG_outputDir = "AUTO"#the dir will have the name of the found executable
+    QT_VERSION = "6.5.0"
+    MINGW_VERSION = "mingw1120_64"
+    CONFIG_WINDEPLOYQT_PATH = getAbsolute(f"C:/Qt/{QT_VERSION}/mingw_64/bin/windeployqt.exe")
+    CONFIG_DEPENDENCY_DIR = getAbsolute("../CPSMPlongees/Assets/Dependencies")
+    CONFIG_INNOSETUP_SCRIPT = getAbsolute("./buildSetup.iss")
+    CONFIG_DEPLOY_OUTPUT_DIR = "DEPLOY_OUTPUT"
+
+    CONFIG_PRIVATE_SIGNER_KEY_FILE = getAbsolute("../CPSMUpdateKeys/CPSMPlongees.private")
+    CONFIG_PUBLIC_VERIFIER_KEY_FILE = getAbsolute("../CPSMUpdateKeys/CPSMPlongees.public")
     CONFIG_MANIFEST_FILE = "manifest.json"
-    CONFIG_outputAssetDir = f"{CONFIG_outputDir}/Assets/"
+    CONFIG_outputAssetDir = getAbsolute(f"{CONFIG_outputDir}/Assets/")
+
+    GLOB_TARGET_EXE_NAME = "CPSMPlongees"
 
 
     print("------------------------------------------------------")
 
 
 
-    releaseDir = getReleaseDir("..")
+    releaseDir = getAbsolute(getReleaseDir(".."))
     if(not releaseDir):
         errorOccured("Cannot find release dir",True)
     print("Found build release dir at : {}".format(releaseDir))
 
-    exePath = getExePath(releaseDir)
+    exePath = getAbsolute(getExePath(releaseDir))
     if(not exePath):
         errorOccured("Cannot find exe path",True)
     print("Found exe at : {}\n".format(exePath))
 
     if(CONFIG_outputDir == "AUTO"):
-        CONFIG_outputDir = "./{}/{}".format(CONFIG_DEPLOY_OUTPUT_DIR,pathlib.Path(exePath).stem+"_release")
-        CONFIG_outputAssetDir = f"{CONFIG_outputDir}/Assets/"
+        CONFIG_outputDir = getAbsolute("./{}/{}".format(CONFIG_DEPLOY_OUTPUT_DIR,pathlib.Path(exePath).stem+"_release"))
+        CONFIG_outputAssetDir = getAbsolute(f"{CONFIG_outputDir}/Assets/")
+
+
+    
+
+
+
+    uselessFileList = []
+    uselessFileList.append(f"{CONFIG_outputDir}/opengl32sw.dll")
+    uselessFileList.append(f"{CONFIG_outputDir}/D3Dcompiler_47.dll")
+    uselessFileList.append(f"{CONFIG_outputDir}/Qt6Svg.dll")
+
+    
+    dependencies = []
+    dependencies.append((f"{CONFIG_PUBLIC_VERIFIER_KEY_FILE}",CONFIG_outputAssetDir))
+    
+
+
 
 
     print("Creating deploy dir <{}> ...".format(CONFIG_outputDir))
@@ -120,7 +151,7 @@ def main():
 
     
 
-    simpleUpdaterExeFile= getExePath(releaseDir,".*SimpleUpdater\.exe")
+    simpleUpdaterExeFile= getAbsolute(getExePath(releaseDir,".*SimpleUpdater\.exe"))
     print("Copying SimpleUpdater exe...")
     try:
         shutil.copy(simpleUpdaterExeFile,CONFIG_outputDir)
@@ -131,10 +162,13 @@ def main():
     print("Running windeployqt...")
     if(not checkFile(CONFIG_WINDEPLOYQT_PATH)):
         errorOccured("Cannot find windeployqt exe at {}".format(CONFIG_WINDEPLOYQT_PATH),True)
-    windeployCmd = "{} {} {}".format(CONFIG_WINDEPLOYQT_PATH,CONFIG_outputDir,exePath)
+    windeployCmd = "{} --no-translations {} {}".format(CONFIG_WINDEPLOYQT_PATH,CONFIG_outputDir,exePath)
+    # qtEnv = {**os.environ, 'PATH': f'C:\\Qt\\{QT_VERSION}\\mingw_64\\bin;C:\\Qt\\Tools\\{MINGW_VERSION}\\bin;' + os.environ['PATH']}
+    qtEnv = {**os.environ, 'PATH': f'C:\\Qt\\{QT_VERSION}\\mingw_64\\bin;C:\\Qt\\Tools\\{MINGW_VERSION}\\bin;'}
     print("\tusing command <{}>".format(windeployCmd))
-    if(os.system(windeployCmd)):#if windeployqt failed
-        errorOccured("windeployqt failed to execute properly.",True)
+    rval = subprocess.Popen(windeployCmd, env=qtEnv)
+    if rval.returncode != 0:
+        errorOccured("WARNING: windeployqt may have failed to execute properly.",False)
     print("Done")
 
 
@@ -143,9 +177,6 @@ def main():
     print("Done\n")
 
     print("Adding dependencies")
-
-    dependencies = []
-    # dependencies.append((f"{CONFIG_DEPENDENCY_DIR}/SDL2.dll",CONFIG_outputDir))
 
     for dependency in dependencies:
         dependencyPath = dependency[0]
@@ -161,18 +192,20 @@ def main():
 
 
     print("Deleting useless files")
-    uselessFileList = []
-    uselessFileList.append(f"{CONFIG_outputDir}/opengl32sw.dll")
-    uselessFileList.append(f"{CONFIG_outputDir}/D3Dcompiler_47.dll")
-    uselessFileList.append(f"{CONFIG_outputDir}/Qt6Svg.dll")
 
     for uselessFilePath in uselessFileList:
-        if(checkFile(uselessFilePath)):
-            print("\tDeleting : <{}>".format(uselessFilePath))
-            try:
-                os.remove(uselessFilePath)
-            except:
-                errorOccured("Cannot delete <{}>".format(uselessFilePath),False)#non fatal error, keep going
+        toRemove = pathlib.Path(uselessFilePath)
+        for i in range(0,10):
+            if not checkFile(str(toRemove.absolute())):
+                print(f"Waiting for {toRemove}")
+                time.sleep(0.3)
+            else:
+                break
+        print("\tDeleting : <{}>".format(toRemove.absolute()))
+        try:
+            toRemove.unlink()
+        except:
+            errorOccured("Cannot delete <{}>".format(toRemove),False)#non fatal error, keep going
     print("Done\n")
 
 
@@ -203,8 +236,6 @@ def main():
 
     print("##########################################")
     print("\nCreating setup...")
-
-    os.system(" {}".format(CONFIG_INNOSETUP_SCRIPT))
     
     innoSetup = f"C:\\Program Files (x86)\\Inno Setup 6\\iscc.exe"
     args = [

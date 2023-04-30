@@ -139,6 +139,7 @@ void installCustomLogHandler(logHandler::GlobalLogInfo logInfo){
 
 #ifdef CMAKE_DEBUG_MODE
     QLoggingCategory::defaultCategory()->setEnabled(QtDebugMsg, true);
+    qDebug() << "Logfile=" << QString::fromStdString(logInfo.progLogFilePath);
 #else
     QLoggingCategory::defaultCategory()->setEnabled(QtDebugMsg, false);
 #endif

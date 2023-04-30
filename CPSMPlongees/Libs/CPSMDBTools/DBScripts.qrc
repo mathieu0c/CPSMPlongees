@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>DBScripts/CreateDB.sql</file>
+        <file>DBScripts/FillTestDB.sql</file>
+        <file>DBScripts/SetupTriggers.sql</file>
+        <file>DBScripts/TestRq.sql</file>
+    </qresource>
+</RCC>

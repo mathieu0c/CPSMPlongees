@@ -1,1 +1,6 @@
-add_subdirectory(SimpleUpdater)
+add_subdirectory(QtSimpleUpdater)
+add_subdirectory(CPSMGlobals)
+add_subdirectory(Proto)
+add_subdirectory(CPSMTools)
+add_subdirectory(DBTools)
+add_subdirectory(CPSMDBTools)

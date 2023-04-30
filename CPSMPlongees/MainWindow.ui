@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1053</width>
+    <height>586</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>12</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>Sea Of Thieves Cooker</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QLabel{color:rgb(25,180,255);font-weight: bold;}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabw_main">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="tabPosition">
+       <enum>QTabWidget::West</enum>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <property name="usesScrollButtons">
+       <bool>true</bool>
+      </property>
+      <property name="documentMode">
+       <bool>true</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>false</bool>
+      </property>
+      <property name="movable">
+       <bool>false</bool>
+      </property>
+      <property name="tabBarAutoHide">
+       <bool>true</bool>
+      </property>
+      <widget class="QStackedWidget" name="tab_divers">
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <attribute name="title">
+        <string>Plongeurs</string>
+       </attribute>
+       <widget class="QWidget" name="pg_browse">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="gui::DiverSearch" name="mainDiverSearch" native="true"/>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="hlay_diverEdit">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetNoConstraint</enum>
+           </property>
+           <item>
+            <widget class="QPushButton" name="pb_deleteDiver">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Supprimer plongeur(s)</string>
+             </property>
+             <property name="shortcut">
+              <string>Del</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_newDiver">
+             <property name="text">
+              <string>Nouveau plongeur</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_editDiver">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Éditer plongeur</string>
+             </property>
+             <property name="shortcut">
+              <string>Return</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="gui::DiverEdit" name="pg_editDiver"/>
+      </widget>
+      <widget class="QStackedWidget" name="tab_dives">
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <attribute name="title">
+        <string>Plongées</string>
+       </attribute>
+       <widget class="gui::DiveEdit" name="pg_editDive"/>
+       <widget class="QWidget" name="pg_browseDives">
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="gui::DiveSearch" name="mainDiveSearch" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="hlay_diveEdit">
+           <item>
+            <widget class="QPushButton" name="pb_deleteDive">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Supprimer plongée(s)</string>
+             </property>
+             <property name="shortcut">
+              <string>Del</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_newDive">
+             <property name="text">
+              <string>Nouvelle plongée</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_editDive">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Éditer plongée</string>
+             </property>
+             <property name="shortcut">
+              <string>Return</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1053</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="action_check_updates"/>
+   </widget>
+   <addaction name="menuTools"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_check_updates">
+   <property name="text">
+    <string>Check updates</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>gui::DiverSearch</class>
+   <extends>QWidget</extends>
+   <header>Gui/DiverSearch.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>gui::DiverEdit</class>
+   <extends>QWidget</extends>
+   <header>Gui/DiverEdit.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>gui::DiveSearch</class>
+   <extends>QWidget</extends>
+   <header>Gui/DiveSearch.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>gui::DiveEdit</class>
+   <extends>QWidget</extends>
+   <header>Gui/DiveEdit.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,13 @@
+--CREATE TRIGGER remove_currencies_1 AFTER DELETE ON table1
+--BEGIN
+--  DELETE FROM currencies
+--  WHERE currency = OLD.currency
+--    AND NOT EXISTS (SELECT 1 FROM table2 WHERE currency = OLD.currency);
+--END;
+
+--CREATE TRIGGER remove_currencies_2 AFTER DELETE ON table2
+--BEGIN
+--  DELETE FROM currencies
+--  WHERE currency = OLD.currency
+--    AND NOT EXISTS (SELECT 1 FROM table1 WHERE currency = OLD.currency);
+--END;
