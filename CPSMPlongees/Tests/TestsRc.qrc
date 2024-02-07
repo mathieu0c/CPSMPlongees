@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Rc/FillTestDB.sql</file>
+        <file>Rc/ClearDB.sql</file>
+    </qresource>
+</RCC>

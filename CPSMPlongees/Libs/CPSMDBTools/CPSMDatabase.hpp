@@ -5,16 +5,18 @@
 namespace cpsm::db
 {
 
-template<bool kDeleteOnCreation = false>
+template<bool kDeleteOnCreation = false, bool kFillDBWithTestsValues = false>
 bool InitDB(const auto& kFileName){
     qInfo() << "--------- DB init function ---------";
 
-#ifdef CMAKE_DEBUG_MODE
     if constexpr(kDeleteOnCreation){
+#ifdef CMAKE_DEBUG_MODE
         qInfo() << "Deleting DB file: " << kFileName;
         qInfo() << QFile::remove(kFileName);
-    }
+#else
+#warning Requesting to delete DB on creation even when not in DEBUG mode
 #endif
+    }
 
     if(!::db::OpenLocal(kFileName)){
         qCritical() << "Failed to open db:" << kFileName;
@@ -37,14 +39,17 @@ bool InitDB(const auto& kFileName){
         qInfo() << "Successfully executed DB triggers creation script";
     }
 
-#ifdef CMAKE_DEBUG_MODE
-    if(!::db::ExecScript(":/DBScripts/FillTestDB.sql",&db)){
-        qCritical() << "Failed to execute fill test DB script";
-        return false;
-    }else{
-        qInfo() << "Successfully executed fill test DB script";
-    }
+    if constexpr(kFillDBWithTestsValues){
+#ifndef CMAKE_DEBUG_MODE
+#warning Requesting to fill db with tests values not in DEBUG mode
 #endif
+        if(!::db::ExecScript(":/DBScripts/FillTestDB.sql",&db)){
+            qCritical() << "Failed to execute fill test DB script";
+            return false;
+        }else{
+            qInfo() << "Successfully executed fill test DB script";
+        }
+    }
 
     qInfo() << "--------- DB init function END ---------";
     return true;

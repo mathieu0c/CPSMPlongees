@@ -22,7 +22,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 qt_add_executable(${target_name} WIN32)
 
 set(ADDITIONAL_SOURCES
-
+    TestsRc.qrc
 )
 
 target_sources("${target_name}"
@@ -37,8 +37,15 @@ target_link_libraries("${target_name}"
     Threads::Threads
     gtest
     gtest_main
-    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::Sql
     CPSMProto::CPSMProto
+    CPSMTools::CPSMTools
+    CPSMDBTools::CPSMDBTools
+    DBTools::DBTools
+    CPSMGlobals::CPSMGlobals
+    ${PROTOBUF_LIBRARIES}
 )
 
 target_include_directories(${target_name}
