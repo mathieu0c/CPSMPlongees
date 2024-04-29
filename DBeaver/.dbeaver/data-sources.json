@@ -1,0 +1,34 @@
+{
+	"folders": {},
+	"connections": {
+		"sqlite_jdbc-18d9a7da8d7-1deda4e9381be1cd": {
+			"provider": "sqlite",
+			"driver": "sqlite_jdbc",
+			"name": "template",
+			"save-password": true,
+			"configuration": {
+				"database": "E:\\NetworkShared\\CPSM\\CPSMPlongees\\DBeaver\\template",
+				"url": "jdbc:sqlite:E:\\NetworkShared\\CPSM\\CPSMPlongees\\DBeaver\\template",
+				"configurationType": "MANUAL",
+				"type": "dev",
+				"auth-model": "native"
+			}
+		}
+	},
+	"connection-types": {
+		"dev": {
+			"name": "Development",
+			"color": "255,255,255",
+			"description": "Regular development database",
+			"auto-commit": true,
+			"confirm-execute": false,
+			"confirm-data-change": false,
+			"smart-commit": false,
+			"smart-commit-recover": false,
+			"auto-close-transactions": true,
+			"close-transactions-period": 1800,
+			"auto-close-connections": true,
+			"close-connections-period": 3600
+		}
+	}
+}

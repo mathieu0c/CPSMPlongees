@@ -18,12 +18,11 @@ target_sources("${target_name}"
         "${ADDITIONAL_SOURCES}"
         "${src_files}"
         "${hdr_files}"
-        "${proto_files}"
 )
 target_link_libraries("${target_name}"
     PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
-    CPSMProto::CPSMProto
+    libLogger::libLogger
 )
 
 target_include_directories(${target_name}

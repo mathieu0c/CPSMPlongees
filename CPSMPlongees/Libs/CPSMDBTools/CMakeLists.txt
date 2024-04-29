@@ -24,9 +24,10 @@ target_link_libraries("${target_name}"
     PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Sql
-    CPSMProto::CPSMProto
     CPSMGlobals::CPSMGlobals
     DBTools::DBTools
+    libLogger::libLogger
+    libUtils::libUtils
 )
 
 target_include_directories(${target_name}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <RawStructs.hpp>
 
 namespace gui {
 
@@ -8,18 +9,26 @@ namespace Ui {
 class DiverEdit;
 }
 
-class DiverEdit : public QWidget
-{
-    Q_OBJECT
+class DiverEdit : public QWidget {
+  Q_OBJECT
 
-public:
-    explicit DiverEdit(QWidget *parent = nullptr);
-    ~DiverEdit();
+ signals:
+  void DiverEdited();
 
-private:
-    Ui::DiverEdit *ui;
+ public:
+  explicit DiverEdit(QWidget *parent = nullptr);
+  ~DiverEdit();
+
+  bool SetDiver(const db::Diver &diver);
+
+ private:
+  void UpdateUi();
+
+ private:
+  Ui::DiverEdit *ui;
+
+  db::Diver m_diver{};
+  db::DiverAddress m_address{};
 };
 
-
-} // namespace gui
-
+}  // namespace gui

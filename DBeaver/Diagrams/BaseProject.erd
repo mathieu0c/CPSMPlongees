@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diagram version="1" name="BaseProject">
+	<entities>
+		<data-source id="sqlite_jdbc-18d9a7da8d7-1deda4e9381be1cd">
+			<entity id="1" name="DiverLevels" fq-name="DiverLevels"/>
+			<entity id="2" name="Divers" fq-name="Divers"/>
+			<entity id="3" name="DiversAddresses" fq-name="DiversAddresses"/>
+			<entity id="4" name="Dives" fq-name="Dives"/>
+			<entity id="5" name="DivesMembers" fq-name="DivesMembers"/>
+			<entity id="6" name="DivingSites" fq-name="DivingSites"/>
+		</data-source>
+	</entities>
+	<relations>
+		<relation name="Divers_DiverLevels_FK" fq-name="Divers.Divers_DiverLevels_FK" type="fk" pk-ref="1" fk-ref="2"/>
+		<relation name="DivesMembers_Divers_FK" fq-name="DivesMembers.DivesMembers_Divers_FK" type="fk" pk-ref="2" fk-ref="5"/>
+		<relation name="Divers_DiversAddresses_FK" fq-name="Divers.Divers_DiversAddresses_FK" type="fk" pk-ref="3" fk-ref="2"/>
+		<relation name="DivesMembers_Dives_FK" fq-name="DivesMembers.DivesMembers_Dives_FK" type="fk" pk-ref="4" fk-ref="5"/>
+		<relation name="Dives_DivingSites_FK" fq-name="Dives.Dives_DivingSites_FK" type="fk" pk-ref="6" fk-ref="4"/>
+	</relations>
+</diagram>

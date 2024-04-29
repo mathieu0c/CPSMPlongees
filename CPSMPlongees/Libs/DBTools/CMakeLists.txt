@@ -24,6 +24,13 @@ target_link_libraries("${target_name}"
     PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Sql
+    libLogger::libLogger
+    libUtils::libUtils
+)
+target_link_libraries("${target_name}"
+    PUBLIC
+    libLogger::libLogger
+    libUtils::libUtils
 )
 
 target_include_directories(${target_name}

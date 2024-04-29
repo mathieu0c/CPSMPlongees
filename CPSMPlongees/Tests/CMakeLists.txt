@@ -40,11 +40,11 @@ target_link_libraries("${target_name}"
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Network
     Qt${QT_VERSION_MAJOR}::Sql
-    CPSMProto::CPSMProto
     CPSMTools::CPSMTools
     CPSMDBTools::CPSMDBTools
     DBTools::DBTools
     CPSMGlobals::CPSMGlobals
+    libUtils::libUtils
     ${PROTOBUF_LIBRARIES}
 )
 

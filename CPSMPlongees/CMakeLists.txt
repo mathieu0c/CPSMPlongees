@@ -58,27 +58,6 @@ if(NOT DEFINED BASE_PROTO_PATH)
 endif()
 
 
-# --- Protobuf ---
-#See README for more info about installation
-set(Protobuf_PREFIX_PATH
-    "${BASE_PROTO_PATH}\\include"            
-    "${BASE_PROTO_PATH}\\lib"             
-    "${BASE_PROTO_PATH}\\bin" )
-list(APPEND CMAKE_PREFIX_PATH "${Protobuf_PREFIX_PATH}")
-
-set(Protobuf_USE_STATIC_LIBS ON)
-find_package(Protobuf REQUIRED HINTS "${BASE_PROTO_PATH}\\lib\\cmake\\protobuf")
-
-message(STATUS "Protobuf include dir: ${Protobuf_INCLUDE_DIRS}")
-
-if(NOT DEFINED Protobuf_INCLUDE_DIRS)
-    set(Protobuf_INCLUDE_DIRS "${BASE_PROTO_PATH}\\include" CACHE BOOL "")
-endif()
-include_directories(SYSTEM ${Protobuf_INCLUDE_DIRS})
-
-find_package(Protobuf)
-include_directories(SYSTEM ${Protobuf_INCLUDE_DIRS})
-
 # --- Qt ---
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Network Sql REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Network Sql REQUIRED)
@@ -109,13 +88,15 @@ set(PROJECT_SOURCES
         MainWindow.hpp
         MainWindow.ui
 
-        ProgResources.qrc
+        Assets/ProgResources.qrc
 
         Gui/DiverEdit.hpp Gui/DiverEdit.cpp Gui/DiverEdit.ui
         Gui/DiveEdit.hpp Gui/DiveEdit.cpp Gui/DiveEdit.ui
         Gui/DiveSearch.hpp Gui/DiveSearch.cpp Gui/DiveSearch.ui
         Gui/DiverSearch.hpp Gui/DiverSearch.cpp Gui/DiverSearch.ui
         Gui/DialogConfirmListDeletion.hpp Gui/DialogConfirmListDeletion.cpp Gui/DialogConfirmListDeletion.ui
+
+        Models/table_model_test.hpp Models/table_model_test.cpp
 )
 
 
@@ -125,6 +106,9 @@ set(PROJECT_SOURCES
 #        Compilation          #
 #                             #
 ###############################
+
+add_compile_definitions(CMAKEMACRO_PROJECT_EXE="${CMAKE_PROJECT_NAME}")
+add_compile_definitions(CMAKEMACRO_BASE_PROJECT_DIR="${CMAKE_SOURCE_DIR}")
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
@@ -139,12 +123,11 @@ target_link_libraries(${EXE_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Network
     Qt${QT_VERSION_MAJOR}::Sql
     libSimpleUpdater::libSimpleUpdater
-    CPSMProto::CPSMProto
     CPSMTools::CPSMTools
     CPSMDBTools::CPSMDBTools
     DBTools::DBTools
     CPSMGlobals::CPSMGlobals
-    ${PROTOBUF_LIBRARIES}
+    libLogger::libLogger
 )
 
 

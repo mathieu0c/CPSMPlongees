@@ -1,24 +1,30 @@
-#include "MainWindow.hpp"
-
 #include <QApplication>
+#include <QFontDatabase>
 #include <QLocale>
 #include <QTranslator>
-#include <QFontDatabase>
 
-#include "LoggerHandler.hpp"
+#include <Logger/logger.hpp>
+#include <Logger/logger_setup.hpp>
 
-int main(int argc, char *argv[])
-{
-    installCustomLogHandler(logHandler::GlobalLogInfo{.progLogFilePath="CPSMPlongees.log",.progName="CPSMPlongees"});
+#include "MainWindow.hpp"
 
-    QApplication a(argc, argv);
+int main(int argc, char *argv[]) {
+  Q_INIT_RESOURCE(DBScripts);
+  //  installCustomLogHandler(logHandler::GlobalLogInfo{.progLogFilePath = "CPSMPlongees.log", .progName =
+  //  "CPSMPlongees"});
+  const auto kLogPath{logger::GetLogFilePath(CMAKEMACRO_PROJECT_EXE)};
+  logger::SetupLoggerRotating(kLogPath, 2);
 
-    // QFontDatabase::addApplicationFont(":/fonts/LEMONMILK-Bold.otf");
+  SPDLOG_INFO("\n\n\n - {} - Hello! Welcome to CPSM Gestion plongées\n\n", QDateTime::currentDateTime().toString());
 
-    // const QFont kBaseFont{"LEMONMILK"};
-    // QApplication::setFont(kBaseFont);
+  QApplication a(argc, argv);
 
-    MainWindow w;
-    w.show();
-    return a.exec();
+  // QFontDatabase::addApplicationFont(":/fonts/LEMONMILK-Bold.otf");
+
+  // const QFont kBaseFont{"LEMONMILK"};
+  // QApplication::setFont(kBaseFont);
+
+  MainWindow w;
+  w.show();
+  return a.exec();
 }
