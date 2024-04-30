@@ -1,4 +1,4 @@
-#encoding : utf-8
+# encoding : utf-8
 
 import glob
 import os
@@ -11,166 +11,179 @@ import time
 
 GLOB_TARGET_EXE_NAME = ""
 
-def filterListWithRegex(inVar : list, regex : str):
-    return list(filter(re.compile(regex).match,inVar))
 
-def ls(rootPath: str = ".", regex : str = None) -> list:
-    if(not rootPath.endswith("/*")):
+def filterListWithRegex(inVar: list, regex: str):
+    return list(filter(re.compile(regex).match, inVar))
+
+
+def ls(rootPath: str = ".", regex: str = None) -> list:
+    if (not rootPath.endswith("/*")):
         rootPath += "/*"
-    tmpList = glob.glob(rootPath,recursive=False)
-    if(regex == None):
+    tmpList = glob.glob(rootPath, recursive=False)
+    if (regex == None):
         return tmpList
-    return filterListWithRegex(tmpList,regex)
+    return filterListWithRegex(tmpList, regex)
 
-def errorOccured(what : str = None,quitProg : bool = False):
-    print("------- {} -------- An error occurred :\n\t{}".format(inspect.stack()[1].function,what))
-    if(quitProg):
+
+def errorOccured(what: str = None, quitProg: bool = False):
+    frame = inspect.stack()[1]
+    line_number = frame.lineno
+    function_name = frame.function
+    filename = frame.filename
+
+    print(
+        f"------- {function_name}:{line_number} -------- An error occurred :\n\t{what}")
+    if (quitProg):
         exit(1)
 
 
-def mkpathOverwrite(path : str) -> bool:
+def mkpathOverwrite(path: str) -> bool:
     """
     This function search for a dir, DELETE it if found
     then re-create it (empty)
-    
+
     BE CAREFUL WHEN USING IT
     """
-    if(path == "./"):
-        errorOccured("You should not delete current dir",True)
+    if (path == "./"):
+        errorOccured("You should not delete current dir", True)
     dirPath = pathlib.Path(path)
-    if(dirPath.exists() and dirPath.is_dir()):
+    if (dirPath.exists() and dirPath.is_dir()):
         shutil.rmtree(dirPath)
     os.makedirs(path)
     return True
 
-def checkFile(path : str)->bool:
+
+def checkFile(path: str) -> bool:
     tmpPath = pathlib.Path(path)
     isFile = tmpPath.is_file()
     exist = tmpPath.exists()
-    if((not isFile) or (not exist)):
+    if ((not isFile) or (not exist)):
         return False
     return True
 
-#-------------------------------------------------------------
+# -------------------------------------------------------------
 
-def getReleaseDir(rootPath : str = ".") -> str:
-    tmpList = ls(rootPath,".*build-.*Desktop_Qt_6.*MinGW.*_64.*-Release")
+
+def getReleaseDir(rootPath: str = ".") -> str:
+    tmpList = ls(rootPath, ".*build-.*Desktop_Qt_6.*MinGW.*_64.*-Release")
     # tmpList = ls()
     for i, dir in enumerate(tmpList):
         tmpList[i] = dir + "/Bin"
-    if(len(tmpList) > 1):
-        errorOccured("Too many build-release folder :\n{}".format(str(tmpList)),False)
+    if (len(tmpList) > 1):
+        errorOccured(
+            "Too many build-release folder :\n{}".format(str(tmpList)), False)
         return None
-    if(len(tmpList) == 0):
+    if (len(tmpList) == 0):
         errorOccured("No build release folder found")
     return tmpList[0]
 
 
-def getExePath(releaseDir : str,exeRegex:str = None) -> str:
+def getExePath(releaseDir: str, exeRegex: str = None) -> str:
     global GLOB_TARGET_EXE_NAME
     if exeRegex == None:
-        exeRegex = f".*{GLOB_TARGET_EXE_NAME}\.exe"
-    tmpList = ls(releaseDir,exeRegex)
+        exeRegex = f".*{GLOB_TARGET_EXE_NAME}\\.exe"
+    tmpList = ls(releaseDir, exeRegex)
     # tmpList = ls(releaseDir)
-    if(len(tmpList) > 1):
-        errorOccured("Too many exe found :\n{}".format(str(tmpList)),False)
+    if (len(tmpList) > 1):
+        errorOccured("Too many exe found :\n{}".format(str(tmpList)), False)
         return None
     elif len(tmpList) == 0:
-        errorOccured("Exe not found",False)
+        errorOccured("Exe not found", False)
         return None
     return tmpList[0]
 
 
-def getAbsolute(path: str)->str:
+def getAbsolute(path: str) -> str:
     return str(pathlib.Path(path).absolute())
+
 
 def main():
     global GLOB_TARGET_EXE_NAME
-    CONFIG_outputDir = "AUTO"#the dir will have the name of the found executable
-    QT_VERSION = "6.5.0"
+    CONFIG_outputDir = "AUTO"  # the dir will have the name of the found executable
+    QT_VERSION = "6.6.0"
     MINGW_VERSION = "mingw1120_64"
-    CONFIG_WINDEPLOYQT_PATH = getAbsolute(f"C:/Qt/{QT_VERSION}/mingw_64/bin/windeployqt.exe")
+    CONFIG_WINDEPLOYQT_PATH = getAbsolute(
+        f"C:/Qt/{QT_VERSION}/mingw_64/bin/windeployqt.exe")
     CONFIG_DEPENDENCY_DIR = getAbsolute("../CPSMPlongees/Assets/Dependencies")
     CONFIG_INNOSETUP_SCRIPT = getAbsolute("./buildSetup.iss")
     CONFIG_DEPLOY_OUTPUT_DIR = "DEPLOY_OUTPUT"
 
-    CONFIG_PRIVATE_SIGNER_KEY_FILE = getAbsolute("../CPSMUpdateKeys/CPSMPlongees.private")
-    CONFIG_PUBLIC_VERIFIER_KEY_FILE = getAbsolute("../CPSMUpdateKeys/CPSMPlongees.public")
+    CONFIG_PRIVATE_SIGNER_KEY_FILE = getAbsolute(
+        "../CPSMUpdateKeys/CPSMPlongees.private")
+    CONFIG_PUBLIC_VERIFIER_KEY_FILE = getAbsolute(
+        "../CPSMUpdateKeys/CPSMPlongees.public")
     CONFIG_MANIFEST_FILE = "manifest.json"
     CONFIG_outputAssetDir = getAbsolute(f"{CONFIG_outputDir}/Assets/")
 
     GLOB_TARGET_EXE_NAME = "CPSMPlongees"
-
+    SETUP_EXE_NAME = f"{GLOB_TARGET_EXE_NAME}_setup_x64.exe"
 
     print("------------------------------------------------------")
 
-
-
     releaseDir = getAbsolute(getReleaseDir(".."))
-    if(not releaseDir):
-        errorOccured("Cannot find release dir",True)
+    if (not releaseDir):
+        errorOccured("Cannot find release dir", True)
     print("Found build release dir at : {}".format(releaseDir))
 
-    exePath = getAbsolute(getExePath(releaseDir))
-    if(not exePath):
-        errorOccured("Cannot find exe path",True)
+    tmpExePath = getExePath(releaseDir, f".*{GLOB_TARGET_EXE_NAME}\\.exe")
+    if not tmpExePath:
+        errorOccured("Cannot find relative exe path", True)
+
+    print("Relative exe path : {}".format(tmpExePath))
+    exePath = getAbsolute(tmpExePath)
+    if (not exePath):
+        errorOccured("Cannot find exe path", True)
     print("Found exe at : {}\n".format(exePath))
 
-    if(CONFIG_outputDir == "AUTO"):
-        CONFIG_outputDir = getAbsolute("./{}/{}".format(CONFIG_DEPLOY_OUTPUT_DIR,pathlib.Path(exePath).stem+"_release"))
+    if (CONFIG_outputDir == "AUTO"):
+        CONFIG_outputDir = getAbsolute(
+            "./{}/{}".format(CONFIG_DEPLOY_OUTPUT_DIR, pathlib.Path(exePath).stem+"_release"))
         CONFIG_outputAssetDir = getAbsolute(f"{CONFIG_outputDir}/Assets/")
-
-
-    
-
-
 
     uselessFileList = []
     uselessFileList.append(f"{CONFIG_outputDir}/opengl32sw.dll")
     uselessFileList.append(f"{CONFIG_outputDir}/D3Dcompiler_47.dll")
     uselessFileList.append(f"{CONFIG_outputDir}/Qt6Svg.dll")
 
-    
     dependencies = []
-    dependencies.append((f"{CONFIG_PUBLIC_VERIFIER_KEY_FILE}",CONFIG_outputAssetDir))
-    
-
-
-
+    dependencies.append(
+        (f"{CONFIG_PUBLIC_VERIFIER_KEY_FILE}", CONFIG_outputAssetDir))
 
     print("Creating deploy dir <{}> ...".format(CONFIG_outputDir))
-    mkpathOverwrite(CONFIG_outputDir)#erase and re-create deploy dir
+    mkpathOverwrite(CONFIG_outputDir)  # erase and re-create deploy dir
     print("Done\n")
 
     print("Copying exe...")
     try:
-        shutil.copy(exePath,CONFIG_outputDir)
+        shutil.copy(exePath, CONFIG_outputDir)
     except:
-        errorOccured("Cannot copy exe file",True)
+        errorOccured("Cannot copy exe file", True)
     print("Done\n")
 
-    
-
-    simpleUpdaterExeFile= getAbsolute(getExePath(releaseDir,".*SimpleUpdater\.exe"))
+    simpleUpdaterExeFile = getAbsolute(
+        getExePath(releaseDir, ".*SimpleUpdater\.exe"))
     print("Copying SimpleUpdater exe...")
     try:
-        shutil.copy(simpleUpdaterExeFile,CONFIG_outputDir)
+        shutil.copy(simpleUpdaterExeFile, CONFIG_outputDir)
     except:
-        errorOccured("Cannot copy SimpleUpdater exe file",True)
+        errorOccured("Cannot copy SimpleUpdater exe file", True)
     print("Done\n")
 
     print("Running windeployqt...")
-    if(not checkFile(CONFIG_WINDEPLOYQT_PATH)):
-        errorOccured("Cannot find windeployqt exe at {}".format(CONFIG_WINDEPLOYQT_PATH),True)
-    windeployCmd = "{} --no-translations {} {}".format(CONFIG_WINDEPLOYQT_PATH,CONFIG_outputDir,exePath)
+    if (not checkFile(CONFIG_WINDEPLOYQT_PATH)):
+        errorOccured("Cannot find windeployqt exe at {}".format(
+            CONFIG_WINDEPLOYQT_PATH), True)
+    windeployCmd = "{} --no-translations {} {}".format(
+        CONFIG_WINDEPLOYQT_PATH, CONFIG_outputDir, exePath)
     # qtEnv = {**os.environ, 'PATH': f'C:\\Qt\\{QT_VERSION}\\mingw_64\\bin;C:\\Qt\\Tools\\{MINGW_VERSION}\\bin;' + os.environ['PATH']}
-    qtEnv = {**os.environ, 'PATH': f'C:\\Qt\\{QT_VERSION}\\mingw_64\\bin;C:\\Qt\\Tools\\{MINGW_VERSION}\\bin;'}
+    qtEnv = {**os.environ, 'PATH': f'C:\\Qt\\{
+        QT_VERSION}\\mingw_64\\bin;C:\\Qt\\Tools\\{MINGW_VERSION}\\bin;'}
     print("\tusing command <{}>".format(windeployCmd))
     rval = subprocess.Popen(windeployCmd, env=qtEnv)
     if rval.returncode != 0:
-        errorOccured("WARNING: windeployqt may have failed to execute properly.",False)
+        errorOccured(
+            "WARNING: windeployqt may have failed to execute properly.", False)
     print("Done")
-
 
     print(f"Creating target assets dir <{CONFIG_outputAssetDir}> ...")
     mkpathOverwrite(CONFIG_outputAssetDir)
@@ -182,20 +195,21 @@ def main():
         dependencyPath = dependency[0]
         outputDir = dependency[1]
         print("\tAdding : <{}>".format(dependencyPath))
-        if(not checkFile(dependencyPath)):
-            errorOccured("Cannot find following dependency : <{}>".format(dependencyPath),True)
+        if (not checkFile(dependencyPath)):
+            errorOccured("Cannot find following dependency : <{}>".format(
+                dependencyPath), True)
         try:
-            shutil.copy(dependencyPath,outputDir)
+            shutil.copy(dependencyPath, outputDir)
         except:
-            errorOccured("Cannot copy dependency <{}> to <{}>".format(dependencyPath,outputDir),True)
+            errorOccured("Cannot copy dependency <{}> to <{}>".format(
+                dependencyPath, outputDir), True)
     print("Done\n")
-
 
     print("Deleting useless files")
 
     for uselessFilePath in uselessFileList:
         toRemove = pathlib.Path(uselessFilePath)
-        for i in range(0,10):
+        for i in range(0, 10):
             if not checkFile(str(toRemove.absolute())):
                 print(f"Waiting for {toRemove}")
                 time.sleep(0.3)
@@ -205,10 +219,27 @@ def main():
         try:
             toRemove.unlink()
         except:
-            errorOccured("Cannot delete <{}>".format(toRemove),False)#non fatal error, keep going
+            errorOccured("Cannot delete <{}>".format(toRemove),
+                         False)  # non fatal error, keep going
     print("Done\n")
 
+    print("##########################################")
+    print("\nCreating setup...")
 
+    innoSetup = f"C:\\Program Files (x86)\\Inno Setup 6\\iscc.exe"
+    args = [
+        innoSetup,
+        CONFIG_INNOSETUP_SCRIPT
+    ]
+    rval = subprocess.run(args)
+    exe_setup_file = f"{CONFIG_DEPLOY_OUTPUT_DIR}/{SETUP_EXE_NAME}"
+    if rval.returncode != 0:
+        errorOccured("Failed to run the inno setup compiler", True)
+    if not checkFile(f"{exe_setup_file}"):
+        errorOccured(
+            f"Supposedly generated setup exe <{exe_setup_file}> not found", True)
+
+    print("##########################################\n")
     print("Creating update package")
     try:
         suExePath = f"{CONFIG_outputDir}/SimpleUpdater.exe"
@@ -221,35 +252,22 @@ def main():
             CONFIG_MANIFEST_FILE,
             "-r",
             CONFIG_outputDir,
+            "-e",
+            exe_setup_file,
             "-o",
             CONFIG_DEPLOY_OUTPUT_DIR
         ]
         rval = subprocess.run(args)
         if rval.returncode != 0:
-            errorOccured("Could not run SimpleUpdater create update package",True)
+            errorOccured(
+                "Could not run SimpleUpdater create update package", True)
     except Exception as e:
         print(e)
-        errorOccured("Cannot create update package",True)
+        errorOccured("Cannot create update package", True)
     print("Done\n")
-
-
-
-    print("##########################################")
-    print("\nCreating setup...")
-    
-    innoSetup = f"C:\\Program Files (x86)\\Inno Setup 6\\iscc.exe"
-    args = [
-        innoSetup,
-        CONFIG_INNOSETUP_SCRIPT
-    ]
-    rval = subprocess.run(args)
-    if rval.returncode != 0:
-        errorOccured("Failed to run the inno setup compiler",False)
-    print("##########################################\n")
-    
 
     print("------------------------------------------------------")
 
 
-if(__name__ == "__main__"):
+if (__name__ == "__main__"):
     main()

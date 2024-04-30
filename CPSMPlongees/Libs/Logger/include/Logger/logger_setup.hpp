@@ -87,6 +87,7 @@ inline auto SetupLoggerRotating(const QString &q_log_path, int32_t flush_interva
   spdlog::set_level(spdlog::level::debug);
   spdlog::set_pattern(kLoggerPattern);
   spdlog::flush_every(std::chrono::seconds(flush_interval_s));
+  SPDLOG_DEBUG("Logger setup with pattern: {}", kLoggerPattern);
 
   InstallCustomLogHandler();
 

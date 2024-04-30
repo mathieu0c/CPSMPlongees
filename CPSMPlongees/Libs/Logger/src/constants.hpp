@@ -9,7 +9,12 @@
 
 namespace logger {
 constexpr auto kLoggerName{"Default"};
+
+#ifdef CMAKE_DEBUG_MODE
+constexpr auto kLoggerPattern{R"(%H:%M:%S.%e [%^%l%$] %s:%# : %v)"};
+#else
 constexpr auto kLoggerPattern{R"(%H:%M:%S.%e [%^%l%$] %s:%# (%!): %v)"};
+#endif
 
 constexpr auto MaxLogLevel() {
 #if SPDLOG_ACTIVE_LEVEL == SPDLOG_LEVEL_DEBUG

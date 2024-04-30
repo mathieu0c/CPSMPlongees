@@ -28,7 +28,8 @@ MainWindow::MainWindow(QWidget *parent)
       m_test_model{this} {
   ui->setupUi(this);
 
-  cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath);
+  cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath);
+  // cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath);
 
   if (!QFileInfo::exists(c_config_file)) {
     SPDLOG_INFO("Saving default config file: {}", c_config_file);
