@@ -1,5 +1,8 @@
 # Software test
 
+## General UI
+- [ ] Make sure the software is working properly with a resolution of 1024x768
+
 ## Update
 - [ ] Update using an update package is working (min version fulfilled)
   - [ ] Update is signed
