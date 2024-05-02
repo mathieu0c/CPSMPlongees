@@ -225,6 +225,7 @@ template <typename T>
 inline QString questionMarkList(const QVector<T> &in) {
   QString out{'('};
   for (const auto &e : in) {
+    std::ignore = e;
     out = out + "?,";
   }
   if (out.endsWith(',')) out.resize(out.size() - 1);

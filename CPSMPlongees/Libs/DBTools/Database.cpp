@@ -147,7 +147,7 @@ int queryCount(QSqlDatabase& db, QString request, const QStringList& argList, co
   if (err.type() != QSqlError::ErrorType::NoError)  // if there was an error
   {
     SPDLOG_ERROR("SQL error : {}", err);
-    return {};
+    return -2;
   }
 
   return out;
@@ -246,6 +246,9 @@ bool ExecQuery(QSqlDatabase db, QString request, const QStringList& argList, con
     SPDLOG_ERROR("SQL error : {}", err);
     return false;
   }
+
+  SPDLOG_DEBUG("{}", query);
+
   return true;
 }
 

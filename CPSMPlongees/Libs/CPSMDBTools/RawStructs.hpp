@@ -12,21 +12,21 @@ namespace db {
   COLUMN(diver_id, INTEGER, true);        \
   COLUMN(first_name, TEXT, false);        \
   COLUMN(last_name, TEXT, false);         \
-  COLUMN(birth_date, TEXT, false);        \
+  COLUMN(birth_date, DATE, false);        \
   COLUMN(email, TEXT, false);             \
   COLUMN(phone_number, TEXT, false);      \
   COLUMN(address_id, INTEGER, false);     \
   COLUMN(license_number, TEXT, false);    \
-  COLUMN(certif_date, TEXT, false);       \
+  COLUMN(certif_date, DATE, false);       \
   COLUMN(diver_level_id, INTEGER, false); \
-  COLUMN(is_member, INTEGER, false);      \
-  COLUMN(registration_date, TEXT, false); \
+  COLUMN(registration_date, DATE, false); \
   COLUMN(paid_dives, INTEGER, false);     \
   COLUMN(gear_regulator, INTEGER, false); \
   COLUMN(gear_suit, INTEGER, false);      \
   COLUMN(gear_computer, INTEGER, false);  \
   COLUMN(gear_jacket, INTEGER, false);
 DB_DECLARE_STRUCT(Diver, Divers, val.diver_id <= 0, Diver_VAR_LIST)
+int GetDiverDiveCount(const Diver &diver);
 
 #define DiverAddress_VAR_LIST(COLUMN) \
   COLUMN(address_id, INTEGER, true);  \
@@ -35,11 +35,11 @@ DB_DECLARE_STRUCT(Diver, Divers, val.diver_id <= 0, Diver_VAR_LIST)
   COLUMN(city, TEXT, false);
 DB_DECLARE_STRUCT(DiverAddress, DiversAddresses, val.address_id <= 0, DiverAddress_VAR_LIST)
 
-struct Dive {
-  DB_ELEM(dive_id, INTEGER, true);
-  DB_ELEM(datetime, TEXT, false);
-  DB_ELEM(diving_site_id, INTEGER, false);
-};
+#define Dive_VAR_LIST(COLUMN)        \
+  COLUMN(dive_id, INTEGER, true);    \
+  COLUMN(datetime, DATETIME, false); \
+  COLUMN(diving_site_id, INTEGER, false);
+DB_DECLARE_STRUCT(Dive, Dives, val.dive_id <= 0, Dive_VAR_LIST)
 
 #define DiveMember_VAR_LIST(COLUMN) \
   COLUMN(dive_id, INTEGER, true);   \
@@ -47,18 +47,18 @@ struct Dive {
   COLUMN(diving_type_id, INTEGER, false);
 DB_DECLARE_STRUCT(DiveMember, DivesMembers, val.dive_id <= 0 || val.diver_id <= 0, DiveMember_VAR_LIST)
 
-struct DivingSite {
-  DB_ELEM(diving_site_id, INTEGER, true);
-  DB_ELEM(site_text, TEXT, false);
-};
+#define DivingSites_VAR_LIST(COLUMN)     \
+  COLUMN(diving_site_id, INTEGER, true); \
+  COLUMN(site_text, TEXT, false);
+DB_DECLARE_STRUCT(DivingSite, DivingSites, val.diving_site_id <= 0, DivingSites_VAR_LIST)
 
-struct DivingType {
-  DB_ELEM(diving_type_id, INTEGER, true);
-  DB_ELEM(type_name, TEXT, false);
-};
+#define DivingTypes_VAR_LIST(COLUMN)     \
+  COLUMN(diving_type_id, INTEGER, true); \
+  COLUMN(type_name, TEXT, false);
+DB_DECLARE_STRUCT(DivingType, DivingTypes, val.diving_type_id <= 0, DivingTypes_VAR_LIST)
 
-struct DiverLevel {
-  DB_ELEM(diver_level_id, INTEGER, true);
-  DB_ELEM(level_name, TEXT, false);
-};
+#define DiverLevels_VAR_LIST(COLUMN)     \
+  COLUMN(diver_level_id, INTEGER, true); \
+  COLUMN(level_name, TEXT, false);
+DB_DECLARE_STRUCT(DiverLevel, DiversLevels, val.diver_level_id <= 0, DiverLevels_VAR_LIST)
 }  // namespace db

@@ -4,6 +4,8 @@
 
 // include separator
 
+#include <QDate>
+#include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
 #include <QStandardPaths>
@@ -37,6 +39,14 @@ DECLARE_CUSTOM_SPD_FORMAT(QString) {
 
 DECLARE_CUSTOM_SPD_FORMAT(QFileInfo) {
   return stream << val.absoluteFilePath();
+}
+
+DECLARE_CUSTOM_SPD_FORMAT(QDate) {
+  return stream << val.toString();
+}
+
+DECLARE_CUSTOM_SPD_FORMAT(QDateTime) {
+  return stream << val.toString();
 }
 
 template <typename CIter>

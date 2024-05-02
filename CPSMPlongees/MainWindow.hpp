@@ -26,6 +26,8 @@ class MainWindow : public QMainWindow {
   ~MainWindow();
 
  private slots:
+  void OnDiverEdited(std::optional<std::tuple<db::Diver, db::DiverAddress>> edit_opt);
+
   void on_action_check_updates_triggered();
 
  private:

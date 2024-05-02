@@ -3,6 +3,7 @@
 #include <CPSMDatabase.hpp>
 #include <CPSMGlobals.hpp>
 #include <DBUtils.hpp>
+#include <ProgramInterrupts.hpp>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QStandardPaths>
@@ -28,8 +29,12 @@ MainWindow::MainWindow(QWidget *parent)
       m_test_model{this} {
   ui->setupUi(this);
 
-  cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath);
-  // cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath);
+  const auto kLoadDbSuccess{cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath)};
+  // const auto kLoadDbSuccess{cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath)};
+  if (!kLoadDbSuccess) {
+    CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotInitDB);
+  }
+  ui->pg_editDiver->OnDatabaseLoaded();
 
   if (!QFileInfo::exists(c_config_file)) {
     SPDLOG_INFO("Saving default config file: {}", c_config_file);
@@ -54,11 +59,58 @@ MainWindow::MainWindow(QWidget *parent)
   ui->tw_test->setModel(&m_test_model);
 
   const auto kTmpDiver{db::GetDiverFromId(db::Def(), {2})};
-  ui->pg_editDiver->SetDiver(kTmpDiver.value());
+  if (!kTmpDiver) {
+    SPDLOG_ERROR("Failed to retrieve diver with id=2");
+  }
+  SPDLOG_INFO("Retrieved diver: {}", kTmpDiver.value());
+
+  const auto kDiveCount{db::GetDiverDiveCount(kTmpDiver.value())};
+  ui->pg_editDiver->SetDiver(kTmpDiver.value(), kDiveCount);
+
+  connect(ui->pg_editDiver, &gui::DiverEdit::DiverEdited, this, &MainWindow::OnDiverEdited);
 }
 
 MainWindow::~MainWindow() {
   delete ui;
+}
+
+void MainWindow::OnDiverEdited(std::optional<std::tuple<db::Diver, db::DiverAddress>> edit_opt) {
+  if (!edit_opt) {
+    SPDLOG_DEBUG("Diver edition cancelled");
+    return;
+  }
+
+  const auto &[diver, address]{edit_opt.value()};
+  auto database{db::Def()};
+
+  auto lambda_on_failed_save_of_diver{[&, this]() {
+    QMessageBox::critical(
+        this,
+        tr("Erreur"),
+        tr("Impossible de sauvegarder les modifications apportées à %0 %1\n(Contacter le support si besoin)")
+            .arg(diver.last_name, diver.first_name));
+    SPDLOG_ERROR(
+        "Failed to save driver: <{}> and address <{}> to database.\nError: <{}>", diver, address, database.lastError());
+  }};
+
+  if (!database.transaction()) {
+    lambda_on_failed_save_of_diver();
+    return;
+  }
+  bool success{true};
+  success = success && db::UpdateDiver(database, diver);
+  success = success && db::UpdateDiverAddress(database, address);
+
+  if (!success) {
+    if (!database.rollback()) {
+      CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotRollback);
+    }
+    lambda_on_failed_save_of_diver();
+  } else {
+    if (!database.commit()) {
+      lambda_on_failed_save_of_diver();
+    }
+  }
 }
 
 void MainWindow::on_action_check_updates_triggered() {

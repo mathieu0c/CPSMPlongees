@@ -11,23 +11,6 @@ QSqlDatabase dbt{QSqlDatabase::database()};
 
 TEST(CPSMTests, DevTest) {
   REINIT_DB;
-
-  using db::DiveMember;
-  using db::Diver;
-
-  DiveMember test{1, 2, 1};
-  SPDLOG_DEBUG("{}", test);
-  ASSERT_TRUE(UpdateDiveMember(dbt, test));
-  //  ASSERT_TRUE(false);
-
-  auto kTestRead{db::GetDiveMemberFromId(dbt, {1, 2})};
-  if (!kTestRead) {
-    SPDLOG_WARN("Failed to read DiveMember");
-  } else {
-    SPDLOG_INFO("Read DiveMember is: {}", *kTestRead);
-  }
-
-  ASSERT_TRUE(kTestRead);
   //  utils::Chrono<std::chrono::microseconds> req_time0{};
   //  auto results0{
   //      db::readLFromDB<DiveMember>(dbt, db::ExtractDiveMember, "SELECT * FROM %0", {DiveMember::db_table}, {})};
@@ -50,6 +33,27 @@ TEST(CPSMTests, DevTest) {
 
 TEST(CPSMTests, DBInitTest) {
   REINIT_DB;
+}
+
+TEST(CPSMTests, MultiplePrimaryKeys_DivesMembers) {
+  REINIT_DB;
+
+  using db::DiveMember;
+  using db::Diver;
+
+  DiveMember test{1, 2, 1};
+  SPDLOG_DEBUG("{}", test);
+  ASSERT_TRUE(UpdateDiveMember(dbt, test));
+  //  ASSERT_TRUE(false);
+
+  auto kTestRead{db::GetDiveMemberFromId(dbt, {1, 2})};
+  if (!kTestRead) {
+    SPDLOG_WARN("Failed to read DiveMember");
+  } else {
+    SPDLOG_INFO("Read DiveMember is: {}", *kTestRead);
+  }
+
+  ASSERT_TRUE(kTestRead);
 }
 
 TEST(CPSMTests, DiveDeletion) {

@@ -147,7 +147,7 @@ inline std::optional<T> readFromDB(const QSqlDatabase& db, UnaryFunction extract
   if (!query.next())  // if there is no result
   {
     if constexpr (kDebugQueries) {
-      SPDLOG_ERROR("No SQL result found: {} for\n{}", query, err.text());
+      SPDLOG_ERROR("No SQL result found: <{}> for\n<{}>", query, err.text());
     }
     return {};
     //        throw std::runtime_error{errStr.toStdString()};

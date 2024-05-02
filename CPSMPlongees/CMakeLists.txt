@@ -79,6 +79,7 @@ add_subdirectory(Libs)
 set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/Assets/iconResource.rc")
 
 set(PROJECT_SOURCES
+        ProgramInterrupts.hpp
         LoggerHandler.hpp
 
         Constants.hpp

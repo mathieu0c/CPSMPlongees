@@ -3,14 +3,14 @@ PRAGMA foreign_keys = ON;
 
 -- DiversLevels definition
 
-CREATE TABLE "DiversLevels" (
+CREATE TABLE IF NOT EXISTS "DiversLevels" (
   diver_level_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  level_name TEXT
+  level_name TEXT UNIQUE
 );
 
 -- Divers definition
 
-CREATE TABLE Divers (
+CREATE TABLE IF NOT EXISTS Divers (
   diver_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   first_name TEXT,
   last_name TEXT,
@@ -21,7 +21,6 @@ CREATE TABLE Divers (
   license_number TEXT,
   certif_date TEXT,
   diver_level_id INTEGER,
-  is_member INTEGER DEFAULT (0),
   registration_date TEXT,
   paid_dives INTEGER,
   gear_regulator INTEGER DEFAULT (0),
@@ -34,7 +33,7 @@ CREATE TABLE Divers (
 
 -- DiversAddresses definition
 
-CREATE TABLE DiversAddresses (
+CREATE TABLE IF NOT EXISTS DiversAddresses (
   address_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   address TEXT,
   postal_code TEXT,
@@ -43,7 +42,7 @@ CREATE TABLE DiversAddresses (
 
 -- Dives definition
 
-CREATE TABLE Dives (
+CREATE TABLE IF NOT EXISTS Dives (
   dive_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   datetime TEXT,
   diving_site_id INTEGER,
@@ -52,26 +51,26 @@ CREATE TABLE Dives (
 
 -- DivesMembers definition
 
-CREATE TABLE DivesMembers (
+CREATE TABLE IF NOT EXISTS DivesMembers (
   dive_id INTEGER,
   diver_id INTEGER,
   diving_type_id INTEGER,
   CONSTRAINT DivesMembers_PK PRIMARY KEY (dive_id,diver_id),
   CONSTRAINT DivesMembers_Divers_FK FOREIGN KEY (diver_id) REFERENCES Divers(diver_id) ON DELETE CASCADE,
   CONSTRAINT DivesMembers_Dives_FK FOREIGN KEY (dive_id) REFERENCES Dives(dive_id) ON DELETE CASCADE,
-  CONSTRAINT DivesMembers_DivingType_FK FOREIGN KEY (diving_type_id) REFERENCES DivingType(diving_type_id) ON DELETE SET NULL
+  CONSTRAINT DivesMembers_DivingType_FK FOREIGN KEY (diving_type_id) REFERENCES DivingTypes(diving_type_id) ON DELETE SET NULL
 );
 
 -- DivingSites definition
 
-CREATE TABLE DivingSites (
+CREATE TABLE IF NOT EXISTS DivingSites (
   diving_site_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   site_name TEXT
 );
 
 -- DivingType definition
 
-CREATE TABLE DivingType (
+CREATE TABLE IF NOT EXISTS DivingTypes (
   diving_type_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   type_name TEXT
 );
@@ -105,7 +104,7 @@ INSERT OR IGNORE INTO "DivingSites"
 
 
 --  Diving types
-INSERT OR IGNORE INTO "DivingType"
+INSERT OR IGNORE INTO "DivingTypes"
     ("type_name") VALUES
     ("Explo"),
     ("Tech");

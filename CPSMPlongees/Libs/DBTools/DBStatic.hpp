@@ -8,10 +8,26 @@
 
 namespace db {
 
+namespace internals {
+inline QString Join(const QStringList &list, const QString &separator) {
+  if (list.empty()) {
+    return QString{};
+  }
+
+  QString out{};
+  for (const auto &str : list) {
+    out += str + separator;
+  }
+  out.chop(separator.size());
+  return out;
+}
+}  // namespace internals
+
 /* To declare a new db struct, here is an example:
+ * Function is COLUMN(name, DB_TYPE, IS_PRIMARY)
 
 #define ClassName_VAR_LIST(COLUMN)        \
-    COLUMN(diver_id, INTEGER);       \
+    COLUMN(diver_id, INTEGER, true;       \
     COLUMN(first_name, TEXT);        \
     COLUMN(gear_regulator, INTEGER); \
     COLUMN(gear_suit, INTEGER);      \
@@ -30,7 +46,7 @@ constexpr bool IsString() {
   return std::is_same_v<T, std::string> || std::is_same_v<T, QString>;
 }
 
-enum DBType { INTEGER, TEXT };
+enum DBType { INTEGER, TEXT, DATE, DATETIME };
 
 template <typename T>
 struct DBTypeWrapper {
@@ -46,6 +62,10 @@ constexpr auto GetTypeForDBType()
     return DBTypeWrapper<int>{};
   } else if constexpr (kDBType == DBType::TEXT) {
     return DBTypeWrapper<QString>{};
+  } else if constexpr (kDBType == DBType::DATE) {
+    return DBTypeWrapper<QDate>{};
+  } else if constexpr (kDBType == DBType::DATETIME) {
+    return DBTypeWrapper<QDateTime>{};
   } else {
     return DBTypeWrapper<int>{};
   }
@@ -97,8 +117,12 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
     return out;                                                 \
   }
 
-#define DB_INSERT_OR_UPDATE_STEP_STR_LIST(name, DB_TYPE, IS_PRIMARY) str_list.append(val.name##_col);
+#define DB_INSERT_OR_UPDATE_STEP_COLUMNS_LIST(name, DB_TYPE, IS_PRIMARY) columns_list.append(val.name##_col);
 #define DB_INSERT_OR_UPDATE_STEP_VAL_LIST(name, DB_TYPE, IS_PRIMARY) val_list.append(val.name);
+#define DB_INSERT_OR_UPDATE_STEP_VAL_LIST_PK(name, DB_TYPE, IS_PRIMARY) \
+  if constexpr (IS_PRIMARY) val_list.append(val.name);
+#define DB_INSERT_OR_UPDATE_STEP_PK_LIST(name, DB_TYPE, IS_PRIMARY) \
+  if constexpr (IS_PRIMARY) primary_key_list.append(val.name##_col);
 
 #define DB_INSERT_OR_UPDATE_FUNCTION(ClassName, invalid_val_condition, LIST_OF_VARIABLES_MACRO)        \
   [[nodiscard]] inline bool Update##ClassName(QSqlDatabase db, const ClassName &val) {                 \
@@ -110,27 +134,49 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
                                                                                                        \
     QVector<QVariant> val_list{};                                                                      \
     LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_VAL_LIST)                                         \
+    LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_VAL_LIST_PK)                                      \
                                                                                                        \
-    static QStringList str_list{};                                                                     \
-    if (str_list.empty()) {                                                                            \
-      LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_STR_LIST)                                       \
+    static QString base_request{};                                                                     \
+    if (base_request.isEmpty()) {                                                                      \
+      QStringList columns_list{};                                                                      \
+      LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_COLUMNS_LIST)                                   \
                                                                                                        \
-      QString columns_names{"("};                                                                      \
-      for (const auto &e : str_list) {                                                                 \
-        columns_names += e + ",";                                                                      \
+      static QStringList primary_key_list{};                                                           \
+      LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_PK_LIST)                                        \
+                                                                                                       \
+      QString where_clause{};                                                                          \
+      if (!primary_key_list.empty()) {                                                                 \
+        where_clause += "WHERE ";                                                                      \
+        const auto kWhereData{internals::Join(primary_key_list, "=? AND ")};                           \
+        where_clause += kWhereData;                                                                    \
+        where_clause += "=?";                                                                          \
       }                                                                                                \
-      columns_names.removeLast();                                                                      \
-      columns_names += ")";                                                                            \
                                                                                                        \
-      SPDLOG_DEBUG("Columns names: {}", columns_names);                                                \
+      QString affect_excluded{};                                                                       \
+      for (const auto &e : columns_list) {                                                             \
+        affect_excluded += e + "=excluded." + e + ",";                                                 \
+      }                                                                                                \
+      affect_excluded.removeLast();                                                                    \
                                                                                                        \
-      str_list.clear();                                                                                \
-      str_list.emplaceFront(db::questionMarkList(val_list));                                           \
-      str_list.emplaceFront(std::move(columns_names));                                                 \
-      str_list.emplaceFront(val.db_table);                                                             \
+      auto actual_value_list_for_question_marks{val_list};                                             \
+      actual_value_list_for_question_marks.resize(val_list.size() - primary_key_list.size());          \
+                                                                                                       \
+      base_request = "INSERT INTO %0%1 VALUES%2 ON CONFLICT(%3) DO UPDATE SET %4 %5";                  \
+      QStringList str_list{};                                                                          \
+      str_list.emplaceBack(val.db_table);                                               /* #0*/        \
+      str_list.emplaceBack("(" + internals::Join(columns_list, ",") + ")");             /* #1*/        \
+      str_list.emplaceBack(db::questionMarkList(actual_value_list_for_question_marks)); /* #2*/        \
+      str_list.emplaceBack(internals::Join(primary_key_list, ","));                     /* #3*/        \
+      str_list.emplaceBack(affect_excluded);                                            /* #4*/        \
+      str_list.emplaceBack(where_clause);                                               /* #5*/        \
+                                                                                                       \
+      for (const auto &e : str_list) {                                                                 \
+        base_request = base_request.arg(e);                                                            \
+      }                                                                                                \
+      SPDLOG_DEBUG("Base request: <{}>", base_request);                                                \
     }                                                                                                  \
                                                                                                        \
-    return db::ExecQuery(db, "INSERT OR REPLACE INTO %0%1 VALUES%2", str_list, val_list);              \
+    return db::ExecQuery(db, base_request, {}, val_list);                                              \
   }
 
 #define DB_FUNCTION_STEP_PRIMARY_KEY_LIST(name, DB_TYPE, IS_PRIMARY) \

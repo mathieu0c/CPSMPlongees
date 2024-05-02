@@ -10,16 +10,11 @@
     <height>586</height>
    </rect>
   </property>
-  <property name="font">
-   <font>
-    <pointsize>12</pointsize>
-   </font>
-  </property>
   <property name="windowTitle">
    <string>Sea Of Thieves Cooker</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QLabel{color:rgb(25,180,255);font-weight: bold;}</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -230,6 +225,12 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>gui::DiveSearch</class>
+   <extends>QWidget</extends>
+   <header>Gui/DiveSearch.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>gui::DiverSearch</class>
    <extends>QWidget</extends>
    <header>Gui/DiverSearch.hpp</header>
@@ -239,12 +240,6 @@
    <class>gui::DiverEdit</class>
    <extends>QWidget</extends>
    <header>Gui/DiverEdit.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>gui::DiveSearch</class>
-   <extends>QWidget</extends>
-   <header>Gui/DiveSearch.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

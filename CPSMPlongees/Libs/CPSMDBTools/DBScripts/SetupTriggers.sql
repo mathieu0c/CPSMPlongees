@@ -1,4 +1,4 @@
-CREATE TRIGGER remove_unused_address AFTER DELETE
+CREATE TRIGGER IF NOT EXISTS remove_unused_address AFTER DELETE
 ON Divers
 BEGIN
  DELETE FROM DiversAddresses
