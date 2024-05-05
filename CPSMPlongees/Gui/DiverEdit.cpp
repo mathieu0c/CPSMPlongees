@@ -240,11 +240,12 @@ void DiverEdit::OnOk() {
     }
 
     if (kDiverWithAddressCount > 1) {
-      auto ans{QMessageBox::warning(
-          this,
-          tr("Attention"),
-          tr("La modification de l'adresse va impacter %0 plongeurs.\nÊtes-vous sûr ?").arg(kDiverWithAddressCount),
-          QMessageBox::Ok | QMessageBox::Cancel)};
+      auto ans{
+          QMessageBox::warning(this,
+                               tr("Attention"),
+                               tr("La modification de l'adresse va impacter %0 autre(s) plongeur(s).\nÊtes-vous sûr ?")
+                                   .arg(kDiverWithAddressCount - 1),
+                               QMessageBox::Ok | QMessageBox::Cancel)};
       if (ans == QMessageBox::Cancel) {
         return;
       }
@@ -254,6 +255,7 @@ void DiverEdit::OnOk() {
   SPDLOG_DEBUG("Diver edited: {}", m_diver);
   SPDLOG_DEBUG("Address edited: {}", m_address);
   emit DiverEdited({{m_diver, m_address}});
+  m_original_address = m_address;
 }
 
 void DiverEdit::OnCancelled() {
