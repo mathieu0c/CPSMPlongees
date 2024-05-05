@@ -101,6 +101,9 @@ TEST(CPSMTests, DiverAddress) {
                          {});
     return tmp;
   }};
+  auto lambda_get_address_count_in_address_table{
+      []() { return db::queryCount(dbt, "SELECT address_id FROM %0;", {db::DiverAddress::db_table}, {}); }};
+
   const int32_t kTargetAddressId{2};
   const std::array kTargetDiverIds{2, 5};
 
@@ -127,6 +130,21 @@ TEST(CPSMTests, DiverAddress) {
   EXPECT_TRUE(kDiverAddressCountAfter2.find(kTargetAddressId) == kDiverAddressCountAfter2.end());
   EXPECT_EQ(lambda_get_target_address_count(), 0);
 
+  SPDLOG_DEBUG("\n\n#############################");
+
+  db::DiverAddress new_address{};
+  new_address.address = "TEST_ADDR";
+  new_address.city = "Lorient";
+  new_address.postal_code = "9999";
+  const auto kCountBefore{lambda_get_address_count_in_address_table()};
+  auto val_opt{db::UpdateDiverAddress(dbt, new_address)};
+  SPDLOG_DEBUG("Extracted: {}", *val_opt);
+
+  EXPECT_EQ(lambda_get_address_count_in_address_table(), kCountBefore + 1);
+  EXPECT_EQ(val_opt->address_id, 6);
+
+  SPDLOG_DEBUG("#############################\n\n");
+
   // ---------
 
   const auto kDiverList{
@@ -142,4 +160,34 @@ TEST(CPSMTests, DiverAddress) {
   for (const auto& e : kAddressList) {
     SPDLOG_INFO("{}", e);
   }
+}
+
+TEST(CPSMTests, DiverAndItsAddress) {
+  REINIT_DB;
+
+  const auto kOriginalDiverOpt{db::GetDiverFromId(dbt, {1})};
+  ASSERT_TRUE(kOriginalDiverOpt);
+
+  const auto kOriginalDiver{kOriginalDiverOpt.value()};
+  auto diver{kOriginalDiver};
+
+  const auto kOriginalAddressOpt{db::GetDiverAddressFromId(dbt, {diver.address_id})};
+  ASSERT_TRUE(kOriginalAddressOpt);
+
+  const auto kOriginalAddress{kOriginalAddressOpt.value()};
+  auto address{kOriginalAddress};
+  address.address_id = {};
+  address.address += "_MODIFIED";
+
+  const auto kStoreResult{db::StoreDiverAndItsAddress(diver, address)};
+  ASSERT_TRUE(kStoreResult);
+
+  const auto& kStoredDiver{kStoreResult.stored_diver};
+  const auto& kStoredAddress{kStoreResult.stored_address};
+  SPDLOG_DEBUG("\nStored diver: {}\nStored diver address:{}", kStoredDiver, kStoredAddress);
+
+  EXPECT_NE(kStoredAddress.address_id, address.address_id); /* An id should have been affected */
+  EXPECT_EQ(kStoredDiver.address_id, kStoredAddress.address_id);
+  diver.address_id = kStoredAddress.address_id; /* Appart from this, both should be equals */
+  EXPECT_EQ(diver, kStoredDiver);
 }

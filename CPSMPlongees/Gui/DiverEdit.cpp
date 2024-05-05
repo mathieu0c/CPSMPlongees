@@ -47,6 +47,7 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   lambda_connect_editing_finished(ui->de_birthDate, &db::Diver::birth_date);
   lambda_connect_editing_finished(ui->le_license, &db::Diver::license_number);
   lambda_connect_editing_finished(ui->de_registration, &db::Diver::registration_date);
+  lambda_connect_editing_finished(ui->de_member, &db::Diver::member_date);
   lambda_connect_editing_finished(ui->de_certificate, &db::Diver::certif_date);
   lambda_connect_editing_finished(ui->le_address, &db::DiverAddress::address);
   lambda_connect_editing_finished(ui->le_city, &db::DiverAddress::city);
@@ -54,15 +55,17 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   lambda_connect_editing_finished(ui->le_mail, &db::Diver::email);
   lambda_connect_editing_finished(ui->le_phone, &db::Diver::phone_number);
 
+  /* -- Manual connections -- */
+
+  /* Gear */
   lambda_connect_checkbox(ui->cb_computer, &db::Diver::gear_computer);
   lambda_connect_checkbox(ui->cb_jacket, &db::Diver::gear_jacket);
   lambda_connect_checkbox(ui->cb_regulator, &db::Diver::gear_regulator);
   lambda_connect_checkbox(ui->cb_suit, &db::Diver::gear_suit);
-
   connect(ui->cb_gear_global, &QCheckBox::clicked, this, &DiverEdit::SetAllGearChecked);
 
+  /* Payments */
   connect(ui->sb_payment, &QSpinBox::valueChanged, this, &DiverEdit::OnPaymentValueChanged);
-
   connect(ui->pb_paymentPlus, &QPushButton::clicked, this, [this]() {
     ui->sb_payment->setValue(ui->sb_payment->value() + 1);
   });
@@ -70,8 +73,19 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
     ui->sb_payment->setValue(ui->sb_payment->value() - 1);
   });
 
+  /* Level */
   connect(ui->cb_level, &QComboBox::activated, this, [this](int index) {
     m_diver.diver_level_id = ui->cb_level->itemData(index).toInt();
+  });
+
+  /* Member */
+  connect(ui->cb_member, &QCheckBox::toggled, this, [this](bool checked) { ui->de_member->setEnabled(checked); });
+  connect(ui->cb_member, &QCheckBox::toggled, this, [this](bool checked) { m_diver.is_member = checked; });
+
+  /* Address */
+  connect(ui->pb_quit_family, &QPushButton::clicked, this, [this]() {
+    m_address.address_id = {};
+    SetAddress(m_address);
   });
 }
 
@@ -98,6 +112,30 @@ bool DiverEdit::SetDiver(const db::Diver &diver, int dive_count) {
   return kSuccess;
 }
 
+void DiverEdit::SetAddress(const db::DiverAddress &address) {
+  m_address = address;
+  m_diver.address_id = address.address_id; /* Shouldn't be required... But meh */
+  UpdateAddressUi();
+
+  auto database{db::Def()};
+  const auto kDiverWithAddressCount{
+      db::queryCount(database,
+                     "SELECT %0 FROM %1 WHERE %2 = ?",
+                     {db::Diver::diver_id_col, db::Diver::db_table, db::Diver::address_id_col},
+                     {m_diver.address_id})};
+  if (kDiverWithAddressCount > 1) {
+    ui->lbl_disp_diver_with_address_count->setVisible(true);
+    ui->lbl_diver_with_address_count->setVisible(true);
+    ui->pb_quit_family->setVisible(true);
+  } else {
+    ui->lbl_disp_diver_with_address_count->setVisible(false);
+    ui->lbl_diver_with_address_count->setVisible(false);
+    ui->pb_quit_family->setVisible(false);
+  }
+
+  ui->lbl_diver_with_address_count->setText(QString::number(kDiverWithAddressCount - 1));
+}
+
 bool DiverEdit::SetDiverAddressFromId(int address_id) {
   if (address_id <= 0) {
     m_diver.address_id = 0;
@@ -111,17 +149,19 @@ bool DiverEdit::SetDiverAddressFromId(int address_id) {
     UpdateAddressUi();
     return false;
   }
-  m_address = kAddr.value();
-  UpdateAddressUi();
+  SetAddress(kAddr.value());
   return true;
 }
 
 void DiverEdit::UpdateUiFromDiver() {
   ui->le_firstname->setText(m_diver.first_name);
-  ui->le_lastname->setText(m_diver.last_name);
+  ui->le_lastname->setText(m_diver.last_name.toUpper());
   ui->de_birthDate->setDate(m_diver.birth_date);
   ui->le_license->setText(m_diver.license_number);
   ui->de_registration->setDate(m_diver.registration_date);
+  ui->cb_member->setChecked(m_diver.is_member);
+  ui->de_member->setEnabled(m_diver.is_member);
+  ui->de_member->setDate(m_diver.member_date);
   SetLevelComboboxFromLevelId(m_diver.diver_level_id);
   ui->de_certificate->setDate(m_diver.certif_date);
 

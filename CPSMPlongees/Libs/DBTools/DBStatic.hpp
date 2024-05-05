@@ -118,65 +118,81 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
   }
 
 #define DB_INSERT_OR_UPDATE_STEP_COLUMNS_LIST(name, DB_TYPE, IS_PRIMARY) columns_list.append(val.name##_col);
-#define DB_INSERT_OR_UPDATE_STEP_VAL_LIST(name, DB_TYPE, IS_PRIMARY) val_list.append(val.name);
+#define DB_INSERT_OR_UPDATE_STEP_VAL_LIST(name, DB_TYPE, IS_PRIMARY)           \
+  if constexpr (!IS_PRIMARY) {                                                 \
+    val_list.append(val.name);                                                 \
+  } else {                                                                     \
+    val_list.append(val.name == decltype(val.name){} ? QVariant{} : val.name); \
+  }
 #define DB_INSERT_OR_UPDATE_STEP_VAL_LIST_PK(name, DB_TYPE, IS_PRIMARY) \
-  if constexpr (IS_PRIMARY) val_list.append(val.name);
+  if constexpr (IS_PRIMARY) val_list.append(val.name == decltype(val.name){} ? QVariant{} : val.name);
 #define DB_INSERT_OR_UPDATE_STEP_PK_LIST(name, DB_TYPE, IS_PRIMARY) \
   if constexpr (IS_PRIMARY) primary_key_list.append(val.name##_col);
 
-#define DB_INSERT_OR_UPDATE_FUNCTION(ClassName, invalid_val_condition, LIST_OF_VARIABLES_MACRO)        \
-  [[nodiscard]] inline bool Update##ClassName(QSqlDatabase db, const ClassName &val) {                 \
-    if (invalid_val_condition) {                                                                       \
-      /* Cannot insert or update an invalid value*/                                                    \
-      SPDLOG_DEBUG("Failed to validate condition !({}) with object: {}", #invalid_val_condition, val); \
-      return false;                                                                                    \
-    }                                                                                                  \
-                                                                                                       \
-    QVector<QVariant> val_list{};                                                                      \
-    LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_VAL_LIST)                                         \
-    LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_VAL_LIST_PK)                                      \
-                                                                                                       \
-    static QString base_request{};                                                                     \
-    if (base_request.isEmpty()) {                                                                      \
-      QStringList columns_list{};                                                                      \
-      LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_COLUMNS_LIST)                                   \
-                                                                                                       \
-      static QStringList primary_key_list{};                                                           \
-      LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_PK_LIST)                                        \
-                                                                                                       \
-      QString where_clause{};                                                                          \
-      if (!primary_key_list.empty()) {                                                                 \
-        where_clause += "WHERE ";                                                                      \
-        const auto kWhereData{internals::Join(primary_key_list, "=? AND ")};                           \
-        where_clause += kWhereData;                                                                    \
-        where_clause += "=?";                                                                          \
-      }                                                                                                \
-                                                                                                       \
-      QString affect_excluded{};                                                                       \
-      for (const auto &e : columns_list) {                                                             \
-        affect_excluded += e + "=excluded." + e + ",";                                                 \
-      }                                                                                                \
-      affect_excluded.removeLast();                                                                    \
-                                                                                                       \
-      auto actual_value_list_for_question_marks{val_list};                                             \
-      actual_value_list_for_question_marks.resize(val_list.size() - primary_key_list.size());          \
-                                                                                                       \
-      base_request = "INSERT INTO %0%1 VALUES%2 ON CONFLICT(%3) DO UPDATE SET %4 %5";                  \
-      QStringList str_list{};                                                                          \
-      str_list.emplaceBack(val.db_table);                                               /* #0*/        \
-      str_list.emplaceBack("(" + internals::Join(columns_list, ",") + ")");             /* #1*/        \
-      str_list.emplaceBack(db::questionMarkList(actual_value_list_for_question_marks)); /* #2*/        \
-      str_list.emplaceBack(internals::Join(primary_key_list, ","));                     /* #3*/        \
-      str_list.emplaceBack(affect_excluded);                                            /* #4*/        \
-      str_list.emplaceBack(where_clause);                                               /* #5*/        \
-                                                                                                       \
-      for (const auto &e : str_list) {                                                                 \
-        base_request = base_request.arg(e);                                                            \
-      }                                                                                                \
-      SPDLOG_DEBUG("Base request: <{}>", base_request);                                                \
-    }                                                                                                  \
-                                                                                                       \
-    return db::ExecQuery(db, base_request, {}, val_list);                                              \
+#define DB_INSERT_OR_UPDATE_FUNCTION(ClassName, invalid_val_condition, LIST_OF_VARIABLES_MACRO)            \
+  [[nodiscard]] inline std::optional<ClassName> Update##ClassName(QSqlDatabase db, const ClassName &val) { \
+    if (invalid_val_condition) {                                                                           \
+      /* Cannot insert or update an invalid value*/                                                        \
+      /*SPDLOG_DEBUG("Failed to validate condition !({}) with object: {}", #invalid_val_condition, val);*/ \
+      SPDLOG_DEBUG("We should insert the object!", #invalid_val_condition, val);                           \
+      /*return false*/;                                                                                    \
+    }                                                                                                      \
+                                                                                                           \
+    QVector<QVariant> val_list{};                                                                          \
+    LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_VAL_LIST)                                             \
+    LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_VAL_LIST_PK)                                          \
+                                                                                                           \
+    static QString base_request{};                                                                         \
+    if (base_request.isEmpty()) {                                                                          \
+      QStringList columns_list{};                                                                          \
+      LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_COLUMNS_LIST)                                       \
+                                                                                                           \
+      static QStringList primary_key_list{};                                                               \
+      LIST_OF_VARIABLES_MACRO(DB_INSERT_OR_UPDATE_STEP_PK_LIST)                                            \
+                                                                                                           \
+      QString where_clause{};                                                                              \
+      if (!primary_key_list.empty()) {                                                                     \
+        where_clause += "WHERE ";                                                                          \
+        const auto kWhereData{internals::Join(primary_key_list, "=? AND ")};                               \
+        where_clause += kWhereData;                                                                        \
+        where_clause += "=?";                                                                              \
+      }                                                                                                    \
+                                                                                                           \
+      QString affect_excluded{};                                                                           \
+      for (const auto &e : columns_list) {                                                                 \
+        affect_excluded += e + "=excluded." + e + ",";                                                     \
+      }                                                                                                    \
+      affect_excluded.removeLast();                                                                        \
+                                                                                                           \
+      auto actual_value_list_for_question_marks{val_list};                                                 \
+      actual_value_list_for_question_marks.resize(val_list.size() - primary_key_list.size());              \
+      const auto kFormattedColumnsList{internals::Join(columns_list, ",")};                                \
+                                                                                                           \
+      base_request = "INSERT INTO %0%1 VALUES%2 ON CONFLICT(%3) DO UPDATE SET %4 %5 RETURNING %6";         \
+      QStringList str_list{};                                                                              \
+      str_list.emplaceBack(val.db_table);                                               /* #0*/            \
+      str_list.emplaceBack("(" + kFormattedColumnsList + ")");                          /* #1*/            \
+      str_list.emplaceBack(db::questionMarkList(actual_value_list_for_question_marks)); /* #2*/            \
+      str_list.emplaceBack(internals::Join(primary_key_list, ","));                     /* #3*/            \
+      str_list.emplaceBack(affect_excluded);                                            /* #4*/            \
+      str_list.emplaceBack(where_clause);                                               /* #5*/            \
+      str_list.emplaceBack(kFormattedColumnsList);                                      /* #6*/            \
+                                                                                                           \
+      for (const auto &e : str_list) {                                                                     \
+        base_request = base_request.arg(e);                                                                \
+      }                                                                                                    \
+      SPDLOG_DEBUG("Base request: <{}>", base_request);                                                    \
+    }                                                                                                      \
+                                                                                                           \
+    auto result_opt{db::ExecQuery(db, base_request, {}, val_list)};                                        \
+    if (!result_opt) {                                                                                     \
+      return {};                                                                                           \
+    }                                                                                                      \
+    if (result_opt->next()) {                                                                              \
+      const auto kExtracted{db::Extract##ClassName(*result_opt)};                                          \
+      return kExtracted;                                                                                   \
+    }                                                                                                      \
+    return {};                                                                                             \
   }
 
 #define DB_FUNCTION_STEP_PRIMARY_KEY_LIST(name, DB_TYPE, IS_PRIMARY) \

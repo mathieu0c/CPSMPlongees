@@ -29,8 +29,8 @@ MainWindow::MainWindow(QWidget *parent)
       m_test_model{this} {
   ui->setupUi(this);
 
-  const auto kLoadDbSuccess{cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath)};
-  // const auto kLoadDbSuccess{cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath)};
+  // const auto kLoadDbSuccess{cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath)};
+  const auto kLoadDbSuccess{cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath)};
   if (!kLoadDbSuccess) {
     CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotInitDB);
   }
@@ -58,9 +58,9 @@ MainWindow::MainWindow(QWidget *parent)
   m_test_model.LoadFromDB();
   ui->tw_test->setModel(&m_test_model);
 
-  const auto kTmpDiver{db::GetDiverFromId(db::Def(), {2})};
+  const auto kTmpDiver{db::GetDiverFromId(db::Def(), {5})};
   if (!kTmpDiver) {
-    SPDLOG_ERROR("Failed to retrieve diver with id=2");
+    SPDLOG_ERROR("Failed to retrieve diver with id=5");
   }
   SPDLOG_INFO("Retrieved diver: {}", kTmpDiver.value());
 
@@ -83,32 +83,31 @@ void MainWindow::OnDiverEdited(std::optional<std::tuple<db::Diver, db::DiverAddr
   const auto &[diver, address]{edit_opt.value()};
   auto database{db::Def()};
 
-  auto lambda_on_failed_save_of_diver{[&, this]() {
-    QMessageBox::critical(
-        this,
-        tr("Erreur"),
-        tr("Impossible de sauvegarder les modifications apportées à %0 %1\n(Contacter le support si besoin)")
-            .arg(diver.last_name, diver.first_name));
-    SPDLOG_ERROR(
-        "Failed to save driver: <{}> and address <{}> to database.\nError: <{}>", diver, address, database.lastError());
-  }};
-
-  if (!database.transaction()) {
-    lambda_on_failed_save_of_diver();
-    return;
+  const auto kStoreResult{db::StoreDiverAndItsAddress(diver, address)};
+  if (kStoreResult) {
+    return; /* Everything was fine */
   }
-  bool success{true};
-  success = success && db::UpdateDiver(database, diver);
-  success = success && db::UpdateDiverAddress(database, address);
+  /* else */
 
-  if (!success) {
-    if (!database.rollback()) {
+  QMessageBox::critical(this,
+                        tr("Erreur"),
+                        tr("Impossible de sauvegarder les modifications apportées à %0 %1\n(Contacter le support si "
+                           "besoin: ErrCode=<%2>)")
+                            .arg(diver.last_name, diver.first_name)
+                            .arg(kStoreResult.err_code));
+  SPDLOG_ERROR("Failed to save driver: <{}> and address <{}> to database.\nErrCode=<{}>\nError: <{}>",
+               diver,
+               address,
+               kStoreResult.err_code,
+               database.lastError());
+
+  using ErrCode = db::StoreDiverAndAddressResult::ErrCode;
+  switch (kStoreResult.err_code) {
+    case ErrCode::kFailedToRollback: {
       CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotRollback);
+      break;
     }
-    lambda_on_failed_save_of_diver();
-  } else {
-    if (!database.commit()) {
-      lambda_on_failed_save_of_diver();
+    default: {
     }
   }
 }

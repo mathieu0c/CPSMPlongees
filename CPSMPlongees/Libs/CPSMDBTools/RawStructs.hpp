@@ -2,6 +2,7 @@
 
 #include <DBStatic.hpp>
 #include <DBUtils.hpp>
+#include <tmp.hpp>
 
 #include "Database.hpp"
 
@@ -20,13 +21,15 @@ namespace db {
   COLUMN(certif_date, DATE, false);       \
   COLUMN(diver_level_id, INTEGER, false); \
   COLUMN(registration_date, DATE, false); \
+  COLUMN(is_member, INTEGER, false);      \
+  COLUMN(member_date, DATE, false);       \
   COLUMN(paid_dives, INTEGER, false);     \
   COLUMN(gear_regulator, INTEGER, false); \
   COLUMN(gear_suit, INTEGER, false);      \
   COLUMN(gear_computer, INTEGER, false);  \
   COLUMN(gear_jacket, INTEGER, false);
 DB_DECLARE_STRUCT(Diver, Divers, val.diver_id <= 0, Diver_VAR_LIST)
-int GetDiverDiveCount(const Diver &diver);
+int GetDiverDiveCount(const Diver& diver);
 
 #define DiverAddress_VAR_LIST(COLUMN) \
   COLUMN(address_id, INTEGER, true);  \
@@ -34,6 +37,33 @@ int GetDiverDiveCount(const Diver &diver);
   COLUMN(postal_code, TEXT, false);   \
   COLUMN(city, TEXT, false);
 DB_DECLARE_STRUCT(DiverAddress, DiversAddresses, val.address_id <= 0, DiverAddress_VAR_LIST)
+
+/* Store a diver and its address... The address gets priority on the address_id of both elements.
+ * The address is stored first and the id is then set in the diver before storing it.
+ * This allows for new address to be added beforehand. The newly added address's id will then be set in the diver
+ */
+struct StoreDiverAndAddressResult {
+  enum ErrCode : int32_t {
+    kDefault = 0,
+    kOk = 1,
+    kFailedToStartTransaction = 2,
+    kFailedToStoreAddress = 3,
+    kFailedToStoreDiver = 4,
+    kFailedToRollback = 5,
+    kFailedToCommit = 6
+  };
+  Diver stored_diver;
+  DiverAddress stored_address;
+  ErrCode err_code;
+
+  bool IsOk() const {
+    return err_code == kOk;
+  }
+  operator bool() const {
+    return IsOk();
+  }
+};
+StoreDiverAndAddressResult StoreDiverAndItsAddress(db::Diver diver, const DiverAddress& address);
 
 #define Dive_VAR_LIST(COLUMN)        \
   COLUMN(dive_id, INTEGER, true);    \

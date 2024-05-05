@@ -20,6 +20,7 @@ class DiverEdit : public QWidget {
   ~DiverEdit();
 
   bool SetDiver(const db::Diver &diver, int dive_count);
+  void SetAddress(const db::DiverAddress &address);
 
  public slots:
   void OnDatabaseLoaded();

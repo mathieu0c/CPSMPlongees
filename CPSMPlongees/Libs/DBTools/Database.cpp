@@ -130,6 +130,8 @@ int queryCount(QSqlDatabase& db, QString request, const QStringList& argList, co
     query.addBindValue(e);
   }
 
+  SPDLOG_DEBUG("COUNT QUERY: {}", query);
+
   query.exec();
 
   if (!query.next()) {
@@ -223,7 +225,8 @@ int getLastInsertId(const QSqlDatabase& db, QString table) {
   return id.has_value() ? id.value() : 0;
 }
 
-bool ExecQuery(QSqlDatabase db, QString request, const QStringList& argList, const QVector<QVariant>& valList) {
+std::optional<QSqlQuery> ExecQuery(QSqlDatabase db, QString request, const QStringList& argList,
+                                   const QVector<QVariant>& valList) {
   QSqlQuery query{db};
 
   for (const auto& e : argList)  // match argument list
@@ -243,13 +246,14 @@ bool ExecQuery(QSqlDatabase db, QString request, const QStringList& argList, con
   auto err{query.lastError()};
   if (err.type() != QSqlError::ErrorType::NoError)  // if there was an error
   {
-    SPDLOG_ERROR("SQL error : {}", err);
-    return false;
+    SPDLOG_ERROR(
+        "SQL error : {}\n{}argList size: <{}>, valList size: <{}>", err, query, argList.size(), valList.size());
+    return {};
   }
 
   SPDLOG_DEBUG("{}", query);
 
-  return true;
+  return query;
 }
 
 }  // namespace db

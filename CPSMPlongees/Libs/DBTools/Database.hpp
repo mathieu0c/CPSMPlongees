@@ -46,7 +46,8 @@ bool queryDelete(QSqlDatabase& db, QString request, const QStringList& argList, 
 
 int getLastInsertId(const QSqlDatabase& db, QString table);
 
-bool ExecQuery(QSqlDatabase db, QString request, const QStringList& argList, const QVector<QVariant>& valList);
+std::optional<QSqlQuery> ExecQuery(QSqlDatabase db, QString request, const QStringList& argList,
+                                   const QVector<QVariant>& valList);
 
 //----------------------------------------------------------------
 

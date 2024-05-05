@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS Divers (
   certif_date TEXT,
   diver_level_id INTEGER,
   registration_date TEXT,
+  is_member INTEGER DEFAULT (0),
+  member_date TEXT,
   paid_dives INTEGER,
   gear_regulator INTEGER DEFAULT (0),
   gear_suit INTEGER DEFAULT (0),
