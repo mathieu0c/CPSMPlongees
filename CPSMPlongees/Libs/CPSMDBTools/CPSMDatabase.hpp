@@ -1,5 +1,6 @@
 #pragma once
 
+#include <CPSMGlobals.hpp>
 #include <DBFormatting.hpp>
 #include <DBUtils.hpp>
 
@@ -12,18 +13,17 @@ bool InitDB(const auto& kFileName) {
   SPDLOG_INFO("Using db file: {}", QFileInfo{kFileName}.absoluteFilePath());
 
 #ifndef CMAKE_DEBUG_MODE
-  if constexpr (kDeleteOnCreation) {
+  if constexpr (kDeleteOnCreation && !consts::kIsBuiltAsMockup) {
     SPDLOG_WARN("We don't want to delete the database when we are not in debug!!!!");
     throw std::runtime_error{"Trying to delete DB in non-debug mode"};
   }
 #endif
 
-  if constexpr (kDeleteOnCreation) {
-#ifdef CMAKE_DEBUG_MODE
-    SPDLOG_WARN("Deleting DB file: {}: success? {}", kFileName, QFile::remove(kFileName));
-#else
-#warning Requesting to delete DB on creation even when not in DEBUG mode
+  if constexpr (kDeleteOnCreation && consts::kIsBuiltAsMockup) {
+#ifndef CMAKE_DEBUG_MODE
+#warning "Requesting to delete db file in DEBUG mode"
 #endif
+    SPDLOG_WARN("Deleting DB file: {}: success? {}", kFileName, QFile::remove(kFileName));
   }
 
   if (!::db::OpenLocal(kFileName)) {
@@ -47,7 +47,7 @@ bool InitDB(const auto& kFileName) {
     SPDLOG_INFO("Successfully executed DB triggers creation script");
   }
 
-  if constexpr (kFillDBWithTestsValues) {
+  if constexpr (kFillDBWithTestsValues && consts::kIsBuiltAsMockup) {
 #ifndef CMAKE_DEBUG_MODE
 #warning Requesting to fill db with tests values not in DEBUG mode
 #endif

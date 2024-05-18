@@ -72,17 +72,17 @@ constexpr auto GetTypeForDBType()
 }
 
 template <DBType kDBType>
-using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
+using GetTypeFromDB = typename decltype(::db::GetTypeForDBType<kDBType>())::Type;
 
 #define DB_ELEM(name, db_type, IS_PRIMARY) \
-  GetTypeFromDB<db_type> name{};           \
+  ::db::GetTypeFromDB<db_type> name{};     \
   static constexpr auto name##_col {       \
     #name                                  \
   }
 
 #define DB_PRINT_NAME_AND_VALUE(name, DB_TYPE, IS_PRIMARY) \
   os << "." #name "=";                                     \
-  if constexpr (IsString<decltype(val.name)>()) {          \
+  if constexpr (::db::IsString<decltype(val.name)>()) {    \
     os << "\"" << val.name << "\",";                       \
   } else {                                                 \
     os << val.name << ",";                                 \
@@ -106,9 +106,9 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
 
 // #define DB_EXTRACT_FUNCTION_LINE(name, DB_TYPE, IS_PRIMARY) out.name =
 // q.value(out.name##_col).value<GetTypeFromDB<DB_TYPE>>()
-#define DB_EXTRACT_FUNCTION_LINE(name, DB_TYPE, IS_PRIMARY)  \
-  if (auto i = q.record().indexOf(out.name##_col); i > -1) { \
-    out.name = q.value(i).value<GetTypeFromDB<DB_TYPE>>();   \
+#define DB_EXTRACT_FUNCTION_LINE(name, DB_TYPE, IS_PRIMARY)      \
+  if (auto i = q.record().indexOf(out.name##_col); i > -1) {     \
+    out.name = q.value(i).value<::db::GetTypeFromDB<DB_TYPE>>(); \
   }
 #define DB_EXTRACT_FUNCTION(ClassName, LIST_OF_VARIABLES_MACRO) \
   inline ClassName Extract##ClassName(const QSqlQuery &q) {     \
@@ -153,7 +153,7 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
       QString where_clause{};                                                                              \
       if (!primary_key_list.empty()) {                                                                     \
         where_clause += "WHERE ";                                                                          \
-        const auto kWhereData{internals::Join(primary_key_list, "=? AND ")};                               \
+        const auto kWhereData{::db::internals::Join(primary_key_list, "=? AND ")};                         \
         where_clause += kWhereData;                                                                        \
         where_clause += "=?";                                                                              \
       }                                                                                                    \
@@ -166,24 +166,24 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
                                                                                                            \
       auto actual_value_list_for_question_marks{val_list};                                                 \
       actual_value_list_for_question_marks.resize(val_list.size() - primary_key_list.size());              \
-      const auto kFormattedColumnsList{internals::Join(columns_list, ",")};                                \
+      const auto kFormattedColumnsList{::db::internals::Join(columns_list, ",")};                          \
                                                                                                            \
       base_request = "INSERT INTO %0%1 VALUES%2 ON CONFLICT(%3) DO UPDATE SET %4 %5 RETURNING %6";         \
       QStringList str_list{};                                                                              \
-      str_list.emplaceBack(val.db_table);                                               /* #0*/            \
-      str_list.emplaceBack("(" + kFormattedColumnsList + ")");                          /* #1*/            \
-      str_list.emplaceBack(db::questionMarkList(actual_value_list_for_question_marks)); /* #2*/            \
-      str_list.emplaceBack(internals::Join(primary_key_list, ","));                     /* #3*/            \
-      str_list.emplaceBack(affect_excluded);                                            /* #4*/            \
-      str_list.emplaceBack(where_clause);                                               /* #5*/            \
-      str_list.emplaceBack(kFormattedColumnsList);                                      /* #6*/            \
+      str_list.emplaceBack(val.db_table);                                                 /* #0*/          \
+      str_list.emplaceBack("(" + kFormattedColumnsList + ")");                            /* #1*/          \
+      str_list.emplaceBack(::db::questionMarkList(actual_value_list_for_question_marks)); /* #2*/          \
+      str_list.emplaceBack(::db::internals::Join(primary_key_list, ","));                 /* #3*/          \
+      str_list.emplaceBack(affect_excluded);                                              /* #4*/          \
+      str_list.emplaceBack(where_clause);                                                 /* #5*/          \
+      str_list.emplaceBack(kFormattedColumnsList);                                        /* #6*/          \
                                                                                                            \
       for (const auto &e : str_list) {                                                                     \
         base_request = base_request.arg(e);                                                                \
       }                                                                                                    \
     }                                                                                                      \
                                                                                                            \
-    auto result_opt{db::ExecQuery(db, base_request, {}, val_list)};                                        \
+    auto result_opt{::db::ExecQuery(db, base_request, {}, val_list)};                                      \
     if (!result_opt) {                                                                                     \
       return {};                                                                                           \
     }                                                                                                      \
@@ -235,7 +235,7 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
       request += ";";                                                                                  \
     }                                                                                                  \
                                                                                                        \
-    return db::queryDelete(db, request, {}, val_list);                                                 \
+    return ::db::queryDelete(db, request, {}, val_list);                                               \
   }
 
 #define DB_GET_FROM_ID_FUNCTION(ClassName, LIST_OF_VARIABLES_MACRO)                                                    \
@@ -263,7 +263,7 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
       request += ";";                                                                                                  \
     }                                                                                                                  \
                                                                                                                        \
-    return db::readFromDB<ClassName>(db, db::Extract##ClassName, request, {}, primary_keys_values);                    \
+    return ::db::readFromDB<ClassName>(db, db::Extract##ClassName, request, {}, primary_keys_values);                  \
   }
 
 #define DB_EQUAL_OPERATOR_FUNCTION_STEP(name, DB_TYPE, IS_PRIMARY) \

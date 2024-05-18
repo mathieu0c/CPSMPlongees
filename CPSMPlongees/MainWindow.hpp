@@ -5,12 +5,8 @@
 #include <QMainWindow>
 #include <QPushButton>
 #include <UpdateHandler.hpp>
-#include <functional>
-#include <unordered_map>
 
 #include <Models/DiversViewModel.hpp>
-
-#include "Models/table_model_test.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -38,7 +34,7 @@ class MainWindow : public QMainWindow {
 
  private slots:
   void EditDiver(const cpsm::DiverWithDiveCount &diver);
-  void OnDiverEdited(std::optional<std::tuple<db::Diver, db::DiverAddress>> edit_opt);
+  void OnDiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress>> edit_opt);
 
   void on_action_check_updates_triggered();
 

@@ -38,15 +38,15 @@ TEST(CPSMTests, DBInitTest) {
 TEST(CPSMTests, MultiplePrimaryKeys_DivesMembers) {
   REINIT_DB;
 
-  using db::DiveMember;
-  using db::Diver;
+  using cpsm::db::DiveMember;
+  using cpsm::db::Diver;
 
   DiveMember test{1, 2, 1};
   SPDLOG_DEBUG("{}", test);
   ASSERT_TRUE(UpdateDiveMember(dbt, test));
   //  ASSERT_TRUE(false);
 
-  auto kTestRead{db::GetDiveMemberFromId(dbt, {1, 2})};
+  auto kTestRead{cpsm::db::GetDiveMemberFromId(dbt, {1, 2})};
   if (!kTestRead) {
     SPDLOG_WARN("Failed to read DiveMember");
   } else {
@@ -68,13 +68,13 @@ TEST(CPSMTests, DiveDeletion) {
   count = db::queryCount(dbt, "SELECT * FROM DivesMembers WHERE dive_id = ?", {}, {kDiveTarget});
   ASSERT_EQ(count, 0);
 
-  using db::Diver;
+  using cpsm::db::Diver;
   Diver tmp{};
   tmp.diver_id++;
   tmp.email = "Biduile@machin.fr";
 
   utils::Chrono<std::chrono::microseconds> req_time{};
-  auto results{db::readLFromDB<Diver>(dbt, db::ExtractDiver, "SELECT * FROM %0", {Diver::db_table}, {})};
+  auto results{db::readLFromDB<Diver>(dbt, cpsm::db::ExtractDiver, "SELECT * FROM %0", {Diver::db_table}, {})};
   SPDLOG_DEBUG("Got divers in {}µs", req_time.Time());
 
   for (const auto& e : results) {
@@ -102,14 +102,14 @@ TEST(CPSMTests, DiverAddress) {
     return tmp;
   }};
   auto lambda_get_address_count_in_address_table{
-      []() { return db::queryCount(dbt, "SELECT address_id FROM %0;", {db::DiverAddress::db_table}, {}); }};
+      []() { return db::queryCount(dbt, "SELECT address_id FROM %0;", {cpsm::db::DiverAddress::db_table}, {}); }};
 
   const int32_t kTargetAddressId{2};
   const std::array kTargetDiverIds{2, 5};
 
   auto lambda_get_target_address_count{[]() {
     return db::queryCount(
-        dbt, "SELECT address_id FROM %0 WHERE address_id = ?;", {db::DiverAddress::db_table}, {kTargetAddressId});
+        dbt, "SELECT address_id FROM %0 WHERE address_id = ?;", {cpsm::db::DiverAddress::db_table}, {kTargetAddressId});
   }};
 
   const auto kDiverAddressCountBefore{lambda_get_address_count()};
@@ -118,26 +118,26 @@ TEST(CPSMTests, DiverAddress) {
   EXPECT_EQ(kDiverAddressCountBefore.at(kTargetAddressId), 2);
   EXPECT_EQ(lambda_get_target_address_count(), 1);
 
-  EXPECT_TRUE(
-      db::queryDelete(dbt, "DELETE FROM %0 WHERE diver_id = ?;", {db::Diver::db_table}, {kTargetDiverIds.back()}));
+  EXPECT_TRUE(db::queryDelete(
+      dbt, "DELETE FROM %0 WHERE diver_id = ?;", {cpsm::db::Diver::db_table}, {kTargetDiverIds.back()}));
   const auto kDiverAddressCountAfter{lambda_get_address_count()};
   EXPECT_EQ(kDiverAddressCountAfter.at(kTargetAddressId), 1);
   EXPECT_EQ(lambda_get_target_address_count(), 1);
 
-  EXPECT_TRUE(
-      db::queryDelete(dbt, "DELETE FROM %0 WHERE diver_id = ?;", {db::Diver::db_table}, {kTargetDiverIds.front()}));
+  EXPECT_TRUE(db::queryDelete(
+      dbt, "DELETE FROM %0 WHERE diver_id = ?;", {cpsm::db::Diver::db_table}, {kTargetDiverIds.front()}));
   const auto kDiverAddressCountAfter2{lambda_get_address_count()};
   EXPECT_TRUE(kDiverAddressCountAfter2.find(kTargetAddressId) == kDiverAddressCountAfter2.end());
   EXPECT_EQ(lambda_get_target_address_count(), 0);
 
   SPDLOG_DEBUG("\n\n#############################");
 
-  db::DiverAddress new_address{};
+  cpsm::db::DiverAddress new_address{};
   new_address.address = "TEST_ADDR";
   new_address.city = "Lorient";
   new_address.postal_code = "9999";
   const auto kCountBefore{lambda_get_address_count_in_address_table()};
-  auto val_opt{db::UpdateDiverAddress(dbt, new_address)};
+  auto val_opt{cpsm::db::UpdateDiverAddress(dbt, new_address)};
   SPDLOG_DEBUG("Extracted: {}", *val_opt);
 
   EXPECT_EQ(lambda_get_address_count_in_address_table(), kCountBefore + 1);
@@ -147,16 +147,16 @@ TEST(CPSMTests, DiverAddress) {
 
   // ---------
 
-  const auto kDiverList{
-      db::readLFromDB<db::Diver>(dbt, db::ExtractDiver, "SELECT * FROM %0", {db::Diver::db_table}, {})};
+  const auto kDiverList{db::readLFromDB<cpsm::db::Diver>(
+      dbt, cpsm::db::ExtractDiver, "SELECT * FROM %0", {cpsm::db::Diver::db_table}, {})};
   for (const auto& e : kDiverList) {
     SPDLOG_INFO("{}", e);
   }
 
   SPDLOG_INFO("-----------");
 
-  const auto kAddressList{db::readLFromDB<db::DiverAddress>(
-      dbt, db::ExtractDiverAddress, "SELECT * FROM %0", {db::DiverAddress::db_table}, {})};
+  const auto kAddressList{db::readLFromDB<cpsm::db::DiverAddress>(
+      dbt, cpsm::db::ExtractDiverAddress, "SELECT * FROM %0", {cpsm::db::DiverAddress::db_table}, {})};
   for (const auto& e : kAddressList) {
     SPDLOG_INFO("{}", e);
   }
@@ -165,13 +165,13 @@ TEST(CPSMTests, DiverAddress) {
 TEST(CPSMTests, DiverAndItsAddress) {
   REINIT_DB;
 
-  const auto kOriginalDiverOpt{db::GetDiverFromId(dbt, {1})};
+  const auto kOriginalDiverOpt{cpsm::db::GetDiverFromId(dbt, {1})};
   ASSERT_TRUE(kOriginalDiverOpt);
 
   const auto kOriginalDiver{kOriginalDiverOpt.value()};
   auto diver{kOriginalDiver};
 
-  const auto kOriginalAddressOpt{db::GetDiverAddressFromId(dbt, {diver.address_id})};
+  const auto kOriginalAddressOpt{cpsm::db::GetDiverAddressFromId(dbt, {diver.address_id})};
   ASSERT_TRUE(kOriginalAddressOpt);
 
   const auto kOriginalAddress{kOriginalAddressOpt.value()};
@@ -179,7 +179,7 @@ TEST(CPSMTests, DiverAndItsAddress) {
   address.address_id = {};
   address.address += "_MODIFIED";
 
-  const auto kStoreResult{db::StoreDiverAndItsAddress(diver, address)};
+  const auto kStoreResult{cpsm::db::StoreDiverAndItsAddress(diver, address)};
   ASSERT_TRUE(kStoreResult);
 
   const auto& kStoredDiver{kStoreResult.stored_diver};

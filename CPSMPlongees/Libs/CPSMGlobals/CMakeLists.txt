@@ -2,7 +2,6 @@ set(target_name "CPSMGlobals")
 message("==== TARGET: ${target_name}")
 
 file(GLOB src_files   "*.cpp")
-file(GLOB hdr_files   "*.hpp" "*.h")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -10,14 +9,16 @@ add_library("${target_name}")
 add_library(${target_name}::${target_name} ALIAS "${target_name}")
 
 set(ADDITIONAL_SOURCES
-
+  CPSMGlobals.hpp
+  CpsmGlobalConfiguration.hpp.in
 )
+
+configure_file(CpsmGlobalConfiguration.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/CpsmGlobalConfiguration.hpp)
 
 target_sources("${target_name}"
     PRIVATE 
         "${ADDITIONAL_SOURCES}"
         "${src_files}"
-        "${hdr_files}"
         "${proto_files}"
 )
 target_link_libraries("${target_name}"
@@ -40,5 +41,9 @@ target_compile_options(${target_name} PRIVATE
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
 #    add_compile_definitions(CMAKE_DEBUG_MODE)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+
+if(CPSM_BUILD_AS_MOCKUP)
+    add_compile_definitions(CPSM_BUILD_AS_MOCKUP)
+endif()
 
 message("====> END: ${target_name}")

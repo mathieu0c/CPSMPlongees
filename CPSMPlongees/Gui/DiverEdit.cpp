@@ -14,7 +14,7 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
           Editor *edit, ReturnType (EditorBis::*editor_data_func)() const, auto MemberType::*target_member) {
         connect(edit, &Editor::editingFinished, this, [this, target_member, edit, editor_data_func]() {
           const auto &data{(edit->*editor_data_func)()};
-          if constexpr (std::is_base_of_v<db::Diver, MemberType>) {
+          if constexpr (std::is_base_of_v<cpsm::db::Diver, MemberType>) {
             m_diver.*target_member = data;
           } else {
             m_address.*target_member = data;
@@ -33,7 +33,7 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
     }
   }};
 
-  auto lambda_connect_checkbox{[this](QCheckBox *cb, int db::Diver::*target_member) {
+  auto lambda_connect_checkbox{[this](QCheckBox *cb, int cpsm::db::Diver::*target_member) {
     connect(cb, &QCheckBox::toggled, this, [this, target_member](bool checked) {
       m_diver.*target_member = checked;
       if (!m_inhibit_all_gear_checkbox_change) {
@@ -42,26 +42,26 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
     });
   }};
 
-  lambda_connect_editing_finished(ui->le_lastname, &db::Diver::last_name);
-  lambda_connect_editing_finished(ui->le_firstname, &db::Diver::first_name);
-  lambda_connect_editing_finished(ui->de_birthDate, &db::Diver::birth_date);
-  lambda_connect_editing_finished(ui->le_license, &db::Diver::license_number);
-  lambda_connect_editing_finished(ui->de_registration, &db::Diver::registration_date);
-  lambda_connect_editing_finished(ui->de_member, &db::Diver::member_date);
-  lambda_connect_editing_finished(ui->de_certificate, &db::Diver::certif_date);
-  lambda_connect_editing_finished(ui->le_address, &db::DiverAddress::address);
-  lambda_connect_editing_finished(ui->le_city, &db::DiverAddress::city);
-  lambda_connect_editing_finished(ui->le_postalCode, &db::DiverAddress::postal_code);
-  lambda_connect_editing_finished(ui->le_mail, &db::Diver::email);
-  lambda_connect_editing_finished(ui->le_phone, &db::Diver::phone_number);
+  lambda_connect_editing_finished(ui->le_lastname, &cpsm::db::Diver::last_name);
+  lambda_connect_editing_finished(ui->le_firstname, &cpsm::db::Diver::first_name);
+  lambda_connect_editing_finished(ui->de_birthDate, &cpsm::db::Diver::birth_date);
+  lambda_connect_editing_finished(ui->le_license, &cpsm::db::Diver::license_number);
+  lambda_connect_editing_finished(ui->de_registration, &cpsm::db::Diver::registration_date);
+  lambda_connect_editing_finished(ui->de_member, &cpsm::db::Diver::member_date);
+  lambda_connect_editing_finished(ui->de_certificate, &cpsm::db::Diver::certif_date);
+  lambda_connect_editing_finished(ui->le_address, &cpsm::db::DiverAddress::address);
+  lambda_connect_editing_finished(ui->le_city, &cpsm::db::DiverAddress::city);
+  lambda_connect_editing_finished(ui->le_postalCode, &cpsm::db::DiverAddress::postal_code);
+  lambda_connect_editing_finished(ui->le_mail, &cpsm::db::Diver::email);
+  lambda_connect_editing_finished(ui->le_phone, &cpsm::db::Diver::phone_number);
 
   /* -- Manual connections -- */
 
   /* Gear */
-  lambda_connect_checkbox(ui->cb_computer, &db::Diver::gear_computer);
-  lambda_connect_checkbox(ui->cb_jacket, &db::Diver::gear_jacket);
-  lambda_connect_checkbox(ui->cb_regulator, &db::Diver::gear_regulator);
-  lambda_connect_checkbox(ui->cb_suit, &db::Diver::gear_suit);
+  lambda_connect_checkbox(ui->cb_computer, &cpsm::db::Diver::gear_computer);
+  lambda_connect_checkbox(ui->cb_jacket, &cpsm::db::Diver::gear_jacket);
+  lambda_connect_checkbox(ui->cb_regulator, &cpsm::db::Diver::gear_regulator);
+  lambda_connect_checkbox(ui->cb_suit, &cpsm::db::Diver::gear_suit);
   connect(ui->cb_gear_global, &QCheckBox::clicked, this, &DiverEdit::SetAllGearChecked);
 
   /* Payments */
@@ -95,14 +95,14 @@ DiverEdit::~DiverEdit() {
 
 void DiverEdit::RefreshFromDB() {
   /* Fill diver level cb */
-  const auto kLevelList{db::readLFromDB<db::DiverLevel>(
-      db::Def(), db::ExtractDiverLevel, "SELECT * FROM %0", {db::DiverLevel::db_table}, {})};
+  const auto kLevelList{db::readLFromDB<cpsm::db::DiverLevel>(
+      db::Def(), cpsm::db::ExtractDiverLevel, "SELECT * FROM %0", {cpsm::db::DiverLevel::db_table}, {})};
   for (const auto &e : kLevelList) {
     ui->cb_level->addItem(e.level_name, e.diver_level_id);
   }
 }
 
-bool DiverEdit::SetDiver(const db::Diver &diver, int dive_count) {
+bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count) {
   m_dive_count = dive_count;
   m_diver = diver;
   m_original_diver = diver;
@@ -113,7 +113,7 @@ bool DiverEdit::SetDiver(const db::Diver &diver, int dive_count) {
   return kSuccess;
 }
 
-void DiverEdit::SetAddress(const db::DiverAddress &address) {
+void DiverEdit::SetAddress(const cpsm::db::DiverAddress &address) {
   m_address = address;
   m_original_address = address;
   m_diver.address_id = address.address_id; /* Shouldn't be required... But meh */
@@ -123,7 +123,7 @@ void DiverEdit::SetAddress(const db::DiverAddress &address) {
   const auto kDiverWithAddressCount{
       db::queryCount(database,
                      "SELECT %0 FROM %1 WHERE %2 = ?",
-                     {db::Diver::diver_id_col, db::Diver::db_table, db::Diver::address_id_col},
+                     {cpsm::db::Diver::diver_id_col, cpsm::db::Diver::db_table, cpsm::db::Diver::address_id_col},
                      {m_diver.address_id})};
   if (kDiverWithAddressCount > 1) {
     ui->lbl_disp_diver_with_address_count->setVisible(true);
@@ -143,17 +143,17 @@ bool DiverEdit::WasEdited() const {
 }
 
 bool DiverEdit::SetDiverAddressFromId(int address_id) {
-  std::optional<db::DiverAddress> addr{};
+  std::optional<cpsm::db::DiverAddress> addr{};
 
   if (address_id > 0) {
-    addr = db::GetDiverAddressFromId(db::Def(), {address_id});
+    addr = cpsm::db::GetDiverAddressFromId(db::Def(), {address_id});
     if (!addr.has_value()) {
       SPDLOG_ERROR("Failed to retrieve address with id: <{}>", address_id);
       return false;
     }
   }
 
-  SetAddress(addr.has_value() ? addr.value() : db::DiverAddress{}); /* If not found or new, set empty address */
+  SetAddress(addr.has_value() ? addr.value() : cpsm::db::DiverAddress{}); /* If not found or new, set empty address */
 
   UpdateAddressUi();
   return true;
@@ -234,7 +234,7 @@ void DiverEdit::OnOk() {
     const auto kDiverWithAddressCount{
         db::queryCount(database,
                        "SELECT %0 FROM %1 WHERE %2 = ?",
-                       {db::Diver::diver_id_col, db::Diver::db_table, db::Diver::address_id_col},
+                       {cpsm::db::Diver::diver_id_col, cpsm::db::Diver::db_table, cpsm::db::Diver::address_id_col},
                        {m_diver.address_id})};
     if (kDiverWithAddressCount < 0) {
       SPDLOG_ERROR("Failed to count diver with address id: <{}>", m_diver.address_id);

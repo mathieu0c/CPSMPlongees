@@ -21,8 +21,8 @@ bool SearchString(const QString &search_line, const cpsm::DiverWithDiveCount &se
 namespace cpsm {
 
 DiversViewModel::DiversViewModel(QObject *parent) : QAbstractTableModel(parent) {
-  const auto kLevelList{db::readLFromDB<db::DiverLevel>(
-      db::Def(), db::ExtractDiverLevel, "SELECT * FROM %0", {db::DiverLevel::db_table}, {})};
+  const auto kLevelList{::db::readLFromDB<db::DiverLevel>(
+      ::db::Def(), db::ExtractDiverLevel, "SELECT * FROM %0", {db::DiverLevel::db_table}, {})};
 
   for (const auto &level : kLevelList) {
     m_db_levels[level.diver_level_id] = level;
@@ -39,16 +39,16 @@ void DiversViewModel::LoadFromDB() {
   static QVector<db::DiverLevel> level_list{};
   if (level_list.size() == 0) {
     SPDLOG_ERROR("Failed to load levels from db. Retrying... (Or first attempt)");
-    level_list = db::readLFromDB<db::DiverLevel>(
-        db::Def(), db::ExtractDiverLevel, "SELECT * FROM %0", {db::DiverLevel::db_table}, {});
+    level_list = ::db::readLFromDB<db::DiverLevel>(
+        ::db::Def(), db::ExtractDiverLevel, "SELECT * FROM %0", {db::DiverLevel::db_table}, {});
     for (const auto &level : level_list) {
       m_db_levels[level.diver_level_id] = level;
     }
   }
 
   SPDLOG_DEBUG("Loading from db");
-  auto list{db::readLFromDB<DiverWithDiveCount>(
-      db::Def(),
+  auto list{::db::readLFromDB<DiverWithDiveCount>(
+      ::db::Def(),
       [&](const QSqlQuery &query) {
         //
         auto diver{db::ExtractDiver(query)};

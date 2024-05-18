@@ -11,6 +11,8 @@ set(VERSIONING_MAJOR 0)#incompatible update
 set(VERSIONING_MINOR 0)#new features added
 set(VERSIONING_PATCH 0)#bug fixed / minor change
 
+option(CPSM_BUILD_AS_MOCKUP "Build as mockup" ON)
+
 
 set(EXE_NAME "CPSMPlongees")
 

@@ -11,6 +11,7 @@
 #include <QStandardPaths>
 #include <QTextBrowser>
 
+#include <Logger/btype.hpp>
 #include <Logger/logger.hpp>
 
 #include "./ui_MainWindow.h"
@@ -26,17 +27,18 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       c_appdata_folder{cpsm::consts::kAppDataPath},
       c_config_file{QString{"%0/config.json"}.arg(c_appdata_folder)},
-      m_updateHandler{new updt::UpdateHandler(consts::CURRENT_VERSION, consts::PROJECT_GITHUB_RELEASE,
+      m_updateHandler{new updt::UpdateHandler(consts::kCurrentVersion, consts::PROJECT_GITHUB_RELEASE,
                                               consts::PUBLIC_VERIFIER_KEY_FILE, true, consts::POST_UPDATE_CMD, true,
                                               this)},
       m_test_model{this} {
   ui->setupUi(this);
 
-  // const auto kLoadDbSuccess{cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath)};
-  const auto kLoadDbSuccess{cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath)};
-  if (!kLoadDbSuccess) {
-    CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotInitDB);
+  if (cpsm::consts::kIsBuiltAsMockup) {
+    QMessageBox::warning(
+        this, tr("Attention"), tr("Version de développement. Aucune modification ne sera enregistrée."));
   }
+
+  // const auto kLoadDbSuccess{cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath)};
   ui->pg_editDiver->RefreshFromDB();
   ui->mainDiverSearch->RefreshFromDB();
 
@@ -64,13 +66,13 @@ MainWindow::MainWindow(QWidget *parent)
   // }
   ui->tw_test->setModel(&m_test_model);
 
-  const auto kTmpDiver{db::GetDiverFromId(db::Def(), {5})};
+  const auto kTmpDiver{cpsm::db::GetDiverFromId(db::Def(), {5})};
   if (!kTmpDiver) {
     SPDLOG_ERROR("Failed to retrieve diver with id=5");
   }
   SPDLOG_INFO("Retrieved diver: {}", kTmpDiver.value());
 
-  const auto kDiveCount{db::GetDiverDiveCount(kTmpDiver.value())};
+  const auto kDiveCount{cpsm::db::GetDiverDiveCount(kTmpDiver.value())};
   ui->pg_editDiver->SetDiver(kTmpDiver.value(), kDiveCount);
 
   connect(ui->pg_editDiver, &gui::DiverEdit::DiverEdited, this, &MainWindow::OnDiverEdited);
@@ -88,7 +90,7 @@ void MainWindow::EditDiver(const cpsm::DiverWithDiveCount &diver) {
   ui->tab_divers->setCurrentIndex(DiverTabPages::kEditDiver);
 }
 
-void MainWindow::OnDiverEdited(std::optional<std::tuple<db::Diver, db::DiverAddress>> edit_opt) {
+void MainWindow::OnDiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress> > edit_opt) {
   if (!edit_opt) {
     SPDLOG_DEBUG("Diver edition cancelled");
     ui->tab_divers->setCurrentIndex(DiverTabPages::kBrowseDivers);
@@ -98,7 +100,7 @@ void MainWindow::OnDiverEdited(std::optional<std::tuple<db::Diver, db::DiverAddr
   const auto &[diver, address]{edit_opt.value()};
   auto database{db::Def()};
 
-  const auto kStoreResult{db::StoreDiverAndItsAddress(diver, address)};
+  const auto kStoreResult{cpsm::db::StoreDiverAndItsAddress(diver, address)};
   if (kStoreResult) {
     ui->mainDiverSearch->RefreshFromDB();
     ui->tab_divers->setCurrentIndex(DiverTabPages::kBrowseDivers);
@@ -118,7 +120,7 @@ void MainWindow::OnDiverEdited(std::optional<std::tuple<db::Diver, db::DiverAddr
                kStoreResult.err_code,
                database.lastError());
 
-  using ErrCode = db::StoreDiverAndAddressResult::ErrCode;
+  using ErrCode = cpsm::db::StoreDiverAndAddressResult::ErrCode;
   switch (kStoreResult.err_code) {
     case ErrCode::kFailedToRollback: {
       CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotRollback);
@@ -189,7 +191,7 @@ void MainWindow::on_pb_deleteDiver_clicked() {
   }
 
   for (const auto &diver : kSelectedDivers) {
-    if (!db::DeleteDiver(database, diver.diver)) {
+    if (!cpsm::db::DeleteDiver(database, diver.diver)) {
       SPDLOG_WARN("Failed to delete diver: {}", diver.diver);
       success = false;
       break;
@@ -224,5 +226,3 @@ void MainWindow::on_pb_newDiver_clicked() {
   default_diver.diver.member_date = QDate::currentDate();
   EditDiver(default_diver);
 }
-
-#include "moc_MainWindow.cpp"

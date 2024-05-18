@@ -6,28 +6,30 @@
 
 #include "Database.hpp"
 
-namespace db {
+namespace cpsm::db {
+
+using DBType = ::db::DBType;
 
 /* Diver */
-#define Diver_VAR_LIST(COLUMN)            \
-  COLUMN(diver_id, INTEGER, true);        \
-  COLUMN(first_name, TEXT, false);        \
-  COLUMN(last_name, TEXT, false);         \
-  COLUMN(birth_date, DATE, false);        \
-  COLUMN(email, TEXT, false);             \
-  COLUMN(phone_number, TEXT, false);      \
-  COLUMN(address_id, INTEGER, false);     \
-  COLUMN(license_number, TEXT, false);    \
-  COLUMN(certif_date, DATE, false);       \
-  COLUMN(diver_level_id, INTEGER, false); \
-  COLUMN(registration_date, DATE, false); \
-  COLUMN(is_member, INTEGER, false);      \
-  COLUMN(member_date, DATE, false);       \
-  COLUMN(paid_dives, INTEGER, false);     \
-  COLUMN(gear_regulator, INTEGER, false); \
-  COLUMN(gear_suit, INTEGER, false);      \
-  COLUMN(gear_computer, INTEGER, false);  \
-  COLUMN(gear_jacket, INTEGER, false);
+#define Diver_VAR_LIST(COLUMN)                    \
+  COLUMN(diver_id, DBType::INTEGER, true);        \
+  COLUMN(first_name, DBType::TEXT, false);        \
+  COLUMN(last_name, DBType::TEXT, false);         \
+  COLUMN(birth_date, DBType::DATE, false);        \
+  COLUMN(email, DBType::TEXT, false);             \
+  COLUMN(phone_number, DBType::TEXT, false);      \
+  COLUMN(address_id, DBType::INTEGER, false);     \
+  COLUMN(license_number, DBType::TEXT, false);    \
+  COLUMN(certif_date, DBType::DATE, false);       \
+  COLUMN(diver_level_id, DBType::INTEGER, false); \
+  COLUMN(registration_date, DBType::DATE, false); \
+  COLUMN(is_member, DBType::INTEGER, false);      \
+  COLUMN(member_date, DBType::DATE, false);       \
+  COLUMN(paid_dives, DBType::INTEGER, false);     \
+  COLUMN(gear_regulator, DBType::INTEGER, false); \
+  COLUMN(gear_suit, DBType::INTEGER, false);      \
+  COLUMN(gear_computer, DBType::INTEGER, false);  \
+  COLUMN(gear_jacket, DBType::INTEGER, false);
 DB_DECLARE_STRUCT(Diver, Divers, val.diver_id <= 0, Diver_VAR_LIST)
 
 int GetDiverDiveCount(const Diver& diver);
@@ -36,11 +38,11 @@ bool IsDiverMedicalCertificateValid(const Diver& diver);
 bool IsDiverCurrentlyRegistered(const Diver& diver);
 bool IsDiverCurrentlyAMember(const Diver& diver);
 
-#define DiverAddress_VAR_LIST(COLUMN) \
-  COLUMN(address_id, INTEGER, true);  \
-  COLUMN(address, TEXT, false);       \
-  COLUMN(postal_code, TEXT, false);   \
-  COLUMN(city, TEXT, false);
+#define DiverAddress_VAR_LIST(COLUMN)        \
+  COLUMN(address_id, DBType::INTEGER, true); \
+  COLUMN(address, DBType::TEXT, false);      \
+  COLUMN(postal_code, DBType::TEXT, false);  \
+  COLUMN(city, DBType::TEXT, false);
 DB_DECLARE_STRUCT(DiverAddress, DiversAddresses, val.address_id <= 0, DiverAddress_VAR_LIST)
 
 /* Store a diver and its address... The address gets priority on the address_id of both elements.
@@ -70,31 +72,31 @@ struct StoreDiverAndAddressResult {
 };
 StoreDiverAndAddressResult StoreDiverAndItsAddress(db::Diver diver, const DiverAddress& address);
 
-#define Dive_VAR_LIST(COLUMN)        \
-  COLUMN(dive_id, INTEGER, true);    \
-  COLUMN(datetime, DATETIME, false); \
-  COLUMN(diving_site_id, INTEGER, false);
+#define Dive_VAR_LIST(COLUMN)                \
+  COLUMN(dive_id, DBType::INTEGER, true);    \
+  COLUMN(datetime, DBType::DATETIME, false); \
+  COLUMN(diving_site_id, DBType::INTEGER, false);
 DB_DECLARE_STRUCT(Dive, Dives, val.dive_id <= 0, Dive_VAR_LIST)
 
-#define DiveMember_VAR_LIST(COLUMN) \
-  COLUMN(dive_id, INTEGER, true);   \
-  COLUMN(diver_id, INTEGER, true);  \
-  COLUMN(diving_type_id, INTEGER, false);
+#define DiveMember_VAR_LIST(COLUMN)        \
+  COLUMN(dive_id, DBType::INTEGER, true);  \
+  COLUMN(diver_id, DBType::INTEGER, true); \
+  COLUMN(diving_type_id, DBType::INTEGER, false);
 DB_DECLARE_STRUCT(DiveMember, DivesMembers, val.dive_id <= 0 || val.diver_id <= 0, DiveMember_VAR_LIST)
 
-#define DivingSites_VAR_LIST(COLUMN)     \
-  COLUMN(diving_site_id, INTEGER, true); \
-  COLUMN(site_text, TEXT, false);
+#define DivingSites_VAR_LIST(COLUMN)             \
+  COLUMN(diving_site_id, DBType::INTEGER, true); \
+  COLUMN(site_text, DBType::TEXT, false);
 DB_DECLARE_STRUCT(DivingSite, DivingSites, val.diving_site_id <= 0, DivingSites_VAR_LIST)
 
-#define DivingTypes_VAR_LIST(COLUMN)     \
-  COLUMN(diving_type_id, INTEGER, true); \
-  COLUMN(type_name, TEXT, false);
+#define DivingTypes_VAR_LIST(COLUMN)             \
+  COLUMN(diving_type_id, DBType::INTEGER, true); \
+  COLUMN(type_name, DBType::TEXT, false);
 DB_DECLARE_STRUCT(DivingType, DivingTypes, val.diving_type_id <= 0, DivingTypes_VAR_LIST)
 
-#define DiverLevels_VAR_LIST(COLUMN)     \
-  COLUMN(diver_level_id, INTEGER, true); \
-  COLUMN(level_name, TEXT, false);
+#define DiverLevels_VAR_LIST(COLUMN)             \
+  COLUMN(diver_level_id, DBType::INTEGER, true); \
+  COLUMN(level_name, DBType::TEXT, false);
 DB_DECLARE_STRUCT(DiverLevel, DiversLevels, val.diver_level_id <= 0, DiverLevels_VAR_LIST)
 
-}  // namespace db
+}  // namespace cpsm::db
