@@ -142,8 +142,6 @@ void MainWindow::on_pb_editDiver_clicked() {
   EditDiver(kSelectedDiverOpt.value());
 }
 
-#include "moc_MainWindow.cpp"
-
 void MainWindow::on_pb_deleteDiver_clicked() {
   const auto kSelectedDivers{ui->mainDiverSearch->GetSelectedDivers()};
 
@@ -216,3 +214,15 @@ void MainWindow::on_pb_deleteDiver_clicked() {
       60000);
   ui->mainDiverSearch->RefreshFromDB();
 }
+
+void MainWindow::on_pb_newDiver_clicked() {
+  cpsm::DiverWithDiveCount default_diver{};
+  default_diver.diver.diver_level_id = 1;
+  default_diver.diver.birth_date = QDate::currentDate().addYears(-30);
+  default_diver.diver.certif_date = QDate::currentDate();
+  default_diver.diver.registration_date = QDate::currentDate();
+  default_diver.diver.member_date = QDate::currentDate();
+  EditDiver(default_diver);
+}
+
+#include "moc_MainWindow.cpp"

@@ -46,6 +46,8 @@ class MainWindow : public QMainWindow {
 
   void on_pb_deleteDiver_clicked();
 
+  void on_pb_newDiver_clicked();
+
  private:
  private:
   Ui::MainWindow *ui;

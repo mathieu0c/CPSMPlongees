@@ -115,6 +115,7 @@ bool DiverEdit::SetDiver(const db::Diver &diver, int dive_count) {
 
 void DiverEdit::SetAddress(const db::DiverAddress &address) {
   m_address = address;
+  m_original_address = address;
   m_diver.address_id = address.address_id; /* Shouldn't be required... But meh */
   UpdateAddressUi();
 
@@ -142,19 +143,19 @@ bool DiverEdit::WasEdited() const {
 }
 
 bool DiverEdit::SetDiverAddressFromId(int address_id) {
-  if (address_id <= 0) {
-    m_diver.address_id = 0;
-    UpdateAddressUi();
+  std::optional<db::DiverAddress> addr{};
+
+  if (address_id > 0) {
+    addr = db::GetDiverAddressFromId(db::Def(), {address_id});
+    if (!addr.has_value()) {
+      SPDLOG_ERROR("Failed to retrieve address with id: <{}>", address_id);
+      return false;
+    }
   }
 
-  const auto kAddr = db::GetDiverAddressFromId(db::Def(), {m_diver.address_id});
-  m_original_address = kAddr ? kAddr.value() : db::DiverAddress{};
+  SetAddress(addr.has_value() ? addr.value() : db::DiverAddress{}); /* If not found or new, set empty address */
 
-  if (!kAddr.has_value()) {
-    UpdateAddressUi();
-    return false;
-  }
-  SetAddress(kAddr.value());
+  UpdateAddressUi();
   return true;
 }
 
