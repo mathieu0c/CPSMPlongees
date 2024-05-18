@@ -108,7 +108,7 @@ int queryCount(QSqlDatabase& db, QString request, const QStringList& argList, co
     request = request.arg(e);
   }
 
-  QRegularExpression re("(SELECT )(.*)( FROM.*)");
+  static QRegularExpression re("(SELECT )(.*)( FROM.*)");
   auto matchs{re.globalMatch(request)};
 
   QStringList groupList{};
@@ -130,8 +130,6 @@ int queryCount(QSqlDatabase& db, QString request, const QStringList& argList, co
     query.addBindValue(e);
   }
 
-  SPDLOG_DEBUG("COUNT QUERY: {}", query);
-
   query.exec();
 
   if (!query.next()) {
@@ -139,11 +137,6 @@ int queryCount(QSqlDatabase& db, QString request, const QStringList& argList, co
     return -1;
   }
   int out{query.value(0).toInt()};
-
-  //    while(query.next())//while we find something correspondant
-  //    {
-  //        out += 1;
-  //    }
 
   auto err{query.lastError()};
   if (err.type() != QSqlError::ErrorType::NoError)  // if there was an error
@@ -250,8 +243,6 @@ std::optional<QSqlQuery> ExecQuery(QSqlDatabase db, QString request, const QStri
         "SQL error : {}\n{}argList size: <{}>, valList size: <{}>", err, query, argList.size(), valList.size());
     return {};
   }
-
-  SPDLOG_DEBUG("{}", query);
 
   return query;
 }

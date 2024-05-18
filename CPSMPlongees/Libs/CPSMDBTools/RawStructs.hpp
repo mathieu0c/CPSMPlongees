@@ -29,7 +29,12 @@ namespace db {
   COLUMN(gear_computer, INTEGER, false);  \
   COLUMN(gear_jacket, INTEGER, false);
 DB_DECLARE_STRUCT(Diver, Divers, val.diver_id <= 0, Diver_VAR_LIST)
+
 int GetDiverDiveCount(const Diver& diver);
+std::optional<int> GetDiverDiveBalance(const Diver& diver);
+bool IsDiverMedicalCertificateValid(const Diver& diver);
+bool IsDiverCurrentlyRegistered(const Diver& diver);
+bool IsDiverCurrentlyAMember(const Diver& diver);
 
 #define DiverAddress_VAR_LIST(COLUMN) \
   COLUMN(address_id, INTEGER, true);  \
@@ -91,4 +96,5 @@ DB_DECLARE_STRUCT(DivingType, DivingTypes, val.diving_type_id <= 0, DivingTypes_
   COLUMN(diver_level_id, INTEGER, true); \
   COLUMN(level_name, TEXT, false);
 DB_DECLARE_STRUCT(DiverLevel, DiversLevels, val.diver_level_id <= 0, DiverLevels_VAR_LIST)
+
 }  // namespace db

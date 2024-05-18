@@ -91,6 +91,7 @@ set(PROJECT_SOURCES
 
         Assets/ProgResources.qrc
 
+        Gui/ReversedTristateCheckBox.hpp Gui/ReversedTristateCheckBox.cpp
         Gui/DiverEdit.hpp Gui/DiverEdit.cpp Gui/DiverEdit.ui
         Gui/DiveEdit.hpp Gui/DiveEdit.cpp Gui/DiveEdit.ui
         Gui/DiveSearch.hpp Gui/DiveSearch.cpp Gui/DiveSearch.ui
@@ -98,6 +99,7 @@ set(PROJECT_SOURCES
         Gui/DialogConfirmListDeletion.hpp Gui/DialogConfirmListDeletion.cpp Gui/DialogConfirmListDeletion.ui
 
         Models/table_model_test.hpp Models/table_model_test.cpp
+        Models/DiversViewModel.hpp Models/DiversViewModel.cpp
 )
 
 

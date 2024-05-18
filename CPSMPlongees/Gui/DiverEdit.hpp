@@ -23,7 +23,7 @@ class DiverEdit : public QWidget {
   void SetAddress(const db::DiverAddress &address);
 
  public slots:
-  void OnDatabaseLoaded();
+  void RefreshFromDB();
 
  private:
   bool AllGearChecked() const;
@@ -41,6 +41,8 @@ class DiverEdit : public QWidget {
   void on_buttonBox_rejected(); /* NOLINT */
 
  private:
+  bool WasEdited() const;
+
   bool SetDiverAddressFromId(int address_id);
   void UpdateUiFromDiver();
   void UpdateAddressUi();
@@ -50,6 +52,7 @@ class DiverEdit : public QWidget {
   Ui::DiverEdit *ui;
 
   db::Diver m_diver{};
+  db::Diver m_original_diver{};
   int32_t m_diver_original_paid_dives_count{};
   int32_t m_dive_count{};
   db::DiverAddress m_address{};

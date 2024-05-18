@@ -594,7 +594,7 @@
           <item row="4" column="0">
            <widget class="QLabel" name="lbl_disp_certificate">
             <property name="text">
-             <string>Certificat</string>
+             <string>Certificat médical</string>
             </property>
            </widget>
           </item>

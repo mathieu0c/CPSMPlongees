@@ -181,7 +181,6 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
       for (const auto &e : str_list) {                                                                     \
         base_request = base_request.arg(e);                                                                \
       }                                                                                                    \
-      SPDLOG_DEBUG("Base request: <{}>", base_request);                                                    \
     }                                                                                                      \
                                                                                                            \
     auto result_opt{db::ExecQuery(db, base_request, {}, val_list)};                                        \
@@ -235,7 +234,6 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
       }                                                                                                \
       request += ";";                                                                                  \
     }                                                                                                  \
-    SPDLOG_INFO("Delete request: {}", request);                                                        \
                                                                                                        \
     return db::queryDelete(db, request, {}, val_list);                                                 \
   }
@@ -264,13 +262,14 @@ using GetTypeFromDB = typename decltype(GetTypeForDBType<kDBType>())::Type;
       }                                                                                                                \
       request += ";";                                                                                                  \
     }                                                                                                                  \
-    SPDLOG_INFO("Read from request: {}", request);                                                                     \
                                                                                                                        \
     return db::readFromDB<ClassName>(db, db::Extract##ClassName, request, {}, primary_keys_values);                    \
   }
 
 #define DB_EQUAL_OPERATOR_FUNCTION_STEP(name, DB_TYPE, IS_PRIMARY) \
-  if (lhs.name != rhs.name) return false
+  if (lhs.name != rhs.name) {                                      \
+    return false;                                                  \
+  }
 
 #define DB_EQUAL_OPERATOR_FUNCTION(ClassName, LIST_OF_VARIABLES_MACRO) \
   inline bool operator==(const ClassName &lhs, const ClassName &rhs) { \

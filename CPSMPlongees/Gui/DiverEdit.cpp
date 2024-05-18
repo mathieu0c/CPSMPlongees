@@ -93,7 +93,7 @@ DiverEdit::~DiverEdit() {
   delete ui;
 }
 
-void DiverEdit::OnDatabaseLoaded() {
+void DiverEdit::RefreshFromDB() {
   /* Fill diver level cb */
   const auto kLevelList{db::readLFromDB<db::DiverLevel>(
       db::Def(), db::ExtractDiverLevel, "SELECT * FROM %0", {db::DiverLevel::db_table}, {})};
@@ -105,6 +105,7 @@ void DiverEdit::OnDatabaseLoaded() {
 bool DiverEdit::SetDiver(const db::Diver &diver, int dive_count) {
   m_dive_count = dive_count;
   m_diver = diver;
+  m_original_diver = diver;
   m_diver_original_paid_dives_count = m_diver.paid_dives;
 
   const auto kSuccess{SetDiverAddressFromId(m_diver.address_id)};
@@ -134,6 +135,10 @@ void DiverEdit::SetAddress(const db::DiverAddress &address) {
   }
 
   ui->lbl_diver_with_address_count->setText(QString::number(kDiverWithAddressCount - 1));
+}
+
+bool DiverEdit::WasEdited() const {
+  return m_diver != m_original_diver || m_address != m_original_address;
 }
 
 bool DiverEdit::SetDiverAddressFromId(int address_id) {
@@ -259,12 +264,16 @@ void DiverEdit::OnOk() {
 }
 
 void DiverEdit::OnCancelled() {
-  auto ans{QMessageBox::question(this,
-                                 tr("Confirmation"),
-                                 tr("Toute modification sera définitivement perdue.\nAnnuler ?"),
-                                 QMessageBox::Yes | QMessageBox::No)};
+  if (!WasEdited()) {
+    emit DiverEdited({});
+    return;
+  }
+  auto ans{QMessageBox::question(
+      this,
+      tr("Confirmation"),
+      tr("Toute modification sera définitivement perdue.\nSouhaitez-vous abandonner toutes les modifications ?"),
+      QMessageBox::Yes | QMessageBox::No)};
   if (ans == QMessageBox::Yes) {
-    SPDLOG_DEBUG("Cancelled diver edition");
     emit DiverEdited({});
   }
 }

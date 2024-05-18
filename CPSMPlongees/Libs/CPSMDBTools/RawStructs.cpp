@@ -7,6 +7,24 @@ int GetDiverDiveCount(const Diver& diver) {
   return db::queryCount(
       db, "SELECT diver_id FROM %0 WHERE %1 = ?", {DiveMember::db_table, DiveMember::diver_id_col}, {diver.diver_id});
 }
+std::optional<int> GetDiverDiveBalance(const Diver& diver) {
+  const auto kDiveCount{GetDiverDiveCount(diver)};
+  if (kDiveCount < 0) {
+    return {};
+  }
+  return diver.paid_dives - GetDiverDiveCount(diver);
+}
+
+bool IsDiverMedicalCertificateValid(const Diver& diver) {
+  return diver.certif_date.addYears(1) > QDate::currentDate();
+}
+
+bool IsDiverCurrentlyRegistered(const Diver& diver) {
+  return diver.registration_date.addYears(1) > QDate::currentDate();
+}
+bool IsDiverCurrentlyAMember(const Diver& diver) {
+  return diver.is_member && diver.member_date.addYears(1) > QDate::currentDate();
+}
 
 StoreDiverAndAddressResult StoreDiverAndItsAddress(Diver diver, const DiverAddress& address) {
   StoreDiverAndAddressResult out{};

@@ -46,12 +46,12 @@
       </property>
       <widget class="QStackedWidget" name="tab_divers">
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <attribute name="title">
         <string>Plongeurs</string>
        </attribute>
-       <widget class="QWidget" name="pg_browse">
+       <widget class="QWidget" name="pg_browse_divers">
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
           <widget class="gui::DiverSearch" name="mainDiverSearch" native="true"/>

@@ -8,6 +8,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include <Models/DiversViewModel.hpp>
+
 #include "Models/table_model_test.hpp"
 
 QT_BEGIN_NAMESPACE
@@ -19,6 +21,15 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
+ private:
+  enum DiverTabPages : int32_t {
+    kBrowseDivers = 0,
+    kEditDiver = 1,
+  };
+
+ signals:
+  void DBLoaded();
+
  public:
   const QColor kBaseBlueColor{25, 180, 255};
 
@@ -26,9 +37,14 @@ class MainWindow : public QMainWindow {
   ~MainWindow();
 
  private slots:
+  void EditDiver(const cpsm::DiverWithDiveCount &diver);
   void OnDiverEdited(std::optional<std::tuple<db::Diver, db::DiverAddress>> edit_opt);
 
   void on_action_check_updates_triggered();
+
+  void on_pb_editDiver_clicked();
+
+  void on_pb_deleteDiver_clicked();
 
  private:
  private:
@@ -41,6 +57,7 @@ class MainWindow : public QMainWindow {
 
   //    sot::KeyboardProfile m_config{};
 
-  cpsm::DiverTableModel m_test_model;
+  cpsm::DiversViewModel m_test_model;
+  // MyModel m_test_model;
 };
 #endif  // MAINWINDOW_HPP

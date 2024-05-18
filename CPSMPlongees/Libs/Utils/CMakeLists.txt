@@ -85,6 +85,7 @@ file(GLOB hdr_files   "**/*.hpp" "**/*.h" "${INCLUDE_DIR}/**/*.hpp" "${INCLUDE_D
 # )
 set(SOURCE_FILES ${hdr_files} ${src_files}
   ${INCLUDE_DIR}/chrono.hpp
+  ${INCLUDE_DIR}/list_filters.hpp
 )
 
 
