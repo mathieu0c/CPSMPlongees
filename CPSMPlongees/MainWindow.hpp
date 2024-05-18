@@ -52,10 +52,5 @@ class MainWindow : public QMainWindow {
   const QString c_config_file;
 
   updt::UpdateHandler *m_updateHandler;
-
-  //    sot::KeyboardProfile m_config{};
-
-  cpsm::DiversViewModel m_test_model;
-  // MyModel m_test_model;
 };
 #endif  // MAINWINDOW_HPP

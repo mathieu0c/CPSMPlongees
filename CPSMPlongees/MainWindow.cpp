@@ -29,11 +29,10 @@ MainWindow::MainWindow(QWidget *parent)
       c_config_file{QString{"%0/config.json"}.arg(c_appdata_folder)},
       m_updateHandler{new updt::UpdateHandler(consts::kCurrentVersion, consts::PROJECT_GITHUB_RELEASE,
                                               consts::PUBLIC_VERIFIER_KEY_FILE, true, consts::POST_UPDATE_CMD, true,
-                                              this)},
-      m_test_model{this} {
+                                              this)} {
   ui->setupUi(this);
 
-  if (cpsm::consts::kIsBuiltAsMockup) {
+  if (cpsm::consts::kIsBuiltAsMockup && !btype::HasDebInfo()) {
     QMessageBox::warning(
         this, tr("Attention"), tr("Version de développement. Aucune modification ne sera enregistrée."));
   }
@@ -45,26 +44,6 @@ MainWindow::MainWindow(QWidget *parent)
   if (!QFileInfo::exists(c_config_file)) {
     SPDLOG_INFO("Saving default config file: {}", c_config_file);
   }
-
-  test();
-
-  //    const auto kPbOpt{pb::ReadFromFile<sot::KeyboardProfile>(c_config_file)};
-  //    if(!kPbOpt && false){
-  //        QString err{tr("Could not read config file: %0").arg(c_config_file)};
-  //        qCritical() << err;
-  //        QMessageBox::critical(this,tr("Error"),tr("Fatal error:\n%0").arg(err));
-  //        throw std::runtime_error(err.toStdString());
-  //    }
-  //    GetCurrentProfile() = kPbOpt.value();
-
-  //  std::function<void(void)> nothing{[]() {}};
-  //  const auto kWasUpdated{updt::acquireUpdated(nothing, consts::UPDATED_TAG_FILENAME)};
-  //  SPDLOG_INFO("Was updated? {}", kWasUpdated);
-
-  // if constexpr (std::is_same_v<cpsm::DiverTableModel, decltype(m_test_model)>) {
-  m_test_model.LoadFromDB();
-  // }
-  ui->tw_test->setModel(&m_test_model);
 
   const auto kTmpDiver{cpsm::db::GetDiverFromId(db::Def(), {5})};
   if (!kTmpDiver) {
@@ -165,7 +144,7 @@ void MainWindow::on_pb_deleteDiver_clicked() {
   diver_display.setText([&kSelectedDivers]() {
     QString out{};
     for (const auto &diver : kSelectedDivers) {
-      out.append(tr("%0 %1\n").arg(diver.diver.last_name, diver.diver.first_name));
+      out.append(tr("<%0 %1>\n").arg(diver.diver.last_name, diver.diver.first_name));
     }
     return out;
   }());

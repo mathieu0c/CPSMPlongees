@@ -108,6 +108,8 @@ bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count) {
   m_original_diver = diver;
   m_diver_original_paid_dives_count = m_diver.paid_dives;
 
+  ui->sb_payment->setValue(0);
+
   const auto kSuccess{SetDiverAddressFromId(m_diver.address_id)};
   UpdateUiFromDiver();
   return kSuccess;
