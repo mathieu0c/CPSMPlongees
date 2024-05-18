@@ -12,6 +12,9 @@ DiverSearch::DiverSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiverSea
   connect(ui->cb_member, &QCheckBox::stateChanged, &m_model, [this](int state) {
     m_model.SetFilterEnabled(cpsm::DiversViewModel::Filters::kFilterIsMember, state != Qt::CheckState::Unchecked);
     m_model.SetFilterNegate(cpsm::DiversViewModel::Filters::kFilterIsMember, state == Qt::CheckState::PartiallyChecked);
+    ui->lbl_member_state->setText(state == Qt::CheckState::Checked
+                                      ? tr("(oui)")
+                                      : (state == Qt::CheckState::PartiallyChecked ? tr("(non)") : ""));
   });
 
   connect(ui->cb_registered, &QCheckBox::stateChanged, &m_model, [this](int state) {
@@ -19,6 +22,9 @@ DiverSearch::DiverSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiverSea
                              state != Qt::CheckState::Unchecked);
     m_model.SetFilterNegate(cpsm::DiversViewModel::Filters::kFilterIsCurrentlyRegistered,
                             state == Qt::CheckState::PartiallyChecked);
+    ui->lbl_registered_state->setText(state == Qt::CheckState::Checked
+                                          ? tr("(oui)")
+                                          : (state == Qt::CheckState::PartiallyChecked ? tr("(non)") : ""));
   });
 
   connect(ui->cb_positive_balance, &QCheckBox::stateChanged, &m_model, [this](bool state) {

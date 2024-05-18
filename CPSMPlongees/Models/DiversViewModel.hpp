@@ -24,10 +24,6 @@ class DiverDisplayListOwner {
 
   void SetDiversToDisplay(QVector<DiverWithDiveCount> divers) {
     m_divers_to_display = std::move(divers);
-    SPDLOG_DEBUG("========= Divers to display modified");
-    for (const auto &diver : DiversToDisplay()) {
-      SPDLOG_DEBUG("{} {} {}", diver.diver.first_name, diver.diver.last_name, diver.Balance());
-    }
   }
 
  private:

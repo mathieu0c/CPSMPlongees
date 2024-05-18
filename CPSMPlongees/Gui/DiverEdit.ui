@@ -32,7 +32,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QLineEdit" name="le_lastname">
+           <widget class="LineEditUpperCase" name="le_lastname">
             <property name="text">
              <string/>
             </property>
@@ -697,6 +697,11 @@
    <extends>QWidget</extends>
    <header>Gui/DiveSearch.hpp</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LineEditUpperCase</class>
+   <extends>QLineEdit</extends>
+   <header>Gui/LineEditUpperCase.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>

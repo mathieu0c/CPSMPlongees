@@ -45,19 +45,21 @@
       <string>Filtres</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="1" column="0">
-       <widget class="ReversedTristateCheckBox" name="cb_member">
-        <property name="text">
-         <string>Membre cette année</string>
-        </property>
-        <property name="tristate">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
+      <property name="leftMargin">
+       <number>4</number>
+      </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
+      <property name="rightMargin">
+       <number>4</number>
+      </property>
+      <property name="bottomMargin">
+       <number>4</number>
+      </property>
       <item row="0" column="3" rowspan="2">
        <layout class="QGridLayout" name="glay_balance">
-        <item row="0" column="1" rowspan="2">
+        <item row="0" column="2" rowspan="2">
          <widget class="QLabel" name="lbl_disp_balance">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -70,7 +72,28 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
+        <item row="0" column="0">
+         <layout class="QHBoxLayout" name="hlay_name">
+          <item>
+           <widget class="QLabel" name="lbl_disp_name">
+            <property name="text">
+             <string>Nom ou prénom</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="le_name">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="3">
          <widget class="QCheckBox" name="cb_positive_balance">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -86,7 +109,7 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
+        <item row="1" column="3">
          <widget class="QCheckBox" name="cb_negative_balance">
           <property name="text">
            <string>Négatif</string>
@@ -96,45 +119,64 @@
           </property>
          </widget>
         </item>
-       </layout>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="hlay_name">
-        <item>
-         <widget class="QLabel" name="lbl_disp_name">
-          <property name="text">
-           <string>Nom ou prénom</string>
+        <item row="0" column="1" rowspan="2">
+         <widget class="Line" name="line">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QLineEdit" name="le_name">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
+        <item row="1" column="0">
+         <layout class="QHBoxLayout" name="hlay_filter">
+          <item>
+           <widget class="ReversedTristateCheckBox" name="cb_member">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Membre cette année</string>
+            </property>
+            <property name="tristate">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lbl_member_state">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="ReversedTristateCheckBox" name="cb_registered">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Inscrit cette année</string>
+            </property>
+            <property name="tristate">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lbl_registered_state">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
-      </item>
-      <item row="1" column="1">
-       <widget class="ReversedTristateCheckBox" name="cb_registered">
-        <property name="text">
-         <string>Inscrit cette année</string>
-        </property>
-        <property name="tristate">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2" rowspan="2">
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
       </item>
      </layout>
     </widget>

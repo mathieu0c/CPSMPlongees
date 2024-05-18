@@ -97,6 +97,7 @@ set(PROJECT_SOURCES
         Gui/DiveSearch.hpp Gui/DiveSearch.cpp Gui/DiveSearch.ui
         Gui/DiverSearch.hpp Gui/DiverSearch.cpp Gui/DiverSearch.ui
         Gui/DialogConfirmListDeletion.hpp Gui/DialogConfirmListDeletion.cpp Gui/DialogConfirmListDeletion.ui
+        Gui/LineEditUpperCase.hpp
 
         Models/table_model_test.hpp Models/table_model_test.cpp
         Models/DiversViewModel.hpp Models/DiversViewModel.cpp

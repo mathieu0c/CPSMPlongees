@@ -98,9 +98,24 @@ int DiversViewModel::columnCount(const QModelIndex & /*parent*/) const {
 }
 
 QVariant DiversViewModel::headerData(int section, Qt::Orientation orientation, int role) const {
-  if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
-    if (static_cast<size_t>(section) < kColumnsHeaders.size()) {
-      return kColumnsHeaders[section];
+  if (orientation != Qt::Horizontal) {
+    return {};
+  }
+
+  switch (role) {
+    case Qt::DisplayRole:
+      if (static_cast<size_t>(section) < kColumnsHeaders.size()) {
+        return kColumnsHeaders[section];
+      } else {
+        break;
+      }
+    case Qt::TextAlignmentRole:
+      return section == ColumnId::kBalance ? int(Qt::AlignLeft | Qt::AlignVCenter)
+                                           : int(Qt::AlignHCenter | Qt::AlignVCenter);
+    case Qt::FontRole: {
+      static QFont default_font{};
+      return default_font;
+      break;
     }
   }
   return QVariant();
@@ -127,7 +142,8 @@ QVariant DiversViewModel::data(const QModelIndex &index, int role) const {
     case Qt::BackgroundRole:
       return GetBackgroundForIndex(diver, col);
     case Qt::TextAlignmentRole:
-      return int(Qt::AlignHCenter | Qt::AlignVCenter);
+      return col == ColumnId::kBalance ? int(Qt::AlignLeft | Qt::AlignVCenter)
+                                       : int(Qt::AlignHCenter | Qt::AlignVCenter);
     case Qt::CheckStateRole:
       // if (row == 1 && col == 0)  // add a checkbox to cell(1,0)
       //   return Qt::Checked;
