@@ -18,7 +18,7 @@ option(CPSM_BUILD_AS_MOCKUP "Build as mockup" ON)
 set(CPSM_BUILD_AS_MOCKUP ON)
 
 #VERSION = MAJOR.MINOR.PATCH
-set(ENV{MAIN_VERSIONING_MAJOR} 1)#incompatible update
+set(ENV{MAIN_VERSIONING_MAJOR} 0)#incompatible update
 set(ENV{MAIN_VERSIONING_MINOR} 0)#new features added
 set(ENV{MAIN_VERSIONING_PATCH} 1)#bug fixed / minor change
 
@@ -37,7 +37,7 @@ set(ENV{MAIN_GITHUB_URL} "https://api.github.com/repos/mathieu0c/CPSMPlongees/re
 ###############################
 
 set(EXE_NAME "CPSMPlongees")
-project(CPSMPlongees VERSION ${MAIN_VERSIONING_MAJOR}.${MAIN_VERSIONING_MINOR}.${MAIN_VERSIONING_PATCH} LANGUAGES CXX)
+project(CPSMPlongees VERSION $ENV{MAIN_VERSIONING_MAJOR}.$ENV{MAIN_VERSIONING_MINOR}.$ENV{MAIN_VERSIONING_PATCH} LANGUAGES CXX)
 
 
 

@@ -82,13 +82,27 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   connect(ui->cb_member, &QCheckBox::toggled, this, [this](bool checked) {
     if (checked) {
       ui->de_member->setDate(QDate::currentDate());
+    } else {
+      if (m_inhibit_member_checkbox_change) {
+        return;
+      }
+      /* Member unchecked -> restore original diver member date if he was not a member. Set Epoch otherwise */
+      m_inhibit_member_checkbox_change = true;
+      ui->de_member->setDate(cpsm::db::IsDiverCurrentlyAMember(m_original_diver) ? cpsm::consts::kEpochDate
+                                                                                 : m_original_diver.member_date);
+      m_inhibit_member_checkbox_change = false;
     }
   });
   connect(ui->de_member, &QDateEdit::dateChanged, this, [this](const QDate &date) {
     if (date.year() != m_diver.member_date.year()) { /* Update date only if the year is different */
       m_diver.member_date = date;
     }
+    if (m_inhibit_member_checkbox_change) {
+      return;
+    }
+    m_inhibit_member_checkbox_change = true;
     ui->cb_member->setChecked(m_diver.member_date.year() == QDate::currentDate().year());
+    m_inhibit_member_checkbox_change = false;
   });
 
   /* Address */
@@ -176,7 +190,7 @@ void DiverEdit::UpdateUiFromDiver() {
   ui->de_birthDate->setDate(m_diver.birth_date);
   ui->le_license->setText(m_diver.license_number);
   ui->de_registration->setDate(m_diver.registration_date);
-  ui->cb_member->setChecked(m_diver.member_date.year() == QDate::currentDate().year());
+  ui->cb_member->setChecked(cpsm::db::IsDiverCurrentlyAMember(m_diver));
   ui->de_member->setDate(m_diver.member_date.isValid() ? m_diver.member_date : cpsm::consts::kEpochDate);
   SetLevelComboboxFromLevelId(m_diver.diver_level_id);
   ui->de_certificate->setDate(m_diver.certif_date);
@@ -267,8 +281,6 @@ void DiverEdit::OnOk() {
     }
   }
 
-  SPDLOG_DEBUG("Diver edited: {}", m_diver);
-  SPDLOG_DEBUG("Address edited: {}", m_address);
   emit DiverEdited({{m_diver, m_address}});
   m_original_address = m_address;
 }

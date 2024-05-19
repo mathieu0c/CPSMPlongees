@@ -46,7 +46,7 @@ void DiversViewModel::LoadFromDB() {
     }
   }
 
-  SPDLOG_DEBUG("Loading from db");
+  SPDLOG_TRACE("Reloading DiversViewModel from db");
   auto list{::db::readLFromDB<DiverWithDiveCount>(
       ::db::Def(),
       [&](const QSqlQuery &query) {

@@ -59,6 +59,7 @@ class DiverEdit : public QWidget {
   cpsm::db::DiverAddress m_original_address{};
 
   bool m_inhibit_all_gear_checkbox_change{false}; /* Avoid spam when check the all gear checkbox */
+  bool m_inhibit_member_checkbox_change{false};
 };
 
 }  // namespace gui

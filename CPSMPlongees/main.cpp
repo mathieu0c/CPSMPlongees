@@ -1,5 +1,6 @@
 #include <CPSMDatabase.hpp>
 #include <CPSMGlobals.hpp>
+#include <DBMigration.hpp>
 #include <DBUtils.hpp>
 #include <QApplication>
 #include <QFontDatabase>
@@ -9,31 +10,43 @@
 #include <Logger/logger.hpp>
 #include <Logger/logger_setup.hpp>
 
-#include "Constants.hpp"
 #include "MainWindow.hpp"
 #include "ProgramInterrupts.hpp"
 
 int main(int argc, char *argv[]) {
+  /*#########################*/
+  /*#                       #*/
+  /*#       Base setup      #*/
+  /*#                       #*/
+  /*#########################*/
+
   Q_INIT_RESOURCE(DBScripts);
 
   QApplication::setApplicationName(cpsm::consts::kAppName);
   QApplication::setApplicationVersion(to_string(cpsm::consts::kCurrentVersion));
 
-  //  installCustomLogHandler(logHandler::GlobalLogInfo{.progLogFilePath = "CPSMPlongees.log", .progName =
-  //  "CPSMPlongees"});
   const auto kLogPath{logger::GetLogFilePath(CMAKEMACRO_PROJECT_EXE)};
   logger::SetupLoggerRotating(kLogPath, 2);
 
   SPDLOG_INFO("\n\n\n - {} - Hello! Welcome to CPSM Gestion plongées\n\n", QDateTime::currentDateTime().toString());
-
   QApplication a(argc, argv);
+
+  /*#########################*/
+  /*#                       #*/
+  /*#  DB load & migration  #*/
+  /*#                       #*/
+  /*#########################*/
 
   const auto kLoadDbSuccess{cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath)};
   if (!kLoadDbSuccess) {
     CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotInitDB);
   }
 
-  const auto kDBInfoOpt{cpsm::db::GetDBInfoFromId(db::Def(), {1})};
+  /* -- DB retrieving db information -- */
+
+  auto database{db::Def()};
+
+  const auto kDBInfoOpt{cpsm::db::GetDBInfoFromId(database, {1})};
   if (!kDBInfoOpt) {
     CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotGetDBInfo);
   }
@@ -46,22 +59,74 @@ int main(int argc, char *argv[]) {
     CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotGetDBInfo);
   }
   const auto kLastDBSoftVersion{*kLastDBSoftVersionOpt};
-  if (/*kLastDBSoftVersion != updt::Version{0, 0, 0} &&*/ kLastDBSoftVersion != cpsm::consts::kCurrentVersion) {
-    SPDLOG_INFO("We may need a db migration here? last used soft version <{}> to current version <{}>",
-                kLastDBSoftVersion,
-                cpsm::consts::kCurrentVersion);
+
+  /* -- DB actual Migration -- */
+
+  if (!database.transaction()) {
+    CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotInitTransaction);
+  }
+  const auto kNeedsMigration{cpsm::db::VersionNeedsMigration(kLastDBSoftVersion, cpsm::consts::kCurrentVersion)};
+  switch (kNeedsMigration) {
+    case cpsm::db::NeedsMigrationState::kNoMigrationNeeded:
+      break;
+    case cpsm::db::NeedsMigrationState::kUpgradeNeeded: /* We'll check that later for lisibility reason */
+      break;
+    case cpsm::db::NeedsMigrationState::kDowngradeNeeded: {
+      const auto kShouldExecute{QMessageBox::critical(
+          nullptr,
+          QObject::tr("ATTENTION"),
+          QObject::tr("La base de donnée a dernièrement été ouverte avec une version du logiciel plus récente (%0).\n"
+                      "L'ouvrir avec cette version plus ancienne (%1) va probablement causer une corruption des "
+                      "données irrémédiable.\n"
+                      "\n"
+                      "Souhaitez-vous malgré tout lancer le logiciel ?")
+              .arg(to_string(kLastDBSoftVersion), to_string(cpsm::consts::kCurrentVersion)),
+          QMessageBox::Yes | QMessageBox::No,
+          QMessageBox::No)};
+      if (kShouldExecute == QMessageBox::No) {
+        return 0;
+      }
+      SPDLOG_WARN("User decided to open the software with a lower version ({}) than the one used last time ({})",
+                  cpsm::consts::kCurrentVersion,
+                  kLastDBSoftVersion);
+      break;
+    }
+    default:
+      SPDLOG_CRITICAL("Unknown migration need type: {}", static_cast<int>(kNeedsMigration));
+      CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kUnknownDBMigrationNeed);
+      break;
+  }
+
+  if (kNeedsMigration == cpsm::db::NeedsMigrationState::kUpgradeNeeded) {
+    if (!cpsm::db::MigrateDB(kLastDBSoftVersion, cpsm::consts::kCurrentVersion, database)) {
+      if (!database.rollback()) {
+        CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotRollback);
+      }
+      CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kDBMigrationFailed);
+    }
   }
 
   db_info.latest_cpsm_soft_version_used = to_string(cpsm::consts::kCurrentVersion);
   db_info.latest_cpsm_db_version_used = to_string(cpsm::consts::kCurrentVersion);
   db_info.latest_open_date = QDateTime::currentDateTime();
   SPDLOG_INFO("Updating DB infos to {}", db_info);
-  const auto kUpdateInfoSuccess{cpsm::db::UpdateDBInfo(db::Def(), db_info)};
+  const auto kUpdateInfoSuccess{cpsm::db::UpdateDBInfo(database, db_info)};
   SPDLOG_INFO("Update db info success? {}", kUpdateInfoSuccess.has_value());
   if (!kUpdateInfoSuccess) {
-    CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotGetDBInfo);
+    if (!database.rollback()) {
+      CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotRollback);
+    }
+  }
+  if (!database.commit()) {
+    CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotCommit);
   }
   SPDLOG_INFO("");
+
+  /*#########################*/
+  /*#                       #*/
+  /*#   Application start   #*/
+  /*#                       #*/
+  /*#########################*/
 
   // QFontDatabase::addApplicationFont(":/fonts/LEMONMILK-Bold.otf");
 

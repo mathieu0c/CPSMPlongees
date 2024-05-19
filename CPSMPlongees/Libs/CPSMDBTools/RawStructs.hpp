@@ -42,6 +42,7 @@ int GetDiverDiveCount(const Diver& diver);
 std::optional<int> GetDiverDiveBalance(const Diver& diver);
 bool IsDiverMedicalCertificateValid(const Diver& diver);
 bool IsDiverCurrentlyRegistered(const Diver& diver);
+bool IsDiverCurrentlyAMember(QDate diver_member_date);
 bool IsDiverCurrentlyAMember(const Diver& diver);
 
 #define DiverAddress_VAR_LIST(COLUMN)        \
