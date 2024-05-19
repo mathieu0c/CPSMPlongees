@@ -1,23 +1,43 @@
 cmake_minimum_required(VERSION 3.5)
 
-
-
 if(UNIX)
     message( FATAL_ERROR "Linux is not supported, CMake will exit." )
 endif(UNIX)
 
-#VERSION = MAJOR.MINOR.PATCH
-set(VERSIONING_MAJOR 0)#incompatible update
-set(VERSIONING_MINOR 0)#new features added
-set(VERSIONING_PATCH 0)#bug fixed / minor change
+###############################
+#                             #
+#        User options         #
+#                             #
+###############################
+
+######################
+#   Modifiable vars  #
+######################
 
 option(CPSM_BUILD_AS_MOCKUP "Build as mockup" ON)
+set(CPSM_BUILD_AS_MOCKUP ON)
 
+#VERSION = MAJOR.MINOR.PATCH
+set(ENV{MAIN_VERSIONING_MAJOR} 1)#incompatible update
+set(ENV{MAIN_VERSIONING_MINOR} 0)#new features added
+set(ENV{MAIN_VERSIONING_PATCH} 1)#bug fixed / minor change
+
+
+######################
+#      Constants     #
+######################
+
+set(ENV{MAIN_GITHUB_URL} "https://api.github.com/repos/mathieu0c/CPSMPlongees/releases/latest")
+
+
+###############################
+#                             #
+#      Project definition     #
+#                             #
+###############################
 
 set(EXE_NAME "CPSMPlongees")
-
-
-project(CPSMPlongees VERSION ${VERSIONING_MAJOR}.${VERSIONING_MINOR}.${VERSIONING_PATCH} LANGUAGES CXX)
+project(CPSMPlongees VERSION ${MAIN_VERSIONING_MAJOR}.${MAIN_VERSIONING_MINOR}.${MAIN_VERSIONING_PATCH} LANGUAGES CXX)
 
 
 
@@ -93,7 +113,7 @@ set(PROJECT_SOURCES
 
         Assets/ProgResources.qrc
 
-        Gui/ReversedTristateCheckBox.hpp Gui/ReversedTristateCheckBox.cpp
+        Gui/CustomCheckBoxes.hpp Gui/CustomCheckBoxes.cpp
         Gui/DiverEdit.hpp Gui/DiverEdit.cpp Gui/DiverEdit.ui
         Gui/DiveEdit.hpp Gui/DiveEdit.cpp Gui/DiveEdit.ui
         Gui/DiveSearch.hpp Gui/DiveSearch.cpp Gui/DiveSearch.ui
@@ -155,11 +175,6 @@ target_include_directories(${EXE_NAME}
 # Code macros (definitions)   #
 #                             #
 ###############################
-
-add_definitions("-DPROJECT_V_MAJOR=${VERSIONING_MAJOR}")
-add_definitions("-DPROJECT_V_MINOR=${VERSIONING_MINOR}")
-add_definitions("-DPROJECT_V_PATCH=${VERSIONING_PATCH}")
-add_definitions("-DPROJECT_GITHUB_RELEASE_DEFINE=\"https://api.github.com/repos/mathieu0c/CPSMPlongees/releases/latest\"")
 
 add_definitions("-DPROJECT_VERSION=\"${CMAKE_PROJECT_VERSION}\"")
 add_definitions("-DPROJECT_NAME=\"${CMAKE_PROJECT_NAME}\"")

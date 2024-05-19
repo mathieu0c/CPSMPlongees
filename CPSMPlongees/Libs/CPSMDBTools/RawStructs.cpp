@@ -23,7 +23,7 @@ bool IsDiverCurrentlyRegistered(const Diver& diver) {
   return diver.registration_date.addYears(1) > QDate::currentDate();
 }
 bool IsDiverCurrentlyAMember(const Diver& diver) {
-  return diver.is_member && diver.member_date.addYears(1) > QDate::currentDate();
+  return diver.member_date.year() == QDate::currentDate().year();
 }
 
 StoreDiverAndAddressResult StoreDiverAndItsAddress(Diver diver, const DiverAddress& address) {

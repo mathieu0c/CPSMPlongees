@@ -21,7 +21,7 @@ bool InitDB(const auto& kFileName) {
 
   if constexpr (kDeleteOnCreation && consts::kIsBuiltAsMockup) {
 #ifndef CMAKE_DEBUG_MODE
-#warning "Requesting to delete db file in DEBUG mode"
+#warning "Requesting to delete db file not in DEBUG mode"
 #endif
     SPDLOG_WARN("Deleting DB file: {}: success? {}", kFileName, QFile::remove(kFileName));
   }

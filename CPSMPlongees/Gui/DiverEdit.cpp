@@ -2,6 +2,7 @@
 
 #include <QMessageBox>
 
+#include "Constants.hpp"
 #include "ui_DiverEdit.h"
 
 namespace gui {
@@ -47,7 +48,6 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   lambda_connect_editing_finished(ui->de_birthDate, &cpsm::db::Diver::birth_date);
   lambda_connect_editing_finished(ui->le_license, &cpsm::db::Diver::license_number);
   lambda_connect_editing_finished(ui->de_registration, &cpsm::db::Diver::registration_date);
-  lambda_connect_editing_finished(ui->de_member, &cpsm::db::Diver::member_date);
   lambda_connect_editing_finished(ui->de_certificate, &cpsm::db::Diver::certif_date);
   lambda_connect_editing_finished(ui->le_address, &cpsm::db::DiverAddress::address);
   lambda_connect_editing_finished(ui->le_city, &cpsm::db::DiverAddress::city);
@@ -79,8 +79,17 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   });
 
   /* Member */
-  connect(ui->cb_member, &QCheckBox::toggled, this, [this](bool checked) { ui->de_member->setEnabled(checked); });
-  connect(ui->cb_member, &QCheckBox::toggled, this, [this](bool checked) { m_diver.is_member = checked; });
+  connect(ui->cb_member, &QCheckBox::toggled, this, [this](bool checked) {
+    if (checked) {
+      ui->de_member->setDate(QDate::currentDate());
+    }
+  });
+  connect(ui->de_member, &QDateEdit::dateChanged, this, [this](const QDate &date) {
+    if (date.year() != m_diver.member_date.year()) { /* Update date only if the year is different */
+      m_diver.member_date = date;
+    }
+    ui->cb_member->setChecked(m_diver.member_date.year() == QDate::currentDate().year());
+  });
 
   /* Address */
   connect(ui->pb_quit_family, &QPushButton::clicked, this, [this]() {
@@ -167,9 +176,8 @@ void DiverEdit::UpdateUiFromDiver() {
   ui->de_birthDate->setDate(m_diver.birth_date);
   ui->le_license->setText(m_diver.license_number);
   ui->de_registration->setDate(m_diver.registration_date);
-  ui->cb_member->setChecked(m_diver.is_member);
-  ui->de_member->setEnabled(m_diver.is_member);
-  ui->de_member->setDate(m_diver.member_date);
+  ui->cb_member->setChecked(m_diver.member_date.year() == QDate::currentDate().year());
+  ui->de_member->setDate(m_diver.member_date.isValid() ? m_diver.member_date : cpsm::consts::kEpochDate);
   SetLevelComboboxFromLevelId(m_diver.diver_level_id);
   ui->de_certificate->setDate(m_diver.certif_date);
 
@@ -220,7 +228,6 @@ void DiverEdit::SetAllGearChecked(bool checked) {
 }
 
 void DiverEdit::OnPaymentValueChanged(int new_val) {
-  SPDLOG_DEBUG("New val: {}", new_val);
   m_diver.paid_dives = new_val + m_diver_original_paid_dives_count;
   UpdateUiSold();
 }

@@ -5,6 +5,10 @@
 #include <Logger/logger_setup.hpp>
 #include <gtest/gtest.h>
 
+#include "test_common.hpp"
+
+QSqlDatabase dbt{QSqlDatabase::database()};
+
 int main(int argc, char *argv[]) {
   Q_INIT_RESOURCE(DBScripts);
 

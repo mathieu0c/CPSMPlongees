@@ -8,6 +8,8 @@
 
 #define REINIT_DB ASSERT_TRUE(test::ReinitDB())
 
+extern QSqlDatabase dbt;
+
 namespace test {
 
 constexpr bool kDebugTest{false};

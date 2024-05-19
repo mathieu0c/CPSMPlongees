@@ -27,9 +27,9 @@ MainWindow::MainWindow(QWidget *parent)
       ui(new Ui::MainWindow),
       c_appdata_folder{cpsm::consts::kAppDataPath},
       c_config_file{QString{"%0/config.json"}.arg(c_appdata_folder)},
-      m_updateHandler{new updt::UpdateHandler(consts::kCurrentVersion, consts::PROJECT_GITHUB_RELEASE,
-                                              consts::PUBLIC_VERIFIER_KEY_FILE, true, consts::POST_UPDATE_CMD, true,
-                                              this)} {
+      m_updateHandler{new updt::UpdateHandler(cpsm::consts::kCurrentVersion, cpsm::consts::kProjectGithubRelease,
+                                              cpsm::consts::kPublicVerifierKeyFile, true,
+                                              cpsm::consts::kPostUpdateCommand, true, this)} {
   ui->setupUi(this);
 
   if (cpsm::consts::kIsBuiltAsMockup && !btype::HasDebInfo()) {
@@ -44,15 +44,6 @@ MainWindow::MainWindow(QWidget *parent)
   if (!QFileInfo::exists(c_config_file)) {
     SPDLOG_INFO("Saving default config file: {}", c_config_file);
   }
-
-  const auto kTmpDiver{cpsm::db::GetDiverFromId(db::Def(), {5})};
-  if (!kTmpDiver) {
-    SPDLOG_ERROR("Failed to retrieve diver with id=5");
-  }
-  SPDLOG_INFO("Retrieved diver: {}", kTmpDiver.value());
-
-  const auto kDiveCount{cpsm::db::GetDiverDiveCount(kTmpDiver.value())};
-  ui->pg_editDiver->SetDiver(kTmpDiver.value(), kDiveCount);
 
   connect(ui->pg_editDiver, &gui::DiverEdit::DiverEdited, this, &MainWindow::OnDiverEdited);
 
@@ -71,7 +62,6 @@ void MainWindow::EditDiver(const cpsm::DiverWithDiveCount &diver) {
 
 void MainWindow::OnDiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress> > edit_opt) {
   if (!edit_opt) {
-    SPDLOG_DEBUG("Diver edition cancelled");
     ui->tab_divers->setCurrentIndex(DiverTabPages::kBrowseDivers);
     return;
   }
@@ -202,6 +192,6 @@ void MainWindow::on_pb_newDiver_clicked() {
   default_diver.diver.birth_date = QDate::currentDate().addYears(-30);
   default_diver.diver.certif_date = QDate::currentDate();
   default_diver.diver.registration_date = QDate::currentDate();
-  default_diver.diver.member_date = QDate::currentDate();
+  default_diver.diver.member_date = cpsm::consts::kEpochDate;
   EditDiver(default_diver);
 }

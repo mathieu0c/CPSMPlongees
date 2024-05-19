@@ -7,8 +7,6 @@
 #include "Database.hpp"
 #include "test_common.hpp"
 
-QSqlDatabase dbt{QSqlDatabase::database()};
-
 TEST(CPSMTests, DevTest) {
   REINIT_DB;
   //  utils::Chrono<std::chrono::microseconds> req_time0{};

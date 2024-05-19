@@ -142,6 +142,15 @@ inline std::optional<T> readFromDB(const QSqlDatabase& db, UnaryFunction extract
   auto err{query.lastError()};
   if (err.type() != QSqlError::ErrorType::NoError) {
     SQL_PRINT_ERROR(query, err);
+    SPDLOG_ERROR("Raw request: <{}>", request);
+    SPDLOG_ERROR("argList<size={}>:", argList.size());
+    for (const auto& e : argList) {
+      SPDLOG_ERROR("{}", e);
+    }
+    SPDLOG_ERROR("valList<size={}>:", valList.size());
+    for (const auto& e : valList) {
+      SPDLOG_ERROR("{}", e.toString());
+    }
     return {};
   }
 

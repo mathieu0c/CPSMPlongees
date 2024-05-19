@@ -14,19 +14,19 @@ VALUES
 
 -- Inserting Divers (with French phone numbers):
 INSERT INTO Divers (first_name, last_name, birth_date, email, phone_number, address_id,
-license_number, certif_date, diver_level_id, registration_date, is_member, member_date, paid_dives,
+license_number, certif_date, diver_level_id, registration_date, member_date, paid_dives,
 gear_regulator, gear_suit, gear_computer, gear_jacket)
 VALUES
   ('John', 'DOE', '1990-05-15', 'john.doe@example.com', '0612345678', 1,
-    'ABC123', '2022-01-01', 1, '2024-02-28', 0, '2021-02-28', 10, 1, 1, 0, 0),-- Level 1 (PE20)
+    'ABC123', '2022-01-01', 1, '2024-02-28', '2021-02-28', 10, 1, 1, 0, 0),-- Level 1 (PE20)
   ('Jane', 'SMITH', '1988-10-20', 'jane.smith@example.com', '0698745632', 2,
-    'XYZ456', '2022-02-15', 2, '2024-02-28', 1, '2024-02-28', 15, 0, 1, 1, 1),-- Level 2 (PE40)
+    'XYZ456', '2022-02-15', 2, '2024-02-28', '2024-02-28', 15, 0, 1, 1, 1),-- Level 2 (PE40)
   ('Michael', 'JOHNSON', '1995-03-12', 'michael.johnson@example.com', '0655565556', 3,
-    'DEF789', '2023-05-20', 3, '2024-02-28', 1, '2024-02-28', 1, 1, 0, 1, 0),-- Level 3 (PA20)
+    'DEF789', '2023-05-20', 3, '2024-02-28', '2024-02-28', 1, 1, 0, 1, 0),-- Level 3 (PA20)
   ('Sarah', 'WILLIAMS', '1992-07-08', 'sarah.williams@example.com', '0611122333', 4,
-    'GHI101', '2023-08-10', 1, '2022-08-12', 0, '2022-08-12', 20, 1, 1, 1, 1),-- Level 1 (PE20)
+    'GHI101', '2023-08-10', 1, '2022-08-12', '2022-08-12', 20, 1, 1, 1, 1),-- Level 1 (PE20)
   ('David', 'BROWN', '1998-12-25', 'david.brown@example.com', '0677889999', 2,
-    'JKL202', '2023-10-30', 4, '2021-02-28', 0, '2021-02-28', 8, 0, 1, 0, 1);-- Level 4 (PE60)
+    'JKL202', '2023-10-30', 4, '2021-02-28', '2021-02-28', 8, 0, 1, 0, 1);-- Level 4 (PE60)
 
 -- Inserting Dives:
 INSERT INTO Dives (datetime, diving_site_id)

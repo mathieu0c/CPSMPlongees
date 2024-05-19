@@ -235,13 +235,13 @@ QString DiversViewModel::GetDisplayTextForIndex(const DiverWithDiveCount &comple
       return diver.first_name;
     }
     case ColumnId::kRegistrationDate: {
-      return diver.registration_date.toString(consts::kDateUserFormat);
+      return diver.registration_date.toString(cpsm::consts::kDateUserFormat);
     }
     case ColumnId::kMember: {
-      return lambda_bool(diver.is_member);
+      return lambda_bool(cpsm::db::IsDiverCurrentlyAMember(diver));
     }
     case ColumnId::kValidCertificate: {
-      return diver.certif_date.toString(consts::kDateUserFormat);
+      return diver.certif_date.toString(cpsm::consts::kDateUserFormat);
     }
     case ColumnId::kLevel: {
       auto it{m_db_levels.find(diver.diver_level_id)};
@@ -261,7 +261,7 @@ QString DiversViewModel::GetDisplayTextForIndex(const DiverWithDiveCount &comple
 }
 
 QVariant DiversViewModel::GetBackgroundForIndex(const DiverWithDiveCount &complete_diver, int col) const {
-  auto lambda_bool{[](bool b) { return b ? consts::colors::kBackgroundGreen : consts::colors::kBackgroundRed; }};
+  auto lambda_bool{[](bool b) { return b ? ::consts::colors::kBackgroundGreen : ::consts::colors::kBackgroundRed; }};
 
   const auto &diver{complete_diver.diver};
   switch (col) {
@@ -269,7 +269,7 @@ QVariant DiversViewModel::GetBackgroundForIndex(const DiverWithDiveCount &comple
       return lambda_bool(db::IsDiverCurrentlyRegistered(diver));
     }
     case ColumnId::kMember: {
-      return lambda_bool(diver.is_member);
+      return lambda_bool(cpsm::db::IsDiverCurrentlyAMember(diver));
     }
     case ColumnId::kValidCertificate: {
       return lambda_bool(db::IsDiverMedicalCertificateValid(diver));

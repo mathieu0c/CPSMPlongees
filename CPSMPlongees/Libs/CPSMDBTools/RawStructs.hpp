@@ -10,6 +10,13 @@ namespace cpsm::db {
 
 using DBType = ::db::DBType;
 
+#define DBInfo_VAR_LIST(COLUMN)                               \
+  COLUMN(dbinfo_id, DBType::INTEGER, true);                   \
+  COLUMN(latest_cpsm_soft_version_used, DBType::TEXT, false); \
+  COLUMN(latest_cpsm_db_version_used, DBType::TEXT, false);   \
+  COLUMN(latest_open_date, DBType::DATETIME, false);
+DB_DECLARE_STRUCT(DBInfo, DBInfo, val.dbinfo_id <= 0, DBInfo_VAR_LIST)
+
 /* Diver */
 #define Diver_VAR_LIST(COLUMN)                    \
   COLUMN(diver_id, DBType::INTEGER, true);        \
@@ -23,7 +30,6 @@ using DBType = ::db::DBType;
   COLUMN(certif_date, DBType::DATE, false);       \
   COLUMN(diver_level_id, DBType::INTEGER, false); \
   COLUMN(registration_date, DBType::DATE, false); \
-  COLUMN(is_member, DBType::INTEGER, false);      \
   COLUMN(member_date, DBType::DATE, false);       \
   COLUMN(paid_dives, DBType::INTEGER, false);     \
   COLUMN(gear_regulator, DBType::INTEGER, false); \

@@ -626,7 +626,7 @@
            <widget class="QDateEdit" name="de_registration"/>
           </item>
           <item row="2" column="0">
-           <widget class="QCheckBox" name="cb_member">
+           <widget class="OnlyCheckableCheckBox" name="cb_member">
             <property name="text">
              <string>Adhérent en l'année</string>
             </property>
@@ -706,6 +706,11 @@
    <class>LineEditUpperCase</class>
    <extends>QLineEdit</extends>
    <header>Gui/LineEditUpperCase.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>OnlyCheckableCheckBox</class>
+   <extends>QCheckBox</extends>
+   <header>Gui/CustomCheckBoxes.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>

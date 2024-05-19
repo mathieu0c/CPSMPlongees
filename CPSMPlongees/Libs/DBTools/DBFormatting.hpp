@@ -5,42 +5,27 @@
 #include <QSqlField>
 #include <QSqlQuery>
 
-// #include <Logger/logger.hpp>
-
 #include "Logger/logger.hpp"
 
 inline QString GetLastExecutedQuery(const QSqlQuery& query) {
-  QString sql = query.executedQuery();
-  int nbBindValues = query.boundValues().size();
+  QString str = query.executedQuery();
 
-  for (int i = 0, j = 0; j < nbBindValues;) {
-    int s = sql.indexOf(QLatin1Char('\''), i);
-    i = sql.indexOf(QLatin1Char('?'), i);
-    if (i < 1) {
-      break;
-    }
-
-    if (s < i && s > 0) {
-      i = sql.indexOf(QLatin1Char('\''), s + 1) + 1;
-      if (i < 2) {
-        break;
-      }
-    } else {
-      const QVariant& var = query.boundValue(j);
-      QSqlField field(QLatin1String(""), var.metaType());
-      if (var.isNull()) {
-        field.clear();
-      } else {
-        field.setValue(var);
-      }
-      QString formatV = query.driver()->formatValue(field);
-      sql.replace(i, 1, formatV);
-      i += formatV.length();
-      ++j;
-    }
+  const auto kBoundValues{query.boundValues()};
+  if (kBoundValues.size() == 0) {
+    return str;
   }
 
-  return sql;
+  for (int i{static_cast<int>(query.boundValues().size() - 1)}; i >= 0; --i) {
+    const auto kBoundValue{query.boundValue(i)};
+    const auto kBoundValueName{query.boundValueName(i)};
+
+    if (kBoundValue.isNull()) {
+      str.replace(kBoundValueName, "NULL");
+    } else {
+      str.replace(kBoundValueName, kBoundValue.toString());
+    }
+  }
+  return str;
 }
 
 DECLARE_CUSTOM_SPD_FORMAT(QSqlError) {

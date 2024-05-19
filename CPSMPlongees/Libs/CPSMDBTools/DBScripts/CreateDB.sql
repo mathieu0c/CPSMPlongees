@@ -1,5 +1,12 @@
 PRAGMA foreign_keys = ON;
 
+-- DBInfo definition
+CREATE TABLE IF NOT EXISTS DBInfo (
+  dbinfo_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  latest_cpsm_soft_version_used TEXT NOT NULL,
+  latest_cpsm_db_version_used TEXT NOT NULL,
+  latest_open_date TEXT NOT NULL
+);
 
 -- DiversLevels definition
 
@@ -22,7 +29,6 @@ CREATE TABLE IF NOT EXISTS Divers (
   certif_date TEXT,
   diver_level_id INTEGER,
   registration_date TEXT,
-  is_member INTEGER DEFAULT (0),
   member_date TEXT,
   paid_dives INTEGER,
   gear_regulator INTEGER DEFAULT (0),
@@ -80,33 +86,39 @@ CREATE TABLE IF NOT EXISTS DivingTypes (
 
 -- INIT
 
+-- DBInfo
+INSERT OR IGNORE INTO DBInfo
+    (dbinfo_id, latest_cpsm_soft_version_used, latest_cpsm_db_version_used, latest_open_date)
+    VALUES
+    (1, "0.0.0", "0.0.0", "1970-01-01 00:00:00");
+
 --  Diver levels
-INSERT OR IGNORE INTO "DiversLevels"
-    ("level_name") VALUES
-    ("PE20"),
-    ("PE40"),
-    ("PA20"),
-    ("PE60"),
-    ("PA60"),
-    ("E1"),
-    ("E2"),
-    ("E3");
+INSERT OR IGNORE INTO DiversLevels
+    (diver_level_id,level_name) VALUES
+    (1,"PE20"),
+    (2,"PE40"),
+    (3,"PA20"),
+    (4,"PE60"),
+    (5,"PA60"),
+    (6,"E1"),
+    (7,"E2"),
+    (8,"E3");
 
 
 --  Diving sites
-INSERT OR IGNORE INTO "DivingSites"
-    ("site_name") VALUES
-    ("Les deux frères"),
-    ("L'Arroyo"),
-    ("La sèche du pêcheur"),
-    ("La sèche de Saint-Elme"),
-    ("La roche à l'ancre"),
-    ("La vallée aux gorgones"),
-    ("Le Tromblon");
+INSERT OR IGNORE INTO DivingSites
+    (diving_site_id, site_name) VALUES
+    (1,"Les deux frères"),
+    (2,"L'Arroyo"),
+    (3,"La sèche du pêcheur"),
+    (4,"La sèche de Saint-Elme"),
+    (5,"La roche à l'ancre"),
+    (6,"La vallée aux gorgones"),
+    (7,"Le Tromblon");
 
 
 --  Diving types
-INSERT OR IGNORE INTO "DivingTypes"
-    ("type_name") VALUES
-    ("Explo"),
-    ("Tech");
+INSERT OR IGNORE INTO DivingTypes
+    (diving_type_id,type_name) VALUES
+    (1,"Explo"),
+    (2,"Tech");

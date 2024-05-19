@@ -28,6 +28,7 @@ target_link_libraries("${target_name}"
     DBTools::DBTools
     libLogger::libLogger
     libUtils::libUtils
+    libSimpleUpdater::libSimpleUpdater
 )
 
 target_include_directories(${target_name}

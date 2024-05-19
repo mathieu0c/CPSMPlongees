@@ -1,4 +1,4 @@
-#include "ReversedTristateCheckBox.hpp"
+#include "CustomCheckBoxes.hpp"
 
 #include <Logger/logger.hpp>
 
@@ -29,5 +29,20 @@ void ReversedTristateCheckBox::nextCheckState() {
     default:
       SPDLOG_ERROR("Invalid check state: {}", checkState());
       break;
+  }
+}
+
+OnlyCheckableCheckBox::OnlyCheckableCheckBox(QWidget *parent) : QCheckBox(parent) {}
+
+OnlyCheckableCheckBox::OnlyCheckableCheckBox(const QString &text, QWidget *parent) : QCheckBox(text, parent) {}
+
+void OnlyCheckableCheckBox::nextCheckState() {
+  if (!isCheckable()) {
+    return;
+  }
+
+  if (!isTristate()) {
+    setChecked(true);
+    return;
   }
 }

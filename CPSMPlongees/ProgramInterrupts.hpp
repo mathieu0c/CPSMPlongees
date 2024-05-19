@@ -8,10 +8,19 @@
 namespace cpsm {
 
 #define AbortReason_ENUM_VALS(name, value, user_msg, log_detail) name = value,
-#define AbortReason_LIST(FUNC)                                                                                \
-  FUNC(kUnknown, 0, "Raison inconnue", "unknown crash reason")                                                \
-  FUNC(kCouldNotRollback, 1, "Impossible de restaurer la base de données.", "Could not rollback transaction") \
-  FUNC(kCouldNotInitDB, 2, "Impossible de charger la base de donnée", "Could not init db")
+#define AbortReason_LIST(FUNC)                                                                                        \
+  FUNC(kUnknown, 0, "Raison inconnue", "unknown crash reason")                                                        \
+  FUNC(kCouldNotRollback, 1, "Impossible de restaurer la base de données.", "Could not rollback transaction")         \
+  FUNC(kCouldNotInitDB, 2, "Impossible de charger la base de donnée", "Could not init db")                            \
+  FUNC(kCouldNotGetDBInfo,                                                                                            \
+       3,                                                                                                             \
+       "Impossible de charger les informations de la base de donnée",                                                 \
+       "Could not read db info such as version and date. This may lead to bad migration & corruption")                \
+  FUNC(kCouldNotUpdateDBInfo,                                                                                         \
+       4,                                                                                                             \
+       "Impossible de mettre à jour les informations de la base de donnée",                                           \
+       "Could not update db info such as version and date. This may lead to bad migration & corruption for the next " \
+       "time")
 
 enum class AbortReason { AbortReason_LIST(AbortReason_ENUM_VALS) };
 
