@@ -38,40 +38,35 @@ int main(int argc, char *argv[]) {
   /*#########################*/
 
   const auto kLoadDbSuccess{cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath)};
-  if (!kLoadDbSuccess) {
-    CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotInitDB);
-  }
+  CPSM_ABORT_IF_FOR(!kLoadDbSuccess, nullptr, cpsm::AbortReason::kCouldNotInitDB);
 
   /* -- DB retrieving db information -- */
 
   auto database{db::Def()};
 
   const auto kDBInfoOpt{cpsm::db::GetDBInfoFromId(database, {1})};
-  if (!kDBInfoOpt) {
-    CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotGetDBInfo);
-  }
+  CPSM_ABORT_IF_FOR(!kDBInfoOpt, nullptr, cpsm::AbortReason::kCouldNotGetDBInfo);
+
   auto db_info{*kDBInfoOpt};
   SPDLOG_INFO("");
   SPDLOG_INFO("DB infos read: {}", db_info);
 
   const auto kLastDBSoftVersionOpt{updt::Version::FromString(db_info.latest_cpsm_soft_version_used)};
-  if (!kLastDBSoftVersionOpt) {
-    CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotGetDBInfo);
-  }
+  CPSM_ABORT_IF_FOR(!kLastDBSoftVersionOpt, nullptr, cpsm::AbortReason::kCouldNotGetDBInfo);
   const auto kLastDBSoftVersion{*kLastDBSoftVersionOpt};
 
   /* -- DB actual Migration -- */
 
-  if (!database.transaction()) {
-    CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotInitTransaction);
-  }
-  const auto kNeedsMigration{cpsm::db::VersionNeedsMigration(kLastDBSoftVersion, cpsm::consts::kCurrentVersion)};
+  CPSM_ABORT_IF_FOR(!database.transaction(), nullptr, cpsm::AbortReason::kCouldNotInitTransaction);
+
+  namespace migration = cpsm::db::migration;
+  const auto kNeedsMigration{migration::VersionNeedsMigration(kLastDBSoftVersion, cpsm::consts::kCurrentVersion)};
   switch (kNeedsMigration) {
-    case cpsm::db::NeedsMigrationState::kNoMigrationNeeded:
+    case migration::NeedsMigrationState::kNoMigrationNeeded:
       break;
-    case cpsm::db::NeedsMigrationState::kUpgradeNeeded: /* We'll check that later for lisibility reason */
+    case migration::NeedsMigrationState::kUpgradeNeeded: /* We'll check that later for lisibility reason */
       break;
-    case cpsm::db::NeedsMigrationState::kDowngradeNeeded: {
+    case migration::NeedsMigrationState::kDowngradeNeeded: {
       const auto kShouldExecute{QMessageBox::critical(
           nullptr,
           QObject::tr("ATTENTION"),
@@ -97,11 +92,11 @@ int main(int argc, char *argv[]) {
       break;
   }
 
-  if (kNeedsMigration == cpsm::db::NeedsMigrationState::kUpgradeNeeded) {
-    if (!cpsm::db::MigrateDB(kLastDBSoftVersion, cpsm::consts::kCurrentVersion, database)) {
-      if (!database.rollback()) {
-        CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotRollback);
-      }
+  if (kNeedsMigration == migration::NeedsMigrationState::kUpgradeNeeded || true) {
+    if (!migration::MigrateDB(kLastDBSoftVersion, cpsm::consts::kCurrentVersion, database)) {
+      /* Make sure we rollback to prevent problems on next opening */
+      CPSM_ABORT_IF_FOR(!database.rollback(), nullptr, cpsm::AbortReason::kCouldNotRollback);
+
       CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kDBMigrationFailed);
     }
   }
@@ -113,13 +108,9 @@ int main(int argc, char *argv[]) {
   const auto kUpdateInfoSuccess{cpsm::db::UpdateDBInfo(database, db_info)};
   SPDLOG_INFO("Update db info success? {}", kUpdateInfoSuccess.has_value());
   if (!kUpdateInfoSuccess) {
-    if (!database.rollback()) {
-      CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotRollback);
-    }
+    CPSM_ABORT_IF_FOR(!database.rollback(), nullptr, cpsm::AbortReason::kCouldNotRollback);
   }
-  if (!database.commit()) {
-    CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kCouldNotCommit);
-  }
+  CPSM_ABORT_IF_FOR(!database.commit(), nullptr, cpsm::AbortReason::kCouldNotCommit);
   SPDLOG_INFO("");
 
   /*#########################*/

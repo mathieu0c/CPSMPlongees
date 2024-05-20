@@ -95,14 +95,18 @@ INSERT OR IGNORE INTO DBInfo
 --  Diver levels
 INSERT OR IGNORE INTO DiversLevels
     (diver_level_id,level_name) VALUES
-    (1,"PE20"),
-    (2,"PE40"),
-    (3,"PA20"),
-    (4,"PE60"),
-    (5,"PA60"),
-    (6,"E1"),
-    (7,"E2"),
-    (8,"E3");
+    (1,"Débutant"),
+    (2,"PE12"),
+    (3,"PE20"),
+    (4,"PE40"),
+    (5,"PA20"),
+    (6,"PA40"),
+    (7,"PE60"),
+    (8,"PA60"),
+    (9,"E1"),
+    (10,"E2"),
+    (11,"E3"),
+    (12,"E4");
 
 
 --  Diving sites

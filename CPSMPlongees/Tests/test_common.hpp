@@ -8,30 +8,28 @@
 
 #define REINIT_DB ASSERT_TRUE(test::ReinitDB())
 
-extern QSqlDatabase dbt;
+#define DBT QSqlDatabase::database()
 
 namespace test {
 
 constexpr bool kDebugTest{false};
 
-inline QSqlDatabase* GetDB() {
-  static auto db{QSqlDatabase::database()};
+inline bool OpenDB() {
+  auto db{QSqlDatabase::database()};
 
-  static bool is_db_init{false};
-  if (!is_db_init) {
-    QFileInfo db_file{"test_db.sqlite"};
-    if (!::db::OpenLocal(db_file.absoluteFilePath())) {
-      throw std::runtime_error("Could not create db");
-    }
-    SPDLOG_INFO("Opened db: {}", db_file);
-    is_db_init = true;
+  QFileInfo db_file{"test_db.sqlite"};
+  if (!::db::OpenLocal(db_file.absoluteFilePath())) {
+    throw std::runtime_error("Could not create db");
+    return false;
   }
+  SPDLOG_INFO("Opened db: {}   driver_name=<{}>", db_file, db.driverName());
 
-  return &db;
+  return true;
 }
 
 inline bool FillDBWithTests() {
-  if (!::db::ExecScript<false, kDebugTest>(":/DBScripts/FillTestDB.sql", GetDB())) {
+  auto dbt{DBT};
+  if (!::db::ExecScript<false, kDebugTest>(":/DBScripts/FillTestDB.sql", &dbt)) {
     SPDLOG_ERROR("Failed to execute fill test DB script");
     return false;
   } else {
@@ -41,7 +39,8 @@ inline bool FillDBWithTests() {
 }
 
 inline bool ClearDB() {
-  if (!::db::ExecScript<false, kDebugTest>(":/Rc/ClearDB.sql", GetDB())) {
+  auto dbt{DBT};
+  if (!::db::ExecScript<false, kDebugTest>(":/Rc/ClearDB.sql", &dbt)) {
     SPDLOG_ERROR("Failed to execute clear test DB script");
     return false;
   } else {
@@ -51,13 +50,14 @@ inline bool ClearDB() {
 }
 
 inline bool CreateDB() {
-  if (!::db::ExecScript<false, kDebugTest>(":/DBScripts/CreateDB.sql", GetDB())) {
+  auto dbt{DBT};
+  if (!::db::ExecScript<false, kDebugTest>(":/DBScripts/CreateDB.sql", &dbt)) {
     SPDLOG_ERROR("Failed to execute create DB script");
     return false;
   } else {
     SPDLOG_INFO("Successfully executed create DB script");
   }
-  if (!::db::ExecScript<false, kDebugTest>(":/DBScripts/SetupTriggers.sql", GetDB())) {
+  if (!::db::ExecScript<false, kDebugTest>(":/DBScripts/SetupTriggers.sql", &dbt)) {
     SPDLOG_ERROR("Failed to execute setup triggers DB script");
     return false;
   } else {

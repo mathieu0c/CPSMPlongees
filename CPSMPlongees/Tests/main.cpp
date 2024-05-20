@@ -7,14 +7,17 @@
 
 #include "test_common.hpp"
 
-QSqlDatabase dbt{QSqlDatabase::database()};
-
 int main(int argc, char *argv[]) {
   Q_INIT_RESOURCE(DBScripts);
 
   ::testing::InitGoogleTest(&argc, argv);
 
   logger::SetupLoggerRotating("TEST_LOGS.log", 1);
+
+  if (!test::OpenDB()) {
+    SPDLOG_CRITICAL("Could not open test database. Abort tests");
+    return -1;
+  }
 
   SPDLOG_INFO("Listing qrc files");
   QDirIterator it(":", QDirIterator::Subdirectories);

@@ -38,13 +38,15 @@ inline bool OpenLocal(const QString &fileName, const QString &connectionName = "
     db = QSqlDatabase::addDatabase("QSQLITE");
   else
     db = QSqlDatabase::addDatabase("QSQLITE", connectionName);
-  db.setHostName("localhost");
-  db.setDatabaseName(fileName);
+  // db.setHostName("localhost");
+  // db.setDatabaseName(fileName);
   if (!db.open()) {
     SPDLOG_ERROR("Cannot open db: {}", db.lastError());
 
     return false;
   }
+
+  SPDLOG_INFO("Opened local db<{}> with driver<{}>", fileName, db.driverName());
 
   return true;
 }

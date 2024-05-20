@@ -42,6 +42,12 @@ DiverSearch::DiverSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiverSea
   });
 
   connect(ui->le_name, &QLineEdit::textChanged, &m_model, &cpsm::DiversViewModel::SetNameFilter);
+
+  auto lambda_update_result_count = [this]() {
+    ui->lbl_status->setText(tr("%1 plongeurs trouvés").arg(m_model.rowCount()));
+  };
+  connect(&m_model, &cpsm::DiversViewModel::rowsInserted, this, lambda_update_result_count);
+  connect(&m_model, &cpsm::DiversViewModel::rowsRemoved, this, lambda_update_result_count);
 }
 
 DiverSearch::~DiverSearch() {

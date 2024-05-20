@@ -83,6 +83,10 @@ inline std::string GetAbortReasonEnumValueName(AbortReason reason) {
 }
 
 #define CPSM_ABORT_FOR(parent, reason) AbortFor(parent, reason, __FILE__, __LINE__)
+#define CPSM_ABORT_IF_FOR(condition, parent, reason) \
+  if (condition) {                                   \
+    CPSM_ABORT_FOR(parent, reason);                  \
+  }
 
 inline void AbortFor(QWidget* parent, AbortReason reason, const std::string& file, int line) {
   SPDLOG_ERROR(

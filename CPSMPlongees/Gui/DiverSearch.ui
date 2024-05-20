@@ -181,6 +181,13 @@
      </layout>
     </widget>
    </item>
+   <item row="2" column="0">
+    <widget class="StatusLabel" name="lbl_status">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -188,6 +195,11 @@
    <class>ReversedTristateCheckBox</class>
    <extends>QCheckBox</extends>
    <header>Gui/CustomCheckBoxes.hpp</header>
+  </customwidget>
+  <customwidget>
+   <class>StatusLabel</class>
+   <extends>QLabel</extends>
+   <header>Gui/GuiUtils.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>

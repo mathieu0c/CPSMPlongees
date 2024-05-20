@@ -11,19 +11,20 @@ TEST(CPSMTests, DevTest) {
   REINIT_DB;
   //  utils::Chrono<std::chrono::microseconds> req_time0{};
   //  auto results0{
-  //      db::readLFromDB<DiveMember>(dbt, db::ExtractDiveMember, "SELECT * FROM %0", {DiveMember::db_table}, {})};
+  //      db::readLFromDB<DiveMember>(DBT, db::ExtractDiveMember, "SELECT * FROM %0", {DiveMember::db_table}, {})};
   //  SPDLOG_DEBUG("Got divers in {}µs", req_time0.Time());
   //  for (const auto &e : results0) {
   //    SPDLOG_DEBUG("{}", e);
   //  }
   //  return;
 
-  //  if (!DeleteDiveMember(dbt, test)) {
+  //  if (!DeleteDiveMember(DBT, test)) {
   //    SPDLOG_ERROR("Failed to delete dive member: {}", test);
   //  }
 
   //  utils::Chrono<std::chrono::microseconds> req_time{};
-  //  auto results{db::readLFromDB<DiveMember>(dbt, db::ExtractDiveMember, "SELECT * FROM %0", {DiveMember::db_table},
+  //  auto results{db::readLFromDB<DiveMember>(DBT, db::ExtractDiveMember, "SELECT * FROM %0",
+  //  {DiveMember::db_table},
   //  {})}; SPDLOG_DEBUG("Got divers in {}µs", req_time.Time()); for (const auto &e : results) {
   //    SPDLOG_DEBUG("{}", e);
   //  }
@@ -31,6 +32,7 @@ TEST(CPSMTests, DevTest) {
 
 TEST(CPSMTests, DBInitTest) {
   REINIT_DB;
+  SPDLOG_INFO("Using sql driver: <{}> open?<{}>", DBT.driverName(), DBT.driver()->isOpen());
 }
 
 TEST(CPSMTests, MultiplePrimaryKeys_DivesMembers) {
@@ -41,10 +43,10 @@ TEST(CPSMTests, MultiplePrimaryKeys_DivesMembers) {
 
   DiveMember test{1, 2, 1};
   SPDLOG_DEBUG("{}", test);
-  ASSERT_TRUE(UpdateDiveMember(dbt, test));
+  ASSERT_TRUE(UpdateDiveMember(DBT, test));
   //  ASSERT_TRUE(false);
 
-  auto kTestRead{cpsm::db::GetDiveMemberFromId(dbt, {1, 2})};
+  auto kTestRead{cpsm::db::GetDiveMemberFromId(DBT, {1, 2})};
   if (!kTestRead) {
     SPDLOG_WARN("Failed to read DiveMember");
   } else {
@@ -58,6 +60,7 @@ TEST(CPSMTests, DiveDeletion) {
   REINIT_DB;
 
   const auto kDiveTarget{2};
+  auto dbt{DBT};
 
   auto count{db::queryCount(dbt, "SELECT * FROM DivesMembers WHERE dive_id = ?", {}, {kDiveTarget})};
   ASSERT_EQ(count, 3);
@@ -72,7 +75,7 @@ TEST(CPSMTests, DiveDeletion) {
   tmp.email = "Biduile@machin.fr";
 
   utils::Chrono<std::chrono::microseconds> req_time{};
-  auto results{db::readLFromDB<Diver>(dbt, cpsm::db::ExtractDiver, "SELECT * FROM %0", {Diver::db_table}, {})};
+  auto results{db::readLFromDB<Diver>(DBT, cpsm::db::ExtractDiver, "SELECT * FROM %0", {Diver::db_table}, {})};
   SPDLOG_DEBUG("Got divers in {}µs", req_time.Time());
 
   for (const auto& e : results) {
@@ -83,9 +86,11 @@ TEST(CPSMTests, DiveDeletion) {
 TEST(CPSMTests, DiverAddress) {
   REINIT_DB;
 
+  auto dbt{DBT};
+
   auto lambda_get_address_count{[]() {
     std::map<int32_t, int32_t> tmp;
-    db::readLFromDB<int>(dbt,
+    db::readLFromDB<int>(DBT,
                          [&tmp](const QSqlQuery& query) {
                            const int32_t kAddressId{query.value(0).toInt()};
                            const int32_t kAddressIdCount{query.value(1).toInt()};
@@ -99,13 +104,16 @@ TEST(CPSMTests, DiverAddress) {
                          {});
     return tmp;
   }};
-  auto lambda_get_address_count_in_address_table{
-      []() { return db::queryCount(dbt, "SELECT address_id FROM %0;", {cpsm::db::DiverAddress::db_table}, {}); }};
+  auto lambda_get_address_count_in_address_table{[]() {
+    auto dbt{DBT};
+    return db::queryCount(dbt, "SELECT address_id FROM %0;", {cpsm::db::DiverAddress::db_table}, {});
+  }};
 
   const int32_t kTargetAddressId{2};
   const std::array kTargetDiverIds{2, 5};
 
   auto lambda_get_target_address_count{[]() {
+    auto dbt{DBT};
     return db::queryCount(
         dbt, "SELECT address_id FROM %0 WHERE address_id = ?;", {cpsm::db::DiverAddress::db_table}, {kTargetAddressId});
   }};
@@ -135,7 +143,7 @@ TEST(CPSMTests, DiverAddress) {
   new_address.city = "Lorient";
   new_address.postal_code = "9999";
   const auto kCountBefore{lambda_get_address_count_in_address_table()};
-  auto val_opt{cpsm::db::UpdateDiverAddress(dbt, new_address)};
+  auto val_opt{cpsm::db::UpdateDiverAddress(DBT, new_address)};
   SPDLOG_DEBUG("Extracted: {}", *val_opt);
 
   EXPECT_EQ(lambda_get_address_count_in_address_table(), kCountBefore + 1);
@@ -146,7 +154,7 @@ TEST(CPSMTests, DiverAddress) {
   // ---------
 
   const auto kDiverList{db::readLFromDB<cpsm::db::Diver>(
-      dbt, cpsm::db::ExtractDiver, "SELECT * FROM %0", {cpsm::db::Diver::db_table}, {})};
+      DBT, cpsm::db::ExtractDiver, "SELECT * FROM %0", {cpsm::db::Diver::db_table}, {})};
   for (const auto& e : kDiverList) {
     SPDLOG_INFO("{}", e);
   }
@@ -154,7 +162,7 @@ TEST(CPSMTests, DiverAddress) {
   SPDLOG_INFO("-----------");
 
   const auto kAddressList{db::readLFromDB<cpsm::db::DiverAddress>(
-      dbt, cpsm::db::ExtractDiverAddress, "SELECT * FROM %0", {cpsm::db::DiverAddress::db_table}, {})};
+      DBT, cpsm::db::ExtractDiverAddress, "SELECT * FROM %0", {cpsm::db::DiverAddress::db_table}, {})};
   for (const auto& e : kAddressList) {
     SPDLOG_INFO("{}", e);
   }
@@ -163,13 +171,13 @@ TEST(CPSMTests, DiverAddress) {
 TEST(CPSMTests, DiverAndItsAddress) {
   REINIT_DB;
 
-  const auto kOriginalDiverOpt{cpsm::db::GetDiverFromId(dbt, {1})};
+  const auto kOriginalDiverOpt{cpsm::db::GetDiverFromId(DBT, {1})};
   ASSERT_TRUE(kOriginalDiverOpt);
 
   const auto kOriginalDiver{kOriginalDiverOpt.value()};
   auto diver{kOriginalDiver};
 
-  const auto kOriginalAddressOpt{cpsm::db::GetDiverAddressFromId(dbt, {diver.address_id})};
+  const auto kOriginalAddressOpt{cpsm::db::GetDiverAddressFromId(DBT, {diver.address_id})};
   ASSERT_TRUE(kOriginalAddressOpt);
 
   const auto kOriginalAddress{kOriginalAddressOpt.value()};
