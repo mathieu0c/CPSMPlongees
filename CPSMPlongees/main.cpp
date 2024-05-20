@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
       break;
   }
 
-  if (kNeedsMigration == migration::NeedsMigrationState::kUpgradeNeeded || true) {
+  if (kNeedsMigration == migration::NeedsMigrationState::kUpgradeNeeded) {
     if (!migration::MigrateDB(kLastDBSoftVersion, cpsm::consts::kCurrentVersion, database)) {
       /* Make sure we rollback to prevent problems on next opening */
       CPSM_ABORT_IF_FOR(!database.rollback(), nullptr, cpsm::AbortReason::kCouldNotRollback);
