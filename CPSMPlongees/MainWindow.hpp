@@ -23,6 +23,11 @@ class MainWindow : public QMainWindow {
     kEditDiver = 1,
   };
 
+  enum MainTabs : int32_t {
+    kDivers = 0,
+    kDives = 1,
+  };
+
  signals:
   void DBLoaded();
 

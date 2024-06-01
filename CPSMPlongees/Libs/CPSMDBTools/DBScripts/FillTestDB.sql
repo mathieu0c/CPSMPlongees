@@ -43,6 +43,8 @@ VALUES
 --  (1, 1, 1),  -- John Doe (Level 1) in Dive 1 - Explo
   (1, 2, 1),  -- Jane Smith (Level 2) in Dive 1 - Explo
   (1, 3, 1),  -- Michael Johnson (Level 3) in Dive 1 - Explo
+  (1, 4, 2),  -- Sarah Williams (Level 1) in Dive 2 - Explo
+  (1, 5, 2),  -- David Brown (Level 4) in Dive 2 - Explo
   (2, 2, 1),  -- Jane Smith (Level 2) in Dive 2 - Explo
   (2, 4, 1),  -- Sarah Williams (Level 1) in Dive 2 - Explo
   (2, 5, 1),  -- David Brown (Level 4) in Dive 2 - Explo

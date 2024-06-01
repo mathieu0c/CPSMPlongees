@@ -209,7 +209,7 @@ void DiversViewModel::InitFilters() {
 
   if (m_filters.size() != Filters::kMaxFilterEnumValue + 1) {
     SPDLOG_ERROR("Filters not initialized correctly. Expected <{}> filters, got <{}>",
-                 Filters::kMaxFilterEnumValue,
+                 Filters::kMaxFilterEnumValue + 1,
                  m_filters.size());
     throw std::runtime_error("DiversViewModel filters list not initialized correctly");
   }

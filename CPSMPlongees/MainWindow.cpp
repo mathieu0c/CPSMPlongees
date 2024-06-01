@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
   // const auto kLoadDbSuccess{cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath)};
   ui->pg_editDiver->RefreshFromDB();
   ui->mainDiverSearch->RefreshFromDB();
+  ui->mainDiveSearch->RefreshFromDB();
 
   if (!QFileInfo::exists(c_config_file)) {
     SPDLOG_INFO("Saving default config file: {}", c_config_file);

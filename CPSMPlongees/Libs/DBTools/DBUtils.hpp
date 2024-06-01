@@ -39,7 +39,7 @@ inline bool OpenLocal(const QString &fileName, const QString &connectionName = "
   else
     db = QSqlDatabase::addDatabase("QSQLITE", connectionName);
   // db.setHostName("localhost");
-  // db.setDatabaseName(fileName);
+  db.setDatabaseName(fileName);
   if (!db.open()) {
     SPDLOG_ERROR("Cannot open db: {}", db.lastError());
 

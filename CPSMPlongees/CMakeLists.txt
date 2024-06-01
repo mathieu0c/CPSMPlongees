@@ -124,6 +124,7 @@ set(PROJECT_SOURCES
 
         Models/table_model_test.hpp Models/table_model_test.cpp
         Models/DiversViewModel.hpp Models/DiversViewModel.cpp
+        Models/DivesViewModel.hpp Models/DivesViewModel.cpp
 )
 
 
