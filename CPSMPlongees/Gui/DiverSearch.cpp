@@ -48,6 +48,8 @@ DiverSearch::DiverSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiverSea
   };
   connect(&m_model, &cpsm::DiversViewModel::rowsInserted, this, lambda_update_result_count);
   connect(&m_model, &cpsm::DiversViewModel::rowsRemoved, this, lambda_update_result_count);
+
+  ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
 DiverSearch::~DiverSearch() {
@@ -79,6 +81,10 @@ QVector<cpsm::DiverWithDiveCount> DiverSearch::GetSelectedDivers() const {
   }
 
   return out;
+}
+
+void DiverSearch::SetSectionResizeMode(QHeaderView::ResizeMode mode) {
+  ui->tableView->horizontalHeader()->setSectionResizeMode(mode);
 }
 
 void DiverSearch::RefreshFromDB() {

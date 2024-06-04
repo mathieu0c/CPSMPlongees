@@ -123,6 +123,8 @@ void DiverEdit::RefreshFromDB() {
   for (const auto &e : kLevelList) {
     ui->cb_level->addItem(e.level_name, e.diver_level_id);
   }
+
+  ui->diveSearch->RefreshFromDB(m_diver.diver_id);
 }
 
 bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count) {
@@ -207,6 +209,8 @@ void DiverEdit::UpdateUiFromDiver() {
   ui->cb_suit->setChecked(m_diver.gear_suit);
   ui->cb_computer->setChecked(m_diver.gear_computer);
   ui->cb_jacket->setChecked(m_diver.gear_jacket);
+
+  ui->diveSearch->RefreshFromDB(m_diver.diver_id);
 }
 
 void DiverEdit::UpdateAddressUi() {

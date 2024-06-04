@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QHeaderView>
 #include <QWidget>
 
 #include <Models/DiversViewModel.hpp>
@@ -22,6 +23,8 @@ class DiverSearch : public QWidget {
 
   std::optional<cpsm::DiverWithDiveCount> GetSelectedDiver() const;
   QVector<cpsm::DiverWithDiveCount> GetSelectedDivers() const;
+
+  void SetSectionResizeMode(QHeaderView::ResizeMode mode);
 
  public slots:
   void RefreshFromDB();

@@ -29,16 +29,18 @@ DivesViewModel::DivesViewModel(QObject *parent) : QAbstractTableModel(parent) {
   // }
 }
 
-void DivesViewModel::LoadFromDB() {
-  // static QVector<db::DiveLevel> level_list{};
-  // if (level_list.size() == 0) {
-  //   SPDLOG_ERROR("Failed to load levels from db. Retrying... (Or first attempt)");
-  //   level_list = ::db::readLFromDB<db::DiveLevel>(
-  //       ::db::Def(), db::ExtractDiveLevel, "SELECT * FROM %0", {db::DiveLevel::db_table}, {});
-  //   for (const auto &level : level_list) {
-  //     m_db_levels[level.dive_level_id] = level;
-  //   }
-  // }
+void DivesViewModel::LoadFromDB(int diver_id) {
+  m_diving_sites.clear();
+
+  const auto kDivingSitesList{::db::readLFromDB<db::DivingSite>(
+      ::db::Def(), db::ExtractDivingSite, "SELECT * FROM %0", {db::DivingSite::db_table}, {})};
+
+  if (kDivingSitesList.size() == 0) {
+    SPDLOG_ERROR("Failed to load levels from db. Retrying... (Or first attempt)");
+  }
+  for (const auto &site : kDivingSitesList) {
+    m_diving_sites[site.diving_site_id] = site;
+  }
 
   SPDLOG_TRACE("Reloading DivesViewModel from db");
 
@@ -57,6 +59,59 @@ void DivesViewModel::LoadFromDB() {
   //           GROUP BY
   //               Dives.dive_id;
 
+  QString base_query{};
+  QStringList str_args{
+      db::DivingType::db_table,           /* 0 */
+      db::DivingType::type_name_col,      /* 1 */
+      db::DiveMember::db_table,           /* 2 */
+      db::DiveMember::dive_id_col,        /* 3 */
+      db::Dive::db_table,                 /* 4 */
+      db::Dive::diving_site_id_col,       /* 5 */
+      db::Dive::dive_id_col,              /* 6 */
+      db::DivingSite::db_table,           /* 7 */
+      db::DivingSite::diving_site_id_col, /* 8 */
+      db::DiveMember::diving_type_id_col, /* 9 */
+      db::DivingType::diving_type_id_col, /* 10 */
+      db::Dive::datetime_col              /* 11 */
+  };
+  QVariantList args{};
+
+  if (diver_id < 0) {
+    base_query =
+        "SELECT "
+        "     *,"
+        "     GROUP_CONCAT(DISTINCT %0.%1) AS dive_types,"
+        "     COUNT(%2.%3) AS diver_count "
+        "FROM %4"
+        "     LEFT JOIN "
+        "         %7 ON %4.%5 = %7.%8"
+        "     LEFT JOIN "
+        "         %2 ON %4.%6 = %2.%3"
+        "     LEFT JOIN "
+        "         %0 ON %2.%9 = %0.%10 "
+        "GROUP BY %4.%6 "
+        "ORDER BY %4.%11 DESC;";
+  } else {
+    base_query =
+        "SELECT "
+        "     *,"
+        "     GROUP_CONCAT(DISTINCT %0.%1) AS dive_types,"
+        "     COUNT(%2.%3) AS diver_count "
+        "FROM %4"
+        "     LEFT JOIN "
+        "         %7 ON %4.%5 = %7.%8"
+        "     LEFT JOIN "
+        "         %2 ON %4.%6 = %2.%3"
+        "     LEFT JOIN "
+        "         %0 ON %2.%9 = %0.%10 "
+        "GROUP BY %4.%6 "
+        "HAVING COUNT(DISTINCT CASE WHEN %2.%12 = ? THEN 1 END) > 0 "
+        "ORDER BY %4.%11 DESC;";
+    str_args.append(db::DiveMember::diver_id_col); /* 12 */
+
+    args.append(diver_id);
+  }
+
   auto list{::db::readLFromDB<DisplayDive>(
       ::db::Def(),
       [&](const QSqlQuery &query) {
@@ -65,33 +120,9 @@ void DivesViewModel::LoadFromDB() {
         auto diving_types{query.value("dive_types").toString()};
         return DisplayDive{.dive = std::move(dive), .diver_count = diver_count, .dive_types = std::move(diving_types)};
       },
-      "SELECT "
-      "     *,"
-      "     GROUP_CONCAT(DISTINCT %0.%1) AS dive_types,"
-      "     COUNT(%2.%3) AS diver_count "
-      "FROM %4"
-      "     LEFT JOIN "
-      "         %7 ON %4.%5 = %7.%8"
-      "     LEFT JOIN "
-      "         %2 ON %4.%6 = %2.%3"
-      "     LEFT JOIN "
-      "         %0 ON %2.%9 = %0.%10 "
-      "GROUP BY %4.%6 ORDER BY %4.%11 DESC;",
-      {
-          db::DivingType::db_table,           /* 0 */
-          db::DivingType::type_name_col,      /* 1 */
-          db::DiveMember::db_table,           /* 2 */
-          db::DiveMember::dive_id_col,        /* 3 */
-          db::Dive::db_table,                 /* 4 */
-          db::Dive::diving_site_id_col,       /* 5 */
-          db::Dive::dive_id_col,              /* 6 */
-          db::DivingSite::db_table,           /* 7 */
-          db::DivingSite::diving_site_id_col, /* 8 */
-          db::DiveMember::diving_type_id_col, /* 9 */
-          db::DivingType::diving_type_id_col, /* 10 */
-          db::Dive::datetime_col              /* 11 */
-      },
-      {})};
+      base_query,
+      str_args,
+      args)};
 
   SetDives(std::move(list));
 }
@@ -229,6 +260,16 @@ void DivesViewModel::SetDiverCountFilter(std::function<bool(int, int)> compariso
   ReapplyFilters();
 }
 
+const QString &DivesViewModel::GetDivingSiteText(int site_id) const {
+  if (const auto kIt{m_diving_sites.find(site_id)}; kIt != m_diving_sites.end()) {
+    return kIt->second.site_name;
+  }
+
+  SPDLOG_WARN("Failed to find diving site with id <{}>", site_id);
+  static const QString kUnknownString{tr("INCONNU")};
+  return kUnknownString;
+}
+
 void DivesViewModel::InitFilters() {
   /* We define the maxFilterValue filter just to avoid crash by mistake... */
   m_filters[Filters::kMaxFilterEnumValue] =
@@ -296,7 +337,7 @@ QString DivesViewModel::GetDisplayTextForIndex(const DisplayDive &dive, int col)
       return dive.dive.datetime.time().toString();
     }
     case ColumnId::kSite: {
-      return "TMP SITE";
+      return GetDivingSiteText(dive.dive.diving_site_id);
     }
     case ColumnId::kDiverCount: {
       return QString::number(dive.diver_count);
@@ -314,6 +355,10 @@ QString DivesViewModel::GetDisplayTextForIndex(const DisplayDive &dive, int col)
 QVariant DivesViewModel::GetBackgroundForIndex(const DisplayDive &complete_dive, int col) const {
   const auto &dive{complete_dive.dive};
   switch (col) {
+    case ColumnId::kDate: {
+      return dive.datetime.date() == QDate::currentDate() ? ::consts::colors::kBackgroundGreen
+                                                          : ::consts::colors::kBackgroundInvisible;
+    }
     case ColumnId::kTime: {
       return IsMorning(dive.datetime) ? ::consts::colors::kBackgroundBlue : ::consts::colors::kBackgroundYellow;
     }

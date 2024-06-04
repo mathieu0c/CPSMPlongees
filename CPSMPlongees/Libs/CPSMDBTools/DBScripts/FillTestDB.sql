@@ -35,7 +35,7 @@ VALUES
   ('2024-02-11 10:30:00', 2),  -- Dive 2: L'Arroyo
   ('2024-02-12 14:15:00', 3),  -- Dive 3: La sèche du pêcheur
   ('2024-02-13 08:45:00', 4),  -- Dive 4: La sèche de Saint-Elme
-  ('2024-03-13 12:30:00', 5);  -- Dive 5: La roche à l'ancre
+  (DateTime('now'), 5);  -- Dive 5: La roche à l'ancre
 
 -- Inserting DivesMembers:
 INSERT INTO DivesMembers (dive_id, diver_id, diving_type_id)

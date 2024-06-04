@@ -32,7 +32,7 @@ class DivesViewModel : public QAbstractTableModel {
  public:
   explicit DivesViewModel(QObject *parent = nullptr);
 
-  void LoadFromDB();
+  void LoadFromDB(int diver_id);
 
   void SetDives(QVector<DisplayDive> dives);
   void SetDivesToDisplay(QVector<DisplayDive> dives);
@@ -51,6 +51,8 @@ class DivesViewModel : public QAbstractTableModel {
   void SetTypeFilter(const QString &type_str, bool active);
   void SetDiverCountFilter(std::function<bool(int, int)> comparison_operator, int value, bool active);
 
+  const QString &GetDivingSiteText(int site_id) const;
+
  private:
   void InitFilters();
 
@@ -64,6 +66,8 @@ class DivesViewModel : public QAbstractTableModel {
 
   QVector<DisplayDive> m_dives;
   QVector<DisplayDive> m_dives_to_display;
+
+  std::map<int, db::DivingSite> m_diving_sites{};
 
   std::map<Filters, utils::Filter<DisplayDive>> m_filters{};
 };

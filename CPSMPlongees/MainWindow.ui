@@ -130,6 +130,9 @@
           <layout class="QHBoxLayout" name="hlay_diveEdit">
            <item>
             <widget class="QPushButton" name="pb_deleteDive">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -146,6 +149,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="pb_newDive">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="text">
               <string>Nouvelle plongée</string>
              </property>
@@ -153,6 +159,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="pb_editDive">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>

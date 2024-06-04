@@ -43,7 +43,7 @@ class DiversViewModel : public QAbstractTableModel, public DiverDisplayListOwner
   };
 
   static constexpr std::array kColumnsHeaders{
-      "Nom", "Prénom", "Dernière inscription", "Membre ?", "Certificat médical", "Niveau", "Solde (plongées)"};
+      "Nom", "Prénom", "Dernière inscription", "Adhérent ?", "Certificat médical", "Niveau", "Solde (plongées)"};
 
  public:
   enum Filters : int32_t {

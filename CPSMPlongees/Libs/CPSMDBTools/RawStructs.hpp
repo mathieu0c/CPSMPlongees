@@ -93,7 +93,7 @@ DB_DECLARE_STRUCT(DiveMember, DivesMembers, val.dive_id <= 0 || val.diver_id <= 
 
 #define DivingSites_VAR_LIST(COLUMN)             \
   COLUMN(diving_site_id, DBType::INTEGER, true); \
-  COLUMN(site_text, DBType::TEXT, false);
+  COLUMN(site_name, DBType::TEXT, false);
 DB_DECLARE_STRUCT(DivingSite, DivingSites, val.diving_site_id <= 0, DivingSites_VAR_LIST)
 
 #define DivingTypes_VAR_LIST(COLUMN)             \

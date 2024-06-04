@@ -61,6 +61,11 @@ DiveSearch::DiveSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiveSearch
   connect(ui->cb_diver_count, &QCheckBox::stateChanged, this, lambda_refresh_diver_count_filter);
   connect(ui->sb_diver_count, &QSpinBox::valueChanged, this, lambda_refresh_diver_count_filter);
   connect(ui->cb_diver_count_operator, &QComboBox::currentIndexChanged, this, lambda_refresh_diver_count_filter);
+
+  // connect(&m_model, &QAbstractTableModel::dataChanged, this, []() { SPDLOG_INFO("Data changed");
+  //     ui->tableView.
+  // });
+  ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
 DiveSearch::~DiveSearch() {
@@ -94,8 +99,12 @@ QVector<cpsm::DisplayDive> DiveSearch::GetSelectedDives() const {
   return out;
 }
 
-void DiveSearch::RefreshFromDB() {
-  m_model.LoadFromDB();
+void DiveSearch::SetSectionResizeMode(QHeaderView::ResizeMode mode) {
+  ui->tableView->horizontalHeader()->setSectionResizeMode(mode);
+}
+
+void DiveSearch::RefreshFromDB(int diver_id) {
+  m_model.LoadFromDB(diver_id);
 
   const auto kTypeList{::db::readLFromDB<cpsm::db::DivingType>(
       ::db::Def(), &cpsm::db::ExtractDivingType, "SELECT * FROM %0", {cpsm::db::DivingType::db_table}, {})};

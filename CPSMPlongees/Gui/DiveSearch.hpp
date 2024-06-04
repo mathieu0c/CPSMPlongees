@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QHeaderView>
 #include <QWidget>
 
 #include <Models/DivesViewModel.hpp>
@@ -20,8 +21,10 @@ class DiveSearch : public QWidget {
   std::optional<cpsm::DisplayDive> GetSelectedDive() const;
   QVector<cpsm::DisplayDive> GetSelectedDives() const;
 
+  void SetSectionResizeMode(QHeaderView::ResizeMode mode);
+
  public slots:
-  void RefreshFromDB();
+  void RefreshFromDB(int diver_id = -1);
   void on_tableView_doubleClicked(const QModelIndex &);
 
  private:

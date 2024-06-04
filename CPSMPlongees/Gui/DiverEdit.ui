@@ -653,7 +653,7 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string>Plongées</string>
+        <string>Plongées effectuées</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <property name="spacing">

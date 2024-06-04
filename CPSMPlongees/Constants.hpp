@@ -8,6 +8,8 @@
 namespace consts {
 
 namespace colors {
+const QColor kBackgroundInvisible{"#00000000"};
+
 const QColor kBackgroundGreen{"#eaffe8"};
 const QColor kBackgroundRed{"#ffe3e3"};
 
