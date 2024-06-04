@@ -76,7 +76,7 @@ void DivesViewModel::LoadFromDB() {
       "         %2 ON %4.%6 = %2.%3"
       "     LEFT JOIN "
       "         %0 ON %2.%9 = %0.%10 "
-      "GROUP BY %4.%6;",
+      "GROUP BY %4.%6 ORDER BY %4.%11 DESC;",
       {
           db::DivingType::db_table,           /* 0 */
           db::DivingType::type_name_col,      /* 1 */
@@ -88,7 +88,8 @@ void DivesViewModel::LoadFromDB() {
           db::DivingSite::db_table,           /* 7 */
           db::DivingSite::diving_site_id_col, /* 8 */
           db::DiveMember::diving_type_id_col, /* 9 */
-          db::DivingType::diving_type_id_col  /* 10 */
+          db::DivingType::diving_type_id_col, /* 10 */
+          db::Dive::datetime_col              /* 11 */
       },
       {})};
 
@@ -192,18 +193,40 @@ void DivesViewModel::SetFilterNegate(Filters filter, bool negate) {
   ReapplyFilters();
 }
 
-/*Enable the name filter if name isn't empty. Search in bot first and last name*/
 void DivesViewModel::SetDateFilter(const QDate &start, const QDate &end) {
-  std::ignore = start;
-  std::ignore = end;
-  // if (name.isEmpty()) {
-  //   m_filters[Filters::kFilterName].active = false;
-  //   ReapplyFilters();
+  m_filters[Filters::kFilterDate].filter = [start, end](const DisplayDive &dive) {
+    return dive.dive.datetime.date() >= start && dive.dive.datetime.date() <= end;
+  };
+  m_filters[Filters::kFilterDate].active = true;
+  ReapplyFilters();
+}
+
+void DivesViewModel::SetTypeFilter(const QString &type_str, bool active) {
+  const auto kOldActive{m_filters[Filters::kFilterType].active};
+  m_filters[Filters::kFilterType].active = active;
+  m_filters[Filters::kFilterType].filter = [type_str](const DisplayDive &dive) {
+    return dive.dive_types.contains(type_str);
+  };
+
+  if (!active && kOldActive == active) {
+    return;
+  }
+
+  ReapplyFilters();
+}
+
+void DivesViewModel::SetDiverCountFilter(std::function<bool(int, int)> comparison_operator, int value, bool active) {
+  // const auto kOldActive{m_filters[Filters::kFilterType].active};
+  m_filters[Filters::kFilterType].active = active;
+  m_filters[Filters::kFilterType].filter = [comparison_operator, value](const DisplayDive &dive) {
+    return comparison_operator(dive.diver_count, value);
+  };
+
+  // if (!active && kOldActive == active) {
   //   return;
   // }
 
-  // m_filters[Filters::kFilterName].filter = [name](const DisplayDive &dive) { return ::SearchString(name, dive);
-  // }; m_filters[Filters::kFilterName].active = true; ReapplyFilters();
+  ReapplyFilters();
 }
 
 void DivesViewModel::InitFilters() {
@@ -221,6 +244,15 @@ void DivesViewModel::InitFilters() {
       utils::Filter<DisplayDive>{.filter = [](const DisplayDive &dive) { return !::IsMorning(dive.dive.datetime); },
                                  .active = false,
                                  .negate = false};
+
+  m_filters[Filters::kFilterDate] =
+      utils::Filter<DisplayDive>{.filter = [](const DisplayDive &) { return true; }, .active = false, .negate = false};
+
+  m_filters[Filters::kFilterType] =
+      utils::Filter<DisplayDive>{.filter = [](const DisplayDive &) { return true; }, .active = false, .negate = false};
+
+  m_filters[Filters::kFilterDiverCount] =
+      utils::Filter<DisplayDive>{.filter = [](const DisplayDive &) { return true; }, .active = false, .negate = false};
 
   // m_filters[Filters::kFilterIsMember] = utils::Filter<DisplayDive>{
   //     .filter = [](const DisplayDive &dive) { return db::IsDiveCurrentlyAMember(dive.dive); },
@@ -249,7 +281,6 @@ void DivesViewModel::InitFilters() {
 }
 
 void DivesViewModel::ReapplyFilters() {
-  SPDLOG_DEBUG("Applying filters to dives list...");
   auto to_display{m_dives};
   utils::FilterList(&to_display, m_filters);
 
@@ -283,7 +314,6 @@ QString DivesViewModel::GetDisplayTextForIndex(const DisplayDive &dive, int col)
 QVariant DivesViewModel::GetBackgroundForIndex(const DisplayDive &complete_dive, int col) const {
   const auto &dive{complete_dive.dive};
   switch (col) {
-    case ColumnId::kDate:
     case ColumnId::kTime: {
       return IsMorning(dive.datetime) ? ::consts::colors::kBackgroundBlue : ::consts::colors::kBackgroundYellow;
     }

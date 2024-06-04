@@ -93,9 +93,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="8">
-       <widget class="QComboBox" name="combobox_type"/>
-      </item>
       <item row="2" column="8">
        <widget class="QSpinBox" name="sb_diver_count"/>
       </item>
@@ -111,6 +108,34 @@
          <string>Type</string>
         </property>
        </widget>
+      </item>
+      <item row="2" column="7">
+       <widget class="QComboBox" name="cb_diver_count_operator">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <item>
+         <property name="text">
+          <string>&gt;</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>=</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>&lt;</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="7" colspan="2">
+       <widget class="QComboBox" name="combobox_type"/>
       </item>
      </layout>
     </widget>

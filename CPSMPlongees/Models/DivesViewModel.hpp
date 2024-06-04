@@ -20,7 +20,14 @@ class DivesViewModel : public QAbstractTableModel {
   static constexpr std::array kColumnsHeaders{"Date", "Heure", "Site", "Plongeurs", "Types de plongées"};
 
  public:
-  enum Filters : int32_t { kFilterMorning, kFilterAfternoon, kMaxFilterEnumValue };
+  enum Filters : int32_t {
+    kFilterMorning,
+    kFilterAfternoon,
+    kFilterDate,
+    kFilterType,
+    kFilterDiverCount,
+    kMaxFilterEnumValue
+  };
 
  public:
   explicit DivesViewModel(QObject *parent = nullptr);
@@ -39,8 +46,10 @@ class DivesViewModel : public QAbstractTableModel {
 
   void SetFilterEnabled(Filters filter, bool enabled);
   void SetFilterNegate(Filters filter, bool negate);
-  /* Enable the name filter if name isn't empty. Search in bot first and last name */
+
   void SetDateFilter(const QDate &start, const QDate &end);
+  void SetTypeFilter(const QString &type_str, bool active);
+  void SetDiverCountFilter(std::function<bool(int, int)> comparison_operator, int value, bool active);
 
  private:
   void InitFilters();
