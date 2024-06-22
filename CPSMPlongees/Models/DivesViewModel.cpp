@@ -172,8 +172,8 @@ QVariant DivesViewModel::headerData(int section, Qt::Orientation orientation, in
         break;
       }
     case Qt::TextAlignmentRole:
-      return section == ColumnId::kDiveType ? int(Qt::AlignLeft | Qt::AlignVCenter)
-                                            : int(Qt::AlignHCenter | Qt::AlignVCenter);
+      return section == ColumnId::kDiverCount ? int(Qt::AlignLeft | Qt::AlignVCenter)
+                                              : int(Qt::AlignHCenter | Qt::AlignVCenter);
     case Qt::FontRole: {
       static QFont default_font{};
       return default_font;
@@ -204,8 +204,8 @@ QVariant DivesViewModel::data(const QModelIndex &index, int role) const {
     case Qt::BackgroundRole:
       return GetBackgroundForIndex(dive, col);
     case Qt::TextAlignmentRole:
-      return col == ColumnId::kDiveType ? int(Qt::AlignLeft | Qt::AlignVCenter)
-                                        : int(Qt::AlignHCenter | Qt::AlignVCenter);
+      return col == ColumnId::kDiverCount ? int(Qt::AlignLeft | Qt::AlignVCenter)
+                                          : int(Qt::AlignHCenter | Qt::AlignVCenter);
     case Qt::CheckStateRole:
       // if (row == 1 && col == 0)  // add a checkbox to cell(1,0)
       //   return Qt::Checked;
@@ -334,7 +334,7 @@ QString DivesViewModel::GetDisplayTextForIndex(const DisplayDive &dive, int col)
       return dive.dive.datetime.date().toString(cpsm::consts::kDateUserFormat);
     }
     case ColumnId::kTime: {
-      return dive.dive.datetime.time().toString();
+      return dive.dive.datetime.time().toString(cpsm::consts::kTimeFormat);
     }
     case ColumnId::kSite: {
       return GetDivingSiteText(dive.dive.diving_site_id);
@@ -342,9 +342,9 @@ QString DivesViewModel::GetDisplayTextForIndex(const DisplayDive &dive, int col)
     case ColumnId::kDiverCount: {
       return QString::number(dive.diver_count);
     }
-    case ColumnId::kDiveType: {
-      return dive.dive_types;
-    }
+    // case ColumnId::kDiveType: {
+    //   return dive.dive_types;
+    // }
     default:
       SPDLOG_WARN("Unknown column title index: <{}>", col);
       break;

@@ -58,7 +58,7 @@ constexpr auto kPostUpdateCommand{"CPSMPlongees.exe"};
 /*#########################*/
 
 constexpr auto kDateUserFormat{"dd/MM/yyyy"};
-constexpr auto kTimeFormat{"HH:mm:ss"};
+constexpr auto kTimeFormat{"HH:mm"};
 
 /*#########################*/
 /*#                       #*/

@@ -13,6 +13,17 @@ DiveSearch::DiveSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiveSearch
 
   ui->de_end->setDate(QDate::currentDate());
 
+  /* Disable useless graphical elements (I don't really want to remove them...) */
+  ui->cb_morning->setVisible(false);
+  ui->cb_afternoon->setVisible(false);
+  ui->cb_diver_count->setVisible(false);
+  ui->cb_diver_count_operator->setVisible(false);
+  ui->sb_diver_count->setVisible(false);
+  ui->cb_type->setVisible(false);
+  ui->combobox_type->setVisible(false);
+  ui->line->setVisible(false);
+  ui->line_2->setVisible(false);
+
   /* Morning & afternoon filters */
   auto lambda_refresh_morning_afternoon_filters{[this]() {
     m_model.SetFilterEnabled(cpsm::DivesViewModel::kFilterMorning,
@@ -115,6 +126,14 @@ void DiveSearch::RefreshFromDB(int diver_id) {
   }
 }
 
+QString DiveSearch::GetNameOfDivingSite(int diving_site_id) const {
+  return m_model.GetDivingSiteText(diving_site_id);
+}
+
+QItemSelectionModel *DiveSearch::GetSelectionModel() {
+  return ui->tableView->selectionModel();
+}
+
 void DiveSearch::on_tableView_doubleClicked(const QModelIndex &) {
   const auto kSelectedDiverOpt{GetSelectedDive()};
   if (!kSelectedDiverOpt) {
@@ -124,6 +143,12 @@ void DiveSearch::on_tableView_doubleClicked(const QModelIndex &) {
   const auto &selected_diver{kSelectedDiverOpt.value()};
   std::ignore = selected_diver;
   // DoubleClickOnDiver(selected_diver);
+}
+
+void DiveSearch::on_tableView_clicked(const QModelIndex &index) {
+  if (const auto kSelectedDiveOpt{m_model.GetDiveAtIndex(index)}; kSelectedDiveOpt.has_value()) {
+    emit diveSelected(kSelectedDiveOpt.value());
+  }
 }
 
 }  // namespace gui

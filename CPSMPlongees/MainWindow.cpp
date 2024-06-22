@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 #include <QTextBrowser>
+#include <RawStructs.hpp>
 
 #include <Logger/btype.hpp>
 #include <Logger/logger.hpp>
@@ -49,6 +50,15 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->pg_editDiver, &gui::DiverEdit::DiverEdited, this, &MainWindow::OnDiverEdited);
 
   connect(ui->mainDiverSearch, &gui::DiverSearch::DoubleClickOnDiver, this, &MainWindow::EditDiver);
+
+  connect(ui->mainDiveSearch, &gui::DiveSearch::diveSelected, this, [this](const cpsm::DisplayDive &dive) {
+    ui->mainDiveDetails->SetDive(dive.dive, ui->mainDiveSearch->GetNameOfDivingSite(dive.dive.diving_site_id));
+  });
+
+  connect(ui->mainDiveSearch->GetSelectionModel(),
+          &QItemSelectionModel::selectionChanged,
+          this,
+          &MainWindow::OnMainDiveSearchSelectionChanged);
 }
 
 MainWindow::~MainWindow() {
@@ -99,6 +109,21 @@ void MainWindow::OnDiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::d
     default: {
     }
   }
+}
+
+void MainWindow::OnMainDiveSearchSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected) {
+  std::ignore = deselected;
+  if (selected.size() == 0) {
+    ui->mainDiveDetails->Clear();
+    return;
+  }
+  const auto kDiveOpt{ui->mainDiveSearch->GetDiveAtRow(selected.last().indexes().last().row())};
+  if (!kDiveOpt) {
+    SPDLOG_WARN("Invalid selection dive search :/");
+    return;
+  }
+  ui->mainDiveDetails->SetDive(kDiveOpt.value().dive,
+                               ui->mainDiveSearch->GetNameOfDivingSite(kDiveOpt.value().dive.diving_site_id));
 }
 
 void MainWindow::on_action_check_updates_triggered() {

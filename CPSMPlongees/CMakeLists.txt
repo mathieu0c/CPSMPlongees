@@ -121,10 +121,12 @@ set(PROJECT_SOURCES
         Gui/DialogConfirmListDeletion.hpp Gui/DialogConfirmListDeletion.cpp Gui/DialogConfirmListDeletion.ui
         Gui/LineEditUpperCase.hpp
         Gui/GuiUtils.hpp Gui/GuiUtils.cpp
+        Gui/DiveDetails.hpp Gui/DiveDetails.cpp Gui/DiveDetails.ui
 
         Models/table_model_test.hpp Models/table_model_test.cpp
         Models/DiversViewModel.hpp Models/DiversViewModel.cpp
         Models/DivesViewModel.hpp Models/DivesViewModel.cpp
+        Models/DiveDetailsViewModel.hpp Models/DiveDetailsViewModel.cpp
 )
 
 

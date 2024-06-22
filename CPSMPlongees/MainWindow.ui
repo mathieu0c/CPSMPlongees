@@ -117,14 +117,24 @@
        <widget class="QWidget" name="pg_browseDives">
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="gui::DiveSearch" name="mainDiveSearch" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+          <layout class="QHBoxLayout" name="hlay_dives">
+           <property name="sizeConstraint">
+            <enum>QLayout::SetMinimumSize</enum>
            </property>
-          </widget>
+           <item>
+            <widget class="gui::DiveSearch" name="mainDiveSearch" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="gui::DiveDetails" name="mainDiveDetails" native="true"/>
+           </item>
+          </layout>
          </item>
          <item>
           <layout class="QHBoxLayout" name="hlay_diveEdit">
@@ -255,6 +265,12 @@
    <class>gui::DiveEdit</class>
    <extends>QWidget</extends>
    <header>Gui/DiveEdit.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>gui::DiveDetails</class>
+   <extends>QWidget</extends>
+   <header>Gui/DiveDetails.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

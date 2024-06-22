@@ -2,6 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include <Constants.hpp>
+#include <QItemSelection>
 #include <QMainWindow>
 #include <QPushButton>
 #include <UpdateHandler.hpp>
@@ -40,6 +41,7 @@ class MainWindow : public QMainWindow {
  private slots:
   void EditDiver(const cpsm::DiverWithDiveCount &diver);
   void OnDiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress>> edit_opt);
+  void OnMainDiveSearchSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 
   void on_action_check_updates_triggered();
 
@@ -49,7 +51,6 @@ class MainWindow : public QMainWindow {
 
   void on_pb_newDiver_clicked();
 
- private:
  private:
   Ui::MainWindow *ui;
 

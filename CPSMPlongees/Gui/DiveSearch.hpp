@@ -14,6 +14,9 @@ class DiveSearch;
 class DiveSearch : public QWidget {
   Q_OBJECT
 
+ signals:
+  void diveSelected(const cpsm::DisplayDive &dive);
+
  public:
   explicit DiveSearch(QWidget *parent = nullptr);
   ~DiveSearch();
@@ -23,9 +26,19 @@ class DiveSearch : public QWidget {
 
   void SetSectionResizeMode(QHeaderView::ResizeMode mode);
 
+  QString GetNameOfDivingSite(int diving_site_id) const;
+
+  QItemSelectionModel *GetSelectionModel();
+  auto GetDiveAtRow(int row) const {
+    return m_model.GetDiveAtIndex(m_model.index(row, 0));
+  }
+
  public slots:
   void RefreshFromDB(int diver_id = -1);
   void on_tableView_doubleClicked(const QModelIndex &);
+
+ private slots:
+  void on_tableView_clicked(const QModelIndex &index);
 
  private:
   Ui::DiveSearch *ui;

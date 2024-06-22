@@ -15,9 +15,9 @@ struct DisplayDive {
 
 class DivesViewModel : public QAbstractTableModel {
   Q_OBJECT
-  enum ColumnId : int32_t { kDate = 0, kTime = 1, kSite = 2, kDiverCount = 3, kDiveType = 4 };
+  enum ColumnId : int32_t { kDate = 0, kTime = 1, kSite = 2, kDiverCount = 3 };
 
-  static constexpr std::array kColumnsHeaders{"Date", "Heure", "Site", "Plongeurs", "Types de plongées"};
+  static constexpr std::array kColumnsHeaders{"Date", "Heure", "Site", "Plongeurs"};
 
  public:
   enum Filters : int32_t {
