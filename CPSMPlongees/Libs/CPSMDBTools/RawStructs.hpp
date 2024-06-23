@@ -44,6 +44,8 @@ bool IsDiverMedicalCertificateValid(const Diver& diver);
 bool IsDiverCurrentlyRegistered(const Diver& diver);
 bool IsDiverCurrentlyAMember(QDate diver_member_date);
 bool IsDiverCurrentlyAMember(const Diver& diver);
+int32_t GetDiverAge(const QDate& diver_birth_date);
+int32_t GetDiverAge(const Diver& diver);
 
 #define DiverAddress_VAR_LIST(COLUMN)        \
   COLUMN(address_id, DBType::INTEGER, true); \

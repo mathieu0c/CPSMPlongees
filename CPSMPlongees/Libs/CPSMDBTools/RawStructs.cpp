@@ -29,6 +29,13 @@ bool IsDiverCurrentlyAMember(const Diver& diver) {
   return IsDiverCurrentlyAMember(diver.member_date);
 }
 
+int32_t GetDiverAge(const QDate& diver_birth_date) {
+  return diver_birth_date.daysTo(QDate::currentDate()) / 365;
+}
+int32_t GetDiverAge(const Diver& diver) {
+  return GetDiverAge(diver.birth_date);
+}
+
 StoreDiverAndAddressResult StoreDiverAndItsAddress(Diver diver, const DiverAddress& address) {
   StoreDiverAndAddressResult out{};
 

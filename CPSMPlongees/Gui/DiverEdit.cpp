@@ -46,6 +46,9 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   lambda_connect_editing_finished(ui->le_lastname, &cpsm::db::Diver::last_name);
   lambda_connect_editing_finished(ui->le_firstname, &cpsm::db::Diver::first_name);
   lambda_connect_editing_finished(ui->de_birthDate, &cpsm::db::Diver::birth_date);
+  connect(ui->de_birthDate, &QDateEdit::dateChanged, this, [this]() {
+    ui->lbl_age->setText(QString::number(cpsm::db::GetDiverAge(ui->de_birthDate->date())));
+  });
   lambda_connect_editing_finished(ui->le_license, &cpsm::db::Diver::license_number);
   lambda_connect_editing_finished(ui->de_registration, &cpsm::db::Diver::registration_date);
   lambda_connect_editing_finished(ui->de_certificate, &cpsm::db::Diver::certif_date);
@@ -190,6 +193,7 @@ void DiverEdit::UpdateUiFromDiver() {
   ui->le_firstname->setText(m_diver.first_name);
   ui->le_lastname->setText(m_diver.last_name.toUpper());
   ui->de_birthDate->setDate(m_diver.birth_date);
+  ui->lbl_age->setText(QString::number(cpsm::db::GetDiverAge(ui->de_birthDate->date())));
   ui->le_license->setText(m_diver.license_number);
   ui->de_registration->setDate(m_diver.registration_date);
   ui->cb_member->setChecked(cpsm::db::IsDiverCurrentlyAMember(m_diver));
