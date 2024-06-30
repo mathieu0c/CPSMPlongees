@@ -17,7 +17,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Détail de la plongée sur le site &quot;%0&quot; le %1 à %2</string>
+      <string>Détail &quot;%0&quot; le %1 à %2</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>

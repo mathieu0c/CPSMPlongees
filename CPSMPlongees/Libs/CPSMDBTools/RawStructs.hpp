@@ -10,6 +10,26 @@ namespace cpsm::db {
 
 using DBType = ::db::DBType;
 
+struct MultipleStoreResult {
+  enum ErrorCode : int32_t {
+    kDefault = 0,
+    kOk = 1,
+    kFailedToStartTransaction = 2,
+    kFailedToStoreElement = 3,
+    kFailedToRollback = 4,
+    kFailedToCommit = 5
+  };
+
+  ErrorCode err_code{};
+
+  bool IsOk() const {
+    return err_code == kOk;
+  }
+  operator bool() const {
+    return IsOk();
+  }
+};
+
 #define DBInfo_VAR_LIST(COLUMN)                               \
   COLUMN(dbinfo_id, DBType::INTEGER, true);                   \
   COLUMN(latest_cpsm_soft_version_used, DBType::TEXT, false); \
@@ -58,26 +78,11 @@ DB_DECLARE_STRUCT(DiverAddress, DiversAddresses, val.address_id <= 0, DiverAddre
  * The address is stored first and the id is then set in the diver before storing it.
  * This allows for new address to be added beforehand. The newly added address's id will then be set in the diver
  */
-struct StoreDiverAndAddressResult {
-  enum ErrCode : int32_t {
-    kDefault = 0,
-    kOk = 1,
-    kFailedToStartTransaction = 2,
-    kFailedToStoreAddress = 3,
-    kFailedToStoreDiver = 4,
-    kFailedToRollback = 5,
-    kFailedToCommit = 6
-  };
+struct StoreDiverAndAddressResult : public MultipleStoreResult {
+  enum DetailErrCode : int32_t { kFailedToStoreAddress = 0, kFailedToStoreDiver = 1 };
+  DetailErrCode err_details{};
   Diver stored_diver;
   DiverAddress stored_address;
-  ErrCode err_code;
-
-  bool IsOk() const {
-    return err_code == kOk;
-  }
-  operator bool() const {
-    return IsOk();
-  }
 };
 StoreDiverAndAddressResult StoreDiverAndItsAddress(db::Diver diver, const DiverAddress& address);
 
@@ -92,6 +97,14 @@ DB_DECLARE_STRUCT(Dive, Dives, val.dive_id <= 0, Dive_VAR_LIST)
   COLUMN(diver_id, DBType::INTEGER, true); \
   COLUMN(diving_type_id, DBType::INTEGER, false);
 DB_DECLARE_STRUCT(DiveMember, DivesMembers, val.dive_id <= 0 || val.diver_id <= 0, DiveMember_VAR_LIST)
+
+struct StoreDiveAndDiversResult : public MultipleStoreResult {
+  enum DetailErrCode : int32_t { kFailedToStoreDive = 0, kFailedToStoreDiveMember = 1 };
+  DetailErrCode err_details{};
+  Dive stored_dive;
+  std::vector<DiveMember> stored_dive_members;
+};
+StoreDiveAndDiversResult StoreDiveAndItsMembers(Dive dive, const std::vector<DiveMember>& members);
 
 #define DivingSites_VAR_LIST(COLUMN)             \
   COLUMN(diving_site_id, DBType::INTEGER, true); \

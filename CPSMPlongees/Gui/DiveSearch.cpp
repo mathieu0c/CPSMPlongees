@@ -135,14 +135,13 @@ QItemSelectionModel *DiveSearch::GetSelectionModel() {
 }
 
 void DiveSearch::on_tableView_doubleClicked(const QModelIndex &) {
-  const auto kSelectedDiverOpt{GetSelectedDive()};
-  if (!kSelectedDiverOpt) {
+  const auto kSelectedDiveOpt{GetSelectedDive()};
+  if (!kSelectedDiveOpt) {
     return;
   }
 
-  const auto &selected_diver{kSelectedDiverOpt.value()};
-  std::ignore = selected_diver;
-  // DoubleClickOnDiver(selected_diver);
+  const auto &selected_dive{kSelectedDiveOpt.value()};
+  DoubleClickOnDive(selected_dive);
 }
 
 void DiveSearch::on_tableView_clicked(const QModelIndex &index) {

@@ -8,6 +8,7 @@
 #include <UpdateHandler.hpp>
 
 #include <Models/DiversViewModel.hpp>
+#include <Models/DivesViewModel.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -41,7 +42,9 @@ class MainWindow : public QMainWindow {
  private slots:
   void EditDiver(const cpsm::DiverWithDiveCount &diver);
   void OnDiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress>> edit_opt);
+
   void OnMainDiveSearchSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+  void EditDive(const cpsm::DisplayDive &dive);
 
   void on_action_check_updates_triggered();
 
@@ -50,6 +53,8 @@ class MainWindow : public QMainWindow {
   void on_pb_deleteDiver_clicked();
 
   void on_pb_newDiver_clicked();
+
+  void on_pb_editDive_clicked();
 
  private:
   Ui::MainWindow *ui;

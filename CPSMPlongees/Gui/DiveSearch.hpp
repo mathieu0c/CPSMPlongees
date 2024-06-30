@@ -16,6 +16,7 @@ class DiveSearch : public QWidget {
 
  signals:
   void diveSelected(const cpsm::DisplayDive &dive);
+  void DoubleClickOnDive(const cpsm::DisplayDive &dive);
 
  public:
   explicit DiveSearch(QWidget *parent = nullptr);

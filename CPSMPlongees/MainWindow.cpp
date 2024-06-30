@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent)
     SPDLOG_INFO("Saving default config file: {}", c_config_file);
   }
 
+  /* --- Diver --- */
+
   connect(ui->pg_editDiver, &gui::DiverEdit::DiverEdited, this, &MainWindow::OnDiverEdited);
 
   connect(ui->mainDiverSearch, &gui::DiverSearch::DoubleClickOnDiver, this, &MainWindow::EditDiver);
@@ -55,10 +57,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->mainDiveDetails->SetDive(dive.dive, ui->mainDiveSearch->GetNameOfDivingSite(dive.dive.diving_site_id));
   });
 
+  /* --- Dives --- */
+
   connect(ui->mainDiveSearch->GetSelectionModel(),
           &QItemSelectionModel::selectionChanged,
           this,
           &MainWindow::OnMainDiveSearchSelectionChanged);
+
+  connect(ui->mainDiveSearch, &gui::DiveSearch::DoubleClickOnDive, this, &MainWindow::EditDive);
 }
 
 MainWindow::~MainWindow() {
@@ -100,7 +106,7 @@ void MainWindow::OnDiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::d
                kStoreResult.err_code,
                database.lastError());
 
-  using ErrCode = cpsm::db::StoreDiverAndAddressResult::ErrCode;
+  using ErrCode = cpsm::db::StoreDiverAndAddressResult::ErrorCode;
   switch (kStoreResult.err_code) {
     case ErrCode::kFailedToRollback: {
       CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotRollback);
@@ -124,6 +130,10 @@ void MainWindow::OnMainDiveSearchSelectionChanged(const QItemSelection &selected
   }
   ui->mainDiveDetails->SetDive(kDiveOpt.value().dive,
                                ui->mainDiveSearch->GetNameOfDivingSite(kDiveOpt.value().dive.diving_site_id));
+}
+
+void MainWindow::EditDive(const cpsm::DisplayDive &dive) {
+  SPDLOG_DEBUG("Editing dive: {}", dive.dive);
 }
 
 void MainWindow::on_action_check_updates_triggered() {
@@ -220,4 +230,13 @@ void MainWindow::on_pb_newDiver_clicked() {
   default_diver.diver.registration_date = QDate::currentDate();
   default_diver.diver.member_date = cpsm::consts::kEpochDate;
   EditDiver(default_diver);
+}
+
+void MainWindow::on_pb_editDive_clicked() {
+  const auto kSelectedDiveOpt{ui->mainDiveSearch->GetSelectedDive()};
+  if (!kSelectedDiveOpt) {
+    ui->statusbar->showMessage(tr("Sélectionnez 1 unique plongée pour l'éditer"), 60000);
+    return;
+  }
+  EditDive(kSelectedDiveOpt.value());
 }

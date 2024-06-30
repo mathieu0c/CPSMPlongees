@@ -42,7 +42,7 @@ StoreDiverAndAddressResult StoreDiverAndItsAddress(Diver diver, const DiverAddre
   auto database{::db::Def()};
   if (!database.transaction()) {
     SPDLOG_ERROR("Failed to start db transaction");
-    out.err_code = StoreDiverAndAddressResult::ErrCode::kFailedToStartTransaction;
+    out.err_code = StoreDiverAndAddressResult::ErrorCode::kFailedToStartTransaction;
     return out;
   }
 
@@ -50,10 +50,11 @@ StoreDiverAndAddressResult StoreDiverAndItsAddress(Diver diver, const DiverAddre
   if (!kStoredAddressOpt.has_value()) {
     SPDLOG_WARN("Failed to store address... from <StoreDiverAndItsAddress>");
     if (!database.rollback()) {
-      out.err_code = StoreDiverAndAddressResult::ErrCode::kFailedToRollback;
+      out.err_code = StoreDiverAndAddressResult::ErrorCode::kFailedToRollback;
       return out;
     } /* else */
-    out.err_code = StoreDiverAndAddressResult::ErrCode::kFailedToStoreAddress;
+    out.err_code = StoreDiverAndAddressResult::ErrorCode::kFailedToStoreElement;
+    out.err_details = StoreDiverAndAddressResult::DetailErrCode::kFailedToStoreAddress;
     return out;
   }
 
@@ -63,26 +64,80 @@ StoreDiverAndAddressResult StoreDiverAndItsAddress(Diver diver, const DiverAddre
   if (!kStoredDiverOpt) {
     SPDLOG_WARN("Failed to store diver... from <StoreDiverAndItsAddress>");
     if (!database.rollback()) {
-      out.err_code = StoreDiverAndAddressResult::ErrCode::kFailedToRollback;
+      out.err_code = StoreDiverAndAddressResult::ErrorCode::kFailedToRollback;
       return out;
     } /* else */
-    out.err_code = StoreDiverAndAddressResult::ErrCode::kFailedToStoreDiver;
+    out.err_code = StoreDiverAndAddressResult::ErrorCode::kFailedToStoreElement;
+    out.err_details = StoreDiverAndAddressResult::DetailErrCode::kFailedToStoreDiver;
     return {};
   }
 
   if (!database.commit()) {
     SPDLOG_WARN("Failed to commit transaction... from <StoreDiverAndItsAddress>");
     if (!database.rollback()) {
-      out.err_code = StoreDiverAndAddressResult::ErrCode::kFailedToRollback;
+      out.err_code = StoreDiverAndAddressResult::ErrorCode::kFailedToRollback;
       return out;
     } /* else */
-    out.err_code = StoreDiverAndAddressResult::ErrCode::kFailedToCommit;
+    out.err_code = StoreDiverAndAddressResult::ErrorCode::kFailedToCommit;
     return out;
   }
 
-  out.err_code = StoreDiverAndAddressResult::ErrCode::kOk;
+  out.err_code = StoreDiverAndAddressResult::ErrorCode::kOk;
   out.stored_diver = *kStoredDiverOpt;
   out.stored_address = *kStoredAddressOpt;
+
+  return out;
+}
+
+StoreDiveAndDiversResult StoreDiveAndItsMembers(Dive dive, const std::vector<DiveMember>& members) {
+  StoreDiveAndDiversResult out{};
+
+  auto database{::db::Def()};
+  if (!database.transaction()) {
+    SPDLOG_ERROR("Failed to start db transaction");
+    out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToStartTransaction;
+    return out;
+  }
+
+  const auto kStoredDiveOpt{UpdateDive(::db::Def(), dive)};
+  if (!kStoredDiveOpt) {
+    SPDLOG_WARN("Failed to store dive... from <StoreDiveAndItsMembers>");
+    if (!database.rollback()) {
+      out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToRollback;
+      return out;
+    } /* else */
+    out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToStoreElement;
+    out.err_details = StoreDiveAndDiversResult::DetailErrCode::kFailedToStoreDive;
+    return {};
+  }
+
+  for (const auto& e : members) {
+    const auto kStoredMemberOpt{UpdateDiveMember(::db::Def(), e)};
+    if (!kStoredMemberOpt) {
+      SPDLOG_WARN("Failed to store dive member... from <StoreDiveAndItsMembers>");
+      if (!database.rollback()) {
+        out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToRollback;
+        return out;
+      } /* else */
+      out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToStoreElement;
+      out.err_details = StoreDiveAndDiversResult::DetailErrCode::kFailedToStoreDiveMember;
+      return {};
+    }
+  }
+
+  if (!database.commit()) {
+    SPDLOG_WARN("Failed to commit transaction... from <StoreDiveAndItsMembers>");
+    if (!database.rollback()) {
+      out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToRollback;
+      return out;
+    } /* else */
+    out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToCommit;
+    return out;
+  }
+
+  out.err_code = StoreDiveAndDiversResult::ErrorCode::kOk;
+  out.stored_dive = *kStoredDiveOpt;
+  out.stored_dive_members = members;
 
   return out;
 }
