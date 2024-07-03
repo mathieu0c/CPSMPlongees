@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   // const auto kLoadDbSuccess{cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath)};
   ui->pg_editDiver->RefreshFromDB();
+  ui->pg_editDive->RefreshFromDB();
   ui->mainDiverSearch->RefreshFromDB();
   ui->mainDiveSearch->RefreshFromDB();
 
@@ -50,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
   /* --- Diver --- */
 
   connect(ui->pg_editDiver, &gui::DiverEdit::DiverEdited, this, &MainWindow::OnDiverEdited);
+  connect(ui->pg_editDive, &gui::DiveEdit::DiveEdited, this, &MainWindow::OnDiveEdited);
 
   connect(ui->mainDiverSearch, &gui::DiverSearch::DoubleClickOnDiver, this, &MainWindow::EditDiver);
 
@@ -133,7 +135,48 @@ void MainWindow::OnMainDiveSearchSelectionChanged(const QItemSelection &selected
 }
 
 void MainWindow::EditDive(const cpsm::DisplayDive &dive) {
-  SPDLOG_DEBUG("Editing dive: {}", dive.dive);
+  ui->statusbar->clearMessage();
+  ui->pg_editDive->SetDive({dive.dive});
+  ui->tab_dives->setCurrentIndex(DiveTabPages::kEditDive);
+}
+
+void MainWindow::OnDiveEdited(std::optional<cpsm::db::DiveAndDivers> edit_opt) {
+  if (!edit_opt) {
+    ui->tab_dives->setCurrentIndex(DiveTabPages::kBrowseDives);
+    return;
+  }
+
+  const auto &dive{edit_opt.value().dive};
+  auto database{db::Def()};
+
+  const auto kStoreResult{cpsm::db::StoreDiveAndItsMembers(edit_opt.value())};
+  if (kStoreResult) {
+    ui->mainDiverSearch->RefreshFromDB();
+    ui->tab_dives->setCurrentIndex(DiveTabPages::kBrowseDives);
+    return; /* Everything was fine */
+  }
+  /* else */
+
+  QMessageBox::critical(
+      this,
+      tr("Erreur"),
+      tr("Impossible de sauvegarder les modifications apportées à la plongée\n(Contacter le support si "
+         "besoin: ErrCode=<%0>)")
+          .arg(kStoreResult.err_code));
+  SPDLOG_ERROR("Failed to save dive and its divers: <{}> to database.\nErrCode=<{}>\nError: <{}>",
+               dive,
+               kStoreResult.err_code,
+               database.lastError());
+
+  using ErrCode = cpsm::db::StoreDiverAndAddressResult::ErrorCode;
+  switch (kStoreResult.err_code) {
+    case ErrCode::kFailedToRollback: {
+      CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotRollback);
+      break;
+    }
+    default: {
+    }
+  }
 }
 
 void MainWindow::on_action_check_updates_triggered() {

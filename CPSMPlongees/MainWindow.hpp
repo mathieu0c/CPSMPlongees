@@ -24,6 +24,10 @@ class MainWindow : public QMainWindow {
     kBrowseDivers = 0,
     kEditDiver = 1,
   };
+  enum DiveTabPages : int32_t {
+    kBrowseDives = 1, /* Never ask me why these are inverted. Idk, Idc */
+    kEditDive = 0,
+  };
 
   enum MainTabs : int32_t {
     kDivers = 0,
@@ -45,6 +49,7 @@ class MainWindow : public QMainWindow {
 
   void OnMainDiveSearchSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
   void EditDive(const cpsm::DisplayDive &dive);
+  void OnDiveEdited(std::optional<cpsm::db::DiveAndDivers> edit_opt);
 
   void on_action_check_updates_triggered();
 

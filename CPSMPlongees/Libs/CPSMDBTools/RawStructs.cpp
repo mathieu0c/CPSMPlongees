@@ -89,7 +89,31 @@ StoreDiverAndAddressResult StoreDiverAndItsAddress(Diver diver, const DiverAddre
   return out;
 }
 
-StoreDiveAndDiversResult StoreDiveAndItsMembers(Dive dive, const std::vector<DiveMember>& members) {
+bool operator==(const DiveAndDivers& lhs, const DiveAndDivers& rhs) {
+  return lhs.dive == rhs.dive && lhs.members == rhs.members;
+}
+bool operator!=(const DiveAndDivers& lhs, const DiveAndDivers& rhs) {
+  return lhs.dive != rhs.dive && lhs.members != rhs.members;
+}
+
+std::string to_string(const DiveAndDivers& dive) {
+  const auto kDiveString{to_string(dive.dive)};
+  std::string member_str{"["};
+  for (const auto& e : dive.members) {
+    member_str += to_string(e) + ",";
+  }
+  if (!dive.members.empty()) {
+    member_str.pop_back();
+  }
+  member_str += "]";
+  std::string out{"DiveAndDivers{.dive=" + kDiveString + ", .members=" + member_str + "}"};
+  return out;
+}
+std::ostream& operator<<(std::ostream& os, const DiveAndDivers& dive) {
+  return os << to_string(dive);
+}
+
+StoreDiveAndDiversResult StoreDiveAndItsMembers(const DiveAndDivers& dive) {
   StoreDiveAndDiversResult out{};
 
   auto database{::db::Def()};
@@ -99,7 +123,7 @@ StoreDiveAndDiversResult StoreDiveAndItsMembers(Dive dive, const std::vector<Div
     return out;
   }
 
-  const auto kStoredDiveOpt{UpdateDive(::db::Def(), dive)};
+  const auto kStoredDiveOpt{UpdateDive(::db::Def(), dive.dive)};
   if (!kStoredDiveOpt) {
     SPDLOG_WARN("Failed to store dive... from <StoreDiveAndItsMembers>");
     if (!database.rollback()) {
@@ -111,7 +135,7 @@ StoreDiveAndDiversResult StoreDiveAndItsMembers(Dive dive, const std::vector<Div
     return {};
   }
 
-  for (const auto& e : members) {
+  for (const auto& e : dive.members) {
     const auto kStoredMemberOpt{UpdateDiveMember(::db::Def(), e)};
     if (!kStoredMemberOpt) {
       SPDLOG_WARN("Failed to store dive member... from <StoreDiveAndItsMembers>");
@@ -136,8 +160,8 @@ StoreDiveAndDiversResult StoreDiveAndItsMembers(Dive dive, const std::vector<Div
   }
 
   out.err_code = StoreDiveAndDiversResult::ErrorCode::kOk;
-  out.stored_dive = *kStoredDiveOpt;
-  out.stored_dive_members = members;
+  out.stored_dive.dive = *kStoredDiveOpt;
+  out.stored_dive.members = dive.members;
 
   return out;
 }

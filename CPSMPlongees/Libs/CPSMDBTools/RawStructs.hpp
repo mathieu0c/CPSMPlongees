@@ -98,13 +98,21 @@ DB_DECLARE_STRUCT(Dive, Dives, val.dive_id <= 0, Dive_VAR_LIST)
   COLUMN(diving_type_id, DBType::INTEGER, false);
 DB_DECLARE_STRUCT(DiveMember, DivesMembers, val.dive_id <= 0 || val.diver_id <= 0, DiveMember_VAR_LIST)
 
+struct DiveAndDivers {
+  Dive dive{};
+  std::vector<DiveMember> members{};
+};
+bool operator==(const DiveAndDivers& lhs, const DiveAndDivers& rhs);
+bool operator!=(const DiveAndDivers& lhs, const DiveAndDivers& rhs);
+std::string to_string(const DiveAndDivers& dive);
+std::ostream& operator<<(std::ostream& os, const DiveAndDivers& dive);
+
 struct StoreDiveAndDiversResult : public MultipleStoreResult {
   enum DetailErrCode : int32_t { kFailedToStoreDive = 0, kFailedToStoreDiveMember = 1 };
   DetailErrCode err_details{};
-  Dive stored_dive;
-  std::vector<DiveMember> stored_dive_members;
+  DiveAndDivers stored_dive;
 };
-StoreDiveAndDiversResult StoreDiveAndItsMembers(Dive dive, const std::vector<DiveMember>& members);
+StoreDiveAndDiversResult StoreDiveAndItsMembers(const DiveAndDivers& dive);
 
 #define DivingSites_VAR_LIST(COLUMN)             \
   COLUMN(diving_site_id, DBType::INTEGER, true); \

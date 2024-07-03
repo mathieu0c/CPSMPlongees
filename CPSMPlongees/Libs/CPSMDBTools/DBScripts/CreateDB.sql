@@ -120,7 +120,10 @@ INSERT OR IGNORE INTO DivingSites
     (4,"La sèche de Saint-Elme"),
     (5,"La roche à l'ancre"),
     (6,"La vallée aux gorgones"),
-    (7,"Le Tromblon");
+    (7,"Le Tromblon"),
+    (8,"Le SMBD2"),
+    (9,"Le Dornier"),
+    (10,"La Corée");
 
 
 --  Diving types
