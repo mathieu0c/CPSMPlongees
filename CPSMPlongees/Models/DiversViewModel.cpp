@@ -47,18 +47,21 @@ void DiversViewModel::LoadFromDB() {
   }
 
   SPDLOG_TRACE("Reloading DiversViewModel from db");
-  auto list{::db::readLFromDB<DiverWithDiveCount>(
-      ::db::Def(),
-      [&](const QSqlQuery &query) {
-        //
-        auto diver{db::ExtractDiver(query)};
-        auto dive_count{query.value("dive_count").toInt()};
-        return DiverWithDiveCount{diver, dive_count};
-      },
-      "SELECT %0.*, COUNT(%1.%2) AS dive_count FROM %0 LEFT JOIN "
-      "%1 ON %0.%3 = %1.%3 GROUP BY %0.%3;",
-      {db::Diver::db_table, db::DiveMember::db_table, db::DiveMember::dive_id_col, db::Diver::diver_id_col},
-      {})};
+  auto list{::db::readLFromDB<DiverWithDiveCount>(::db::Def(),
+                                                  [&](const QSqlQuery &query) {
+                                                    //
+                                                    auto diver{db::ExtractDiver(query)};
+                                                    auto dive_count{query.value("dive_count").toInt()};
+                                                    return DiverWithDiveCount{diver, dive_count};
+                                                  },
+                                                  "SELECT %0.*, COUNT(%1.%2) AS dive_count FROM %0 LEFT JOIN "
+                                                  "%1 ON %0.%3 = %1.%3 GROUP BY %0.%3 ORDER BY %0.%4;",
+                                                  {db::Diver::db_table,
+                                                   db::DiveMember::db_table,
+                                                   db::DiveMember::dive_id_col,
+                                                   db::Diver::diver_id_col,
+                                                   db::Diver::last_name_col},
+                                                  {})};
 
   SetDivers(std::move(list));
 }
@@ -177,6 +180,20 @@ void DiversViewModel::SetNameFilter(const QString &name) {
   ReapplyFilters();
 }
 
+void DiversViewModel::SetHideDiversIdsFilter(std::set<int> divers_ids) {
+  if (divers_ids.empty()) {
+    m_filters[Filters::kFilterHideDiversIds].active = false;
+    ReapplyFilters();
+    return;
+  }
+
+  m_filters[Filters::kFilterHideDiversIds].filter = [divers_ids](const DiverWithDiveCount &diver) {
+    return divers_ids.find(diver.diver.diver_id) == divers_ids.end();
+  };
+  m_filters[Filters::kFilterHideDiversIds].active = true;
+  ReapplyFilters();
+}
+
 void DiversViewModel::InitFilters() {
   /* We define the maxFilterValue filter just to avoid crash by mistake... */
   m_filters[Filters::kMaxFilterEnumValue] = utils::Filter<DiverWithDiveCount>{
@@ -204,6 +221,12 @@ void DiversViewModel::InitFilters() {
 
   m_filters[Filters::kFilterNegativeBalance] = utils::Filter<DiverWithDiveCount>{
       .filter = [](const DiverWithDiveCount &diver) { return diver.Balance() < 0; }, .active = false, .negate = false};
+
+  m_filters[Filters::kFilterHideDiversIds] =
+      utils::Filter<DiverWithDiveCount>{/* Default diver id filter does nothing */
+                                        .filter = [](const DiverWithDiveCount &) { return true; },
+                                        .active = true,
+                                        .negate = false};
 
   /* Check we didn't forget anything */
 
@@ -244,11 +267,7 @@ QString DiversViewModel::GetDisplayTextForIndex(const DiverWithDiveCount &comple
       return diver.certif_date.toString(cpsm::consts::kDateUserFormat);
     }
     case ColumnId::kLevel: {
-      auto it{m_db_levels.find(diver.diver_level_id)};
-      if (it != m_db_levels.end()) {
-        return it->second.level_name;
-      }
-      return "?<" + QString::number(diver.diver_level_id) + ">?";
+      return GetLevelText(diver.diver_level_id);
     }
     case ColumnId::kBalance: {
       return QString::number(complete_diver.Balance());
@@ -281,6 +300,14 @@ QVariant DiversViewModel::GetBackgroundForIndex(const DiverWithDiveCount &comple
       break;
   }
   return {};
+}
+
+QString DiversViewModel::GetLevelText(int level_id) const {
+  auto it{m_db_levels.find(level_id)};
+  if (it != m_db_levels.end()) {
+    return it->second.level_name;
+  }
+  return "?<" + QString::number(level_id) + ">?";
 }
 
 }  // namespace cpsm

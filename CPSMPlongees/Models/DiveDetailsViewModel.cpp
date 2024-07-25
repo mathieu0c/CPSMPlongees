@@ -21,8 +21,6 @@ void DiveDetailsViewModel::LoadFromDB(int dive_id) {
     m_db_diving_types[type.diving_type_id] = type;
   }
 
-  SPDLOG_TRACE("Reloading DiveDetailsViewModel from db");
-
   const QString kBaseQuery{R"(SELECT * FROM %0 NATURAL JOIN %1 WHERE %2=?)"};
   const QStringList kStrArgs{
       db::DiveMember::db_table,   /* 0 */
@@ -55,6 +53,9 @@ void DiveDetailsViewModel::SetDiversToDisplay(QVector<DiveDetailsDiver> divers) 
   beginRemoveRows({}, 0, rowCount() - 1);
   endRemoveRows();
 
+  std::sort(divers.begin(), divers.end(), [](const DiveDetailsDiver &lhs, const DiveDetailsDiver &rhs) {
+    return lhs.last_name < rhs.last_name;
+  });
   m_divers = std::move(divers);
 
   beginInsertRows({}, 0, m_divers.size() - 1);
@@ -125,7 +126,9 @@ QVariant DiveDetailsViewModel::data(const QModelIndex &index, int role) const {
       // }
       break;
     case Qt::BackgroundRole:
-      return {};
+
+      return col == ColumnId::kDiveType ? ::consts::colors::GetColorForDivingType(diver.member.diving_type_id)
+                                        : QVariant{};
     case Qt::TextAlignmentRole:
       return col == ColumnId::kDiveType ? int(Qt::AlignLeft | Qt::AlignVCenter)
                                         : int(Qt::AlignHCenter | Qt::AlignVCenter);

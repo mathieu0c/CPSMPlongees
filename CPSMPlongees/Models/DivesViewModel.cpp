@@ -3,14 +3,7 @@
 #include <CPSMGlobals.hpp>
 #include <Constants.hpp>
 #include <QFont>
-
-namespace {
-
-bool IsMorning(const QDateTime &dt) {
-  return dt.time().hour() < 12;
-}
-
-}  // namespace
+#include <Utils.hpp>
 
 namespace cpsm {
 
@@ -277,12 +270,12 @@ void DivesViewModel::InitFilters() {
 
   /* Actual filters */
   m_filters[Filters::kFilterMorning] =
-      utils::Filter<DisplayDive>{.filter = [](const DisplayDive &dive) { return ::IsMorning(dive.dive.datetime); },
+      utils::Filter<DisplayDive>{.filter = [](const DisplayDive &dive) { return IsMorning(dive.dive.datetime); },
                                  .active = false,
                                  .negate = false};
 
   m_filters[Filters::kFilterAfternoon] =
-      utils::Filter<DisplayDive>{.filter = [](const DisplayDive &dive) { return !::IsMorning(dive.dive.datetime); },
+      utils::Filter<DisplayDive>{.filter = [](const DisplayDive &dive) { return !IsMorning(dive.dive.datetime); },
                                  .active = false,
                                  .negate = false};
 
@@ -360,7 +353,7 @@ QVariant DivesViewModel::GetBackgroundForIndex(const DisplayDive &complete_dive,
                                                           : ::consts::colors::kBackgroundInvisible;
     }
     case ColumnId::kTime: {
-      return IsMorning(dive.datetime) ? ::consts::colors::kBackgroundBlue : ::consts::colors::kBackgroundYellow;
+      return BackgroundColorFromTime(dive.datetime.time());
     }
     default:
       break;

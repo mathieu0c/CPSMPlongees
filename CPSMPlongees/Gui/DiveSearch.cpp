@@ -114,6 +114,30 @@ void DiveSearch::SetSectionResizeMode(QHeaderView::ResizeMode mode) {
   ui->tableView->horizontalHeader()->setSectionResizeMode(mode);
 }
 
+void DiveSearch::SetSelectedDives(const std::set<int> &dive_ids) {
+  std::set<int> rows{};
+  for (int i{}; i < m_model.GetDisplayDives().size(); ++i) {
+    if (dive_ids.contains(m_model.GetDisplayDives()[i].dive.dive_id)) {
+      rows.insert(i);
+    }
+  }
+
+  ui->tableView->clearSelection();
+  if (rows.empty()) {
+    return;
+  }
+
+  QItemSelectionModel *selectionModel = ui->tableView->selectionModel();
+  if (selectionModel) {
+    QItemSelection selection{};
+    for (const auto &row : rows) {
+      selection.select(m_model.index(row, 0), m_model.index(row, m_model.columnCount() - 1));
+    }
+
+    selectionModel->select(selection, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+  }
+}
+
 void DiveSearch::RefreshFromDB(int diver_id) {
   m_model.LoadFromDB(diver_id);
 
@@ -141,7 +165,7 @@ void DiveSearch::on_tableView_doubleClicked(const QModelIndex &) {
   }
 
   const auto &selected_dive{kSelectedDiveOpt.value()};
-  DoubleClickOnDive(selected_dive);
+  emit DoubleClickOnDive(selected_dive);
 }
 
 void DiveSearch::on_tableView_clicked(const QModelIndex &index) {

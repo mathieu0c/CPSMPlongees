@@ -16,8 +16,10 @@ struct MultipleStoreResult {
     kOk = 1,
     kFailedToStartTransaction = 2,
     kFailedToStoreElement = 3,
-    kFailedToRollback = 4,
-    kFailedToCommit = 5
+    kFailedToDeleteElement = 4,
+    kFailedToReadElement = 5,
+    kFailedToRollback = 6,
+    kFailedToCommit = 7
   };
 
   ErrorCode err_code{};
@@ -108,7 +110,12 @@ std::string to_string(const DiveAndDivers& dive);
 std::ostream& operator<<(std::ostream& os, const DiveAndDivers& dive);
 
 struct StoreDiveAndDiversResult : public MultipleStoreResult {
-  enum DetailErrCode : int32_t { kFailedToStoreDive = 0, kFailedToStoreDiveMember = 1 };
+  enum DetailErrCode : int32_t {
+    kFailedToStoreDive = 0,
+    kFailedToStoreDiveMember = 1,
+    kFailedToDeleteDiveMember = 2,
+    kFailedToReadDiveMembers = 3
+  };
   DetailErrCode err_details{};
   DiveAndDivers stored_dive;
 };

@@ -1,5 +1,23 @@
 #include "RawStructs.hpp"
 
+#include <QJsonDocument>
+
+#define ROLLBACK_ON_FAIL_STORE_DIVE_AND_DIVERS(condition, error_code, error_details)                  \
+  if (condition) {                                                                                    \
+    SPDLOG_WARN("Rollback because of failed condition <{}>\n\tERR=<{}>\n\tDETAILS=<{}>\n\tfrom <{}>", \
+                #condition,                                                                           \
+                #error_code,                                                                          \
+                #error_details,                                                                       \
+                __PRETTY_FUNCTION__);                                                                 \
+    if (!database.rollback()) {                                                                       \
+      out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToRollback;                          \
+      return out;                                                                                     \
+    } /* else */                                                                                      \
+    out.err_code = error_code;                                                                        \
+    out.err_details = error_details;                                                                  \
+    return out;                                                                                       \
+  }
+
 namespace cpsm::db {
 
 int GetDiverDiveCount(const Diver& diver) {
@@ -69,7 +87,7 @@ StoreDiverAndAddressResult StoreDiverAndItsAddress(Diver diver, const DiverAddre
     } /* else */
     out.err_code = StoreDiverAndAddressResult::ErrorCode::kFailedToStoreElement;
     out.err_details = StoreDiverAndAddressResult::DetailErrCode::kFailedToStoreDiver;
-    return {};
+    return out;
   }
 
   if (!database.commit()) {
@@ -124,29 +142,45 @@ StoreDiveAndDiversResult StoreDiveAndItsMembers(const DiveAndDivers& dive) {
   }
 
   const auto kStoredDiveOpt{UpdateDive(::db::Def(), dive.dive)};
-  if (!kStoredDiveOpt) {
-    SPDLOG_WARN("Failed to store dive... from <StoreDiveAndItsMembers>");
-    if (!database.rollback()) {
-      out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToRollback;
-      return out;
-    } /* else */
-    out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToStoreElement;
-    out.err_details = StoreDiveAndDiversResult::DetailErrCode::kFailedToStoreDive;
-    return {};
+  ROLLBACK_ON_FAIL_STORE_DIVE_AND_DIVERS(!kStoredDiveOpt,
+                                         StoreDiveAndDiversResult::ErrorCode::kFailedToStoreElement,
+                                         StoreDiveAndDiversResult::DetailErrCode::kFailedToStoreDive);
+
+  bool ok_on_read_members{false};
+  const auto kExistingDiveMembers{::db::readLFromDB<DiveMember>(database,
+                                                                ExtractDiveMember,
+                                                                "SELECT * FROM %0 WHERE %1=?",
+                                                                {DiveMember::db_table, DiveMember::dive_id_col},
+                                                                {kStoredDiveOpt->dive_id},
+                                                                &ok_on_read_members)};
+  ROLLBACK_ON_FAIL_STORE_DIVE_AND_DIVERS(!ok_on_read_members,
+                                         StoreDiveAndDiversResult::ErrorCode::kFailedToReadElement,
+                                         StoreDiveAndDiversResult::DetailErrCode::kFailedToReadDiveMembers);
+
+  for (const auto& e : kExistingDiveMembers) {
+    if (std::find_if(dive.members.cbegin(), dive.members.cend(), [&e](const DiveMember& lhs) {
+          return lhs.diver_id == e.diver_id;
+        }) != dive.members.end()) {
+      /*If the diver is actually a member of the dive*/
+      continue;
+    }
+    /* Diver should not be in the dive. Remove it */
+    const auto kDeletedRemovedDiveMember{DeleteDiveMember(database, e)};
+    ROLLBACK_ON_FAIL_STORE_DIVE_AND_DIVERS(!kDeletedRemovedDiveMember,
+                                           StoreDiveAndDiversResult::ErrorCode::kFailedToDeleteElement,
+                                           StoreDiveAndDiversResult::DetailErrCode::kFailedToDeleteDiveMember);
   }
 
-  for (const auto& e : dive.members) {
+  auto dive_members{dive.members};
+  for (auto& e : dive_members) {
+    e.dive_id = kStoredDiveOpt->dive_id;
+  }
+
+  for (const auto& e : dive_members) {
     const auto kStoredMemberOpt{UpdateDiveMember(::db::Def(), e)};
-    if (!kStoredMemberOpt) {
-      SPDLOG_WARN("Failed to store dive member... from <StoreDiveAndItsMembers>");
-      if (!database.rollback()) {
-        out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToRollback;
-        return out;
-      } /* else */
-      out.err_code = StoreDiveAndDiversResult::ErrorCode::kFailedToStoreElement;
-      out.err_details = StoreDiveAndDiversResult::DetailErrCode::kFailedToStoreDiveMember;
-      return {};
-    }
+    ROLLBACK_ON_FAIL_STORE_DIVE_AND_DIVERS(!kStoredMemberOpt,
+                                           StoreDiveAndDiversResult::ErrorCode::kFailedToStoreElement,
+                                           StoreDiveAndDiversResult::DetailErrCode::kFailedToStoreDiveMember);
   }
 
   if (!database.commit()) {

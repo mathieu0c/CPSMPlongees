@@ -55,9 +55,9 @@ MainWindow::MainWindow(QWidget *parent)
 
   connect(ui->mainDiverSearch, &gui::DiverSearch::DoubleClickOnDiver, this, &MainWindow::EditDiver);
 
-  connect(ui->mainDiveSearch, &gui::DiveSearch::diveSelected, this, [this](const cpsm::DisplayDive &dive) {
-    ui->mainDiveDetails->SetDive(dive.dive, ui->mainDiveSearch->GetNameOfDivingSite(dive.dive.diving_site_id));
-  });
+  // connect(ui->mainDiveSearch, &gui::DiveSearch::diveSelected, this, [this](const cpsm::DisplayDive &dive) {
+  //   ui->mainDiveDetails->SetDive(dive.dive, ui->mainDiveSearch->GetNameOfDivingSite(dive.dive.diving_site_id));
+  // });
 
   /* --- Dives --- */
 
@@ -153,6 +153,9 @@ void MainWindow::OnDiveEdited(std::optional<cpsm::db::DiveAndDivers> edit_opt) {
   if (kStoreResult) {
     ui->mainDiverSearch->RefreshFromDB();
     ui->tab_dives->setCurrentIndex(DiveTabPages::kBrowseDives);
+    ui->mainDiveSearch->RefreshFromDB();
+    OnMainDiveSearchSelectionChanged(ui->mainDiveSearch->GetSelectionModel()->selection(), {});
+    ui->mainDiveSearch->SetSelectedDives({kStoreResult.stored_dive.dive.dive_id});
     return; /* Everything was fine */
   }
   /* else */
@@ -161,12 +164,16 @@ void MainWindow::OnDiveEdited(std::optional<cpsm::db::DiveAndDivers> edit_opt) {
       this,
       tr("Erreur"),
       tr("Impossible de sauvegarder les modifications apportées à la plongée\n(Contacter le support si "
-         "besoin: ErrCode=<%0>)")
-          .arg(kStoreResult.err_code));
-  SPDLOG_ERROR("Failed to save dive and its divers: <{}> to database.\nErrCode=<{}>\nError: <{}>",
-               dive,
-               kStoreResult.err_code,
-               database.lastError());
+         "besoin: (StoreDiveAndDiversResult) ErrCode=<%0>   ErrDetails=<%1>)")
+          .arg(kStoreResult.err_code)
+          .arg(kStoreResult.err_details));
+  SPDLOG_ERROR(
+      "Failed to save dive and its divers: <{}> to database.\n(StoreDiveAndDiversResult) ErrCode=<{}>  "
+      "ErrDetails=<{}>\nDB error: <{}>",
+      dive,
+      kStoreResult.err_code,
+      kStoreResult.err_details,
+      database.lastError());
 
   using ErrCode = cpsm::db::StoreDiverAndAddressResult::ErrorCode;
   switch (kStoreResult.err_code) {
@@ -236,6 +243,13 @@ void MainWindow::on_pb_deleteDiver_clicked() {
   auto database{db::Def()};
   if (!database.transaction()) {
     success = false;
+    SPDLOG_ERROR("Failed to remove diver from database (Failed to start transaction): {}", database.lastError());
+    /* Display to the user the list of diver that could not be deleted in an error message box */
+    QMessageBox::critical(
+        this,
+        tr("Erreur"),
+        tr("Impossible de supprimer les plongeurs sélectionnés\n(Impossible d'initier la transaction)"));
+    return;
   }
 
   for (const auto &diver : kSelectedDivers) {
@@ -282,4 +296,93 @@ void MainWindow::on_pb_editDive_clicked() {
     return;
   }
   EditDive(kSelectedDiveOpt.value());
+}
+
+void MainWindow::on_pb_deleteDive_clicked() {
+  const auto kSelectedDives{ui->mainDiveSearch->GetSelectedDives()};
+
+  if (kSelectedDives.size() == 0) {
+    ui->statusbar->showMessage(tr("Sélectionnez au moins 1 plongée à supprimer"), 60000);
+    return;
+  }
+
+  /* Ask confirmation in a dialog box displaying the divers to be deleted */
+  QDialog dialog(this);
+  dialog.setWindowTitle(tr("Confirmation"));
+
+  QVBoxLayout layout(&dialog);
+
+  QLabel label(tr("Voulez-vous vraiment supprimer les plongées suivants ?"));
+  layout.addWidget(&label);
+
+  QTextBrowser dive_display;
+  dive_display.setText([&kSelectedDives]() {
+    QString out{};
+    for (const auto &dive : kSelectedDives) {
+      out.append(tr("<%0 %1 - %2 plongeurs>\n")
+                     .arg(dive.dive.datetime.date().toString(cpsm::consts::kDateUserFormat),
+                          dive.dive.datetime.time().toString(cpsm::consts::kTimeFormat))
+                     .arg(dive.diver_count));
+    }
+    return out;
+  }());
+  layout.addWidget(&dive_display);
+
+  QLabel warning(tr("Cette action est irréversible."));
+  layout.addWidget(&warning);
+
+  QDialogButtonBox buttonBox(QDialogButtonBox::Yes | QDialogButtonBox::No, Qt::Horizontal, &dialog);
+  buttonBox.setCenterButtons(true);
+  QObject::connect(&buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+  QObject::connect(&buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+  layout.addWidget(&buttonBox);
+
+  if (dialog.exec() == QDialog::Rejected) {
+    return;
+  }
+
+  bool success{true};
+  auto database{db::Def()};
+  if (!database.transaction()) {
+    success = false;
+    SPDLOG_ERROR("Failed to remove dives from database (Failed to start transaction: {}", database.lastError());
+    /* Display to the user the list of diver that could not be deleted in an error message box */
+    QMessageBox::critical(
+        this,
+        tr("Erreur"),
+        tr("Impossible de supprimer les plongées sélectionnés\n(Impossible d'initier la transaction)"));
+    return;
+  }
+
+  for (const auto &dive : kSelectedDives) {
+    if (!cpsm::db::DeleteDive(database, dive.dive)) {
+      SPDLOG_WARN("Failed to delete dive: {}", dive.dive);
+      success = false;
+      break;
+    }
+  }
+  if (database.commit()) {
+    success = true;
+  }
+
+  if (!success) {
+    if (!database.rollback()) {
+      SPDLOG_ERROR("Failed to rollback transaction");
+      CPSM_ABORT_FOR(this, cpsm::AbortReason::kCouldNotRollback);
+    }
+    SPDLOG_ERROR("Failed to remove diver from database: {}", database.lastError());
+    /* Display to the user the list of diver that could not be deleted in an error message box */
+    QMessageBox::critical(this, tr("Erreur"), tr("Impossible de supprimer les plongeurs sélectionnés"));
+    return;
+  }
+  ui->statusbar->showMessage(
+      tr("Suppression de %0 plongée%1 réussie").arg(kSelectedDives.size()).arg(kSelectedDives.size() > 1 ? "s" : ""),
+      60000);
+  ui->mainDiveSearch->RefreshFromDB();
+}
+
+void MainWindow::on_pb_newDive_clicked() {
+  cpsm::DisplayDive default_dive{};
+  default_dive.dive.datetime = QDateTime::currentDateTime();
+  EditDive(default_dive);
 }

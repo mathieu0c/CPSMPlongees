@@ -4,6 +4,7 @@
 #include <QWidget>
 
 #include <Models/DivesViewModel.hpp>
+#include <set>
 
 namespace gui {
 
@@ -33,6 +34,8 @@ class DiveSearch : public QWidget {
   auto GetDiveAtRow(int row) const {
     return m_model.GetDiveAtIndex(m_model.index(row, 0));
   }
+
+  void SetSelectedDives(const std::set<int> &dive_ids);
 
  public slots:
   void RefreshFromDB(int diver_id = -1);

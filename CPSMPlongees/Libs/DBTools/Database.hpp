@@ -72,10 +72,10 @@ auto results{db::readLFromDB<int>(db,[&](const QSqlQuery& q)->int{return q.value
 
 */
 
-template <typename T, typename UnaryFunction>
+template <typename T, bool kPrintQuery = false, typename UnaryFunction>
   requires ReadFromDBExtractor<T, UnaryFunction>
 inline QVector<T> readLFromDB(const QSqlDatabase& db, UnaryFunction extractValue, QString request,
-                              const QStringList& argList, const QVector<QVariant>& valList) {
+                              const QStringList& argList, const QVector<QVariant>& valList, bool* ok = nullptr) {
   QVector<T> out{};
 
   QSqlQuery query{db};
@@ -94,8 +94,18 @@ inline QVector<T> readLFromDB(const QSqlDatabase& db, UnaryFunction extractValue
 
   query.exec();
 
+  if constexpr (kPrintQuery) {
+    SPDLOG_DEBUG("readLFromDB query:\n{}", query);
+  }
+
   auto err{query.lastError()};
+  if (ok) {
+    *ok = true;
+  }
   if (err.type() != QSqlError::ErrorType::NoError) {
+    if (ok) {
+      *ok = false;
+    }
     SQL_PRINT_ERROR(query, err);
     return out;
   }

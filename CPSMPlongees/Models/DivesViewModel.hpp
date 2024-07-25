@@ -53,6 +53,10 @@ class DivesViewModel : public QAbstractTableModel {
 
   const QString &GetDivingSiteText(int site_id) const;
 
+  const auto &GetDisplayDives() const {
+    return m_dives_to_display;
+  }
+
  private:
   void InitFilters();
 

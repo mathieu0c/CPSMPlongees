@@ -15,9 +15,9 @@ struct DiveDetailsDiver {
 
 class DiveDetailsViewModel : public QAbstractTableModel {
   Q_OBJECT
-  enum ColumnId : int32_t { kFirstName = 0, kLastName = 1, kDiveType = 2 };
+  enum ColumnId : int32_t { kLastName = 0, kFirstName = 1, kDiveType = 2 };
 
-  static constexpr std::array kColumnsHeaders{"Prénom", "Nom", "Type"};
+  static constexpr std::array kColumnsHeaders{"Nom", "Prénom", "Type"};
 
  public:
   explicit DiveDetailsViewModel(QObject *parent = nullptr);

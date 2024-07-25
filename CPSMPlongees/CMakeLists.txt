@@ -104,7 +104,7 @@ set(PROJECT_SOURCES
         ProgramInterrupts.hpp
         LoggerHandler.hpp
 
-        Constants.hpp
+        Constants.hpp Constants.cpp
         
         main.cpp
         MainWindow.cpp
@@ -122,11 +122,14 @@ set(PROJECT_SOURCES
         Gui/LineEditUpperCase.hpp
         Gui/GuiUtils.hpp Gui/GuiUtils.cpp
         Gui/DiveDetails.hpp Gui/DiveDetails.cpp Gui/DiveDetails.ui
+        Gui/DivingTypeDelegate.hpp Gui/DivingTypeDelegate.cpp
 
         Models/table_model_test.hpp Models/table_model_test.cpp
         Models/DiversViewModel.hpp Models/DiversViewModel.cpp
         Models/DivesViewModel.hpp Models/DivesViewModel.cpp
         Models/DiveDetailsViewModel.hpp Models/DiveDetailsViewModel.cpp
+        Models/DiveEditNonMembers.hpp Models/DiveEditNonMembers.cpp
+        Models/DiveEditMembers.hpp Models/DiveEditMembers.cpp
 )
 
 

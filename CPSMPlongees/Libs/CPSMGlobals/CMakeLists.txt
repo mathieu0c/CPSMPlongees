@@ -37,6 +37,8 @@ add_library("${target_name}")
 add_library(${target_name}::${target_name} ALIAS "${target_name}")
 
 set(ADDITIONAL_SOURCES
+
+  Utils.hpp
   CPSMGlobals.hpp
   CpsmGlobalConfiguration.hpp.in
   CpsmGlobalConfiguration.hpp
