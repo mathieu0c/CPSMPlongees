@@ -6,10 +6,10 @@
 
 namespace gui {
 
-DiveSearch::DiveSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiveSearch) {
+DiveSearch::DiveSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiveSearch), m_model{} {
   ui->setupUi(this);
 
-  ui->tableView->setModel(&m_model);
+  SetModel(new cpsm::DivesViewModel{parent});
 
   ui->de_end->setDate(QDate::currentDate());
 
@@ -26,26 +26,20 @@ DiveSearch::DiveSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiveSearch
 
   /* Morning & afternoon filters */
   auto lambda_refresh_morning_afternoon_filters{[this]() {
-    m_model.SetFilterEnabled(cpsm::DivesViewModel::kFilterMorning,
-                             ui->cb_morning->isChecked() && !ui->cb_afternoon->isChecked());
-    m_model.SetFilterEnabled(cpsm::DivesViewModel::kFilterAfternoon,
-                             !ui->cb_morning->isChecked() && ui->cb_afternoon->isChecked());
+    m_model->SetFilterEnabled(cpsm::DivesViewModel::kFilterMorning,
+                              ui->cb_morning->isChecked() && !ui->cb_afternoon->isChecked());
+    m_model->SetFilterEnabled(cpsm::DivesViewModel::kFilterAfternoon,
+                              !ui->cb_morning->isChecked() && ui->cb_afternoon->isChecked());
   }};
   connect(ui->cb_morning, &QCheckBox::stateChanged, this, lambda_refresh_morning_afternoon_filters);
   connect(ui->cb_afternoon, &QCheckBox::stateChanged, this, lambda_refresh_morning_afternoon_filters);
 
-  auto lambda_refresh_date_filter{[this]() { m_model.SetDateFilter(ui->de_start->date(), ui->de_end->date()); }};
+  auto lambda_refresh_date_filter{[this]() { m_model->SetDateFilter(ui->de_start->date(), ui->de_end->date()); }};
   connect(ui->de_start, &QDateEdit::dateChanged, this, lambda_refresh_date_filter);
   connect(ui->de_end, &QDateEdit::dateChanged, this, lambda_refresh_date_filter);
 
-  auto lambda_update_result_count = [this]() {
-    ui->lbl_status->setText(tr("%1 plongées trouvées").arg(m_model.rowCount()));
-  };
-  connect(&m_model, &cpsm::DivesViewModel::rowsInserted, this, lambda_update_result_count);
-  connect(&m_model, &cpsm::DivesViewModel::rowsRemoved, this, lambda_update_result_count);
-
   auto lambda_refresh_type_filter{
-      [this](auto) { m_model.SetTypeFilter(ui->combobox_type->currentText(), ui->cb_type->isChecked()); }};
+      [this](auto) { m_model->SetTypeFilter(ui->combobox_type->currentText(), ui->cb_type->isChecked()); }};
   connect(ui->combobox_type, &QComboBox::currentIndexChanged, this, lambda_refresh_type_filter);
   connect(ui->cb_type, &QCheckBox::stateChanged, this, lambda_refresh_type_filter);
 
@@ -67,16 +61,27 @@ DiveSearch::DiveSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiveSearch
                     ui->cb_diver_count_operator->currentIndex());
         break;
     }
-    m_model.SetDiverCountFilter(operator_func, ui->sb_diver_count->value(), ui->cb_diver_count->isChecked());
+    m_model->SetDiverCountFilter(operator_func, ui->sb_diver_count->value(), ui->cb_diver_count->isChecked());
   }};
   connect(ui->cb_diver_count, &QCheckBox::stateChanged, this, lambda_refresh_diver_count_filter);
   connect(ui->sb_diver_count, &QSpinBox::valueChanged, this, lambda_refresh_diver_count_filter);
   connect(ui->cb_diver_count_operator, &QComboBox::currentIndexChanged, this, lambda_refresh_diver_count_filter);
 
-  // connect(&m_model, &QAbstractTableModel::dataChanged, this, []() { SPDLOG_INFO("Data changed");
-  //     ui->tableView.
-  // });
   ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+}
+
+void DiveSearch::SetModel(cpsm::DivesViewModel *model) {
+  if (m_model) {
+    disconnect(m_model, nullptr, this, nullptr);
+    m_model->deleteLater();
+  }
+  m_model = model;
+  auto lambda_update_result_count = [this]() {
+    ui->lbl_status->setText(tr("%1 plongées trouvées").arg(m_model->rowCount()));
+  };
+  connect(m_model, &cpsm::DivesViewModel::rowsInserted, this, lambda_update_result_count);
+  connect(m_model, &cpsm::DivesViewModel::rowsRemoved, this, lambda_update_result_count);
+  ui->tableView->setModel(m_model);
 }
 
 DiveSearch::~DiveSearch() {
@@ -91,7 +96,7 @@ std::optional<cpsm::DisplayDive> DiveSearch::GetSelectedDive() const {
   if (kSelection->selectedRows().size() != 1) {
     return {};
   }
-  return m_model.GetDiveAtIndex(kSelection->currentIndex());
+  return m_model->GetDiveAtIndex(kSelection->currentIndex());
 }
 
 QVector<cpsm::DisplayDive> DiveSearch::GetSelectedDives() const {
@@ -102,7 +107,7 @@ QVector<cpsm::DisplayDive> DiveSearch::GetSelectedDives() const {
 
   QVector<cpsm::DisplayDive> out{};
   for (const auto &index : kSelection->selectedRows()) {
-    if (const auto kDiverOpt{m_model.GetDiveAtIndex(index)}; kDiverOpt) {
+    if (const auto kDiverOpt{m_model->GetDiveAtIndex(index)}; kDiverOpt) {
       out.append(kDiverOpt.value());
     }
   }
@@ -116,8 +121,8 @@ void DiveSearch::SetSectionResizeMode(QHeaderView::ResizeMode mode) {
 
 void DiveSearch::SetSelectedDives(const std::set<int> &dive_ids) {
   std::set<int> rows{};
-  for (int i{}; i < m_model.GetDisplayDives().size(); ++i) {
-    if (dive_ids.contains(m_model.GetDisplayDives()[i].dive.dive_id)) {
+  for (int i{}; i < m_model->GetDisplayDives().size(); ++i) {
+    if (dive_ids.contains(m_model->GetDisplayDives()[i].dive.dive_id)) {
       rows.insert(i);
     }
   }
@@ -131,7 +136,7 @@ void DiveSearch::SetSelectedDives(const std::set<int> &dive_ids) {
   if (selectionModel) {
     QItemSelection selection{};
     for (const auto &row : rows) {
-      selection.select(m_model.index(row, 0), m_model.index(row, m_model.columnCount() - 1));
+      selection.select(m_model->index(row, 0), m_model->index(row, m_model->columnCount() - 1));
     }
 
     selectionModel->select(selection, QItemSelectionModel::Select | QItemSelectionModel::Rows);
@@ -139,7 +144,7 @@ void DiveSearch::SetSelectedDives(const std::set<int> &dive_ids) {
 }
 
 void DiveSearch::RefreshFromDB(int diver_id) {
-  m_model.LoadFromDB(diver_id);
+  m_model->LoadFromDB(diver_id);
 
   const auto kTypeList{::db::readLFromDB<cpsm::db::DivingType>(
       ::db::Def(), &cpsm::db::ExtractDivingType, "SELECT * FROM %0", {cpsm::db::DivingType::db_table}, {})};
@@ -151,7 +156,7 @@ void DiveSearch::RefreshFromDB(int diver_id) {
 }
 
 QString DiveSearch::GetNameOfDivingSite(int diving_site_id) const {
-  return m_model.GetDivingSiteText(diving_site_id);
+  return m_model->GetDivingSiteText(diving_site_id);
 }
 
 QItemSelectionModel *DiveSearch::GetSelectionModel() {
@@ -169,7 +174,7 @@ void DiveSearch::on_tableView_doubleClicked(const QModelIndex &) {
 }
 
 void DiveSearch::on_tableView_clicked(const QModelIndex &index) {
-  if (const auto kSelectedDiveOpt{m_model.GetDiveAtIndex(index)}; kSelectedDiveOpt.has_value()) {
+  if (const auto kSelectedDiveOpt{m_model->GetDiveAtIndex(index)}; kSelectedDiveOpt.has_value()) {
     emit diveSelected(kSelectedDiveOpt.value());
   }
 }

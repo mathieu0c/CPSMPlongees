@@ -57,7 +57,6 @@ void DiverSearch::SetItemDelegateForColumn(int column, QAbstractItemDelegate *de
 
 void DiverSearch::SetModel(cpsm::DiversViewModel *model) {
   disconnect(m_model, nullptr, this, nullptr); /* Disconnect old model from widget */
-  SPDLOG_DEBUG("Model set!");
 
   m_model = model;
   ui->tableView->setModel(m_model);

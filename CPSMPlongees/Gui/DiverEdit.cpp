@@ -2,6 +2,8 @@
 
 #include <QMessageBox>
 
+#include <Models/DivesViewModelForDiverEdit.hpp>
+
 #include "Constants.hpp"
 #include "ui_DiverEdit.h"
 
@@ -9,6 +11,8 @@ namespace gui {
 
 DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   ui->setupUi(this);
+
+  ui->diveSearch->SetModel(new cpsm::DivesViewModelForDiverEdit{this});
 
   auto lambda_connect_editing_finished_sub{
       [this]<typename Editor, typename EditorBis, typename MemberType, typename ReturnType>(

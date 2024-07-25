@@ -2,9 +2,9 @@
 
 #include <QHeaderView>
 #include <QWidget>
+#include <set>
 
 #include <Models/DivesViewModel.hpp>
-#include <set>
 
 namespace gui {
 
@@ -32,10 +32,12 @@ class DiveSearch : public QWidget {
 
   QItemSelectionModel *GetSelectionModel();
   auto GetDiveAtRow(int row) const {
-    return m_model.GetDiveAtIndex(m_model.index(row, 0));
+    return m_model->GetDiveAtIndex(m_model->index(row, 0));
   }
 
   void SetSelectedDives(const std::set<int> &dive_ids);
+
+  void SetModel(cpsm::DivesViewModel *model);
 
  public slots:
   void RefreshFromDB(int diver_id = -1);
@@ -47,7 +49,7 @@ class DiveSearch : public QWidget {
  private:
   Ui::DiveSearch *ui;
 
-  cpsm::DivesViewModel m_model;
+  cpsm::DivesViewModel *m_model;
 };
 
 }  // namespace gui

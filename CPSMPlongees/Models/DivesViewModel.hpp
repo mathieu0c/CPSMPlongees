@@ -32,17 +32,17 @@ class DivesViewModel : public QAbstractTableModel {
  public:
   explicit DivesViewModel(QObject *parent = nullptr);
 
-  void LoadFromDB(int diver_id);
+  virtual void LoadFromDB(int diver_id); /* virtual */
 
-  void SetDives(QVector<DisplayDive> dives);
-  void SetDivesToDisplay(QVector<DisplayDive> dives);
+  virtual void SetDives(QVector<DisplayDive> dives);          /* virtual */
+  virtual void SetDivesToDisplay(QVector<DisplayDive> dives); /* virtual */
 
   std::optional<DisplayDive> GetDiveAtIndex(QModelIndex index) const;
 
-  int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-  int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-  QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-  QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+  int rowCount(const QModelIndex &parent = QModelIndex()) const override;                 /* virtual */
+  int columnCount(const QModelIndex &parent = QModelIndex()) const override;              /* virtual */
+  QVariant headerData(int section, Qt::Orientation orientation, int role) const override; /* virtual */
+  QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;     /* virtual */
 
   void SetFilterEnabled(Filters filter, bool enabled);
   void SetFilterNegate(Filters filter, bool negate);

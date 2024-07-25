@@ -106,3 +106,5 @@ QVariant DiveEditNonMembers::GetBackgroundForIndex(const DiverWithDiveCount &com
 }
 
 }  // namespace cpsm
+
+#include "moc_DiveEditNonMembers.cpp"

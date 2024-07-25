@@ -130,6 +130,7 @@ set(PROJECT_SOURCES
         Models/DiveDetailsViewModel.hpp Models/DiveDetailsViewModel.cpp
         Models/DiveEditNonMembers.hpp Models/DiveEditNonMembers.cpp
         Models/DiveEditMembers.hpp Models/DiveEditMembers.cpp
+        Models/DivesViewModelForDiverEdit.hpp Models/DivesViewModelForDiverEdit.cpp
 )
 
 

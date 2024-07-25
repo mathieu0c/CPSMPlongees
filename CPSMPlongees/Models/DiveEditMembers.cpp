@@ -286,3 +286,5 @@ void DiveEditMembers::SetDivingMembers(std::map<int, db::DiveMember> members) {
 }
 
 }  // namespace cpsm
+
+#include "moc_DiveEditMembers.cpp"

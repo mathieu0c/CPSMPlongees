@@ -88,7 +88,7 @@ void DivesViewModel::LoadFromDB(int diver_id) {
     base_query =
         "SELECT "
         "     *,"
-        "     GROUP_CONCAT(DISTINCT %0.%1) AS dive_types,"
+        "     %0.%1 AS dive_types,"
         "     COUNT(%2.%3) AS diver_count "
         "FROM %4"
         "     LEFT JOIN "
