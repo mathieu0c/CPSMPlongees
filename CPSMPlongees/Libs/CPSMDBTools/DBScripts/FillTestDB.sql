@@ -34,7 +34,7 @@ VALUES
   ('2024-02-10 09:00:00', 1),  -- Dive 1: Les deux frères
   ('2024-02-11 10:30:00', 2),  -- Dive 2: L'Arroyo
   ('2024-02-12 14:15:00', 3),  -- Dive 3: La sèche du pêcheur
-  ('2024-02-13 08:45:00', 4),  -- Dive 4: La sèche de Saint-Elme
+  ('2021-02-13 08:45:00', 4),  -- Dive 4: La sèche de Saint-Elme
   (DateTime('now'), 5);  -- Dive 5: La roche à l'ancre
 
 -- Inserting DivesMembers:

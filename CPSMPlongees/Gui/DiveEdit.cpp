@@ -18,9 +18,6 @@ DiveEdit::DiveEdit(QWidget *parent)
           [this](const std::map<int, cpsm::db::DivingType> &diving_types) {
             m_diving_type_delegate->SetDivingTypes(diving_types);
           });
-  connect(m_diving_type_delegate, &DivingTypeDelegate::DivingTypeChanged, this, [this](int diving_type_id) {
-    m_members_model.SetDefaultDivingType(diving_type_id);
-  });
 
   connect(ui->pb_time_preset_morning, &QPushButton::clicked, this, [this]() { ui->te_diveTime->setTime(QTime(9, 0)); });
   connect(

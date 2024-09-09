@@ -134,8 +134,9 @@ void DiverEdit::RefreshFromDB() {
   ui->diveSearch->RefreshFromDB(m_diver.diver_id);
 }
 
-bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count) {
+bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count, int dive_count_in_last_season) {
   m_dive_count = dive_count;
+  m_dive_count_in_last_season = dive_count_in_last_season;
   m_diver = diver;
   m_original_diver = diver;
   m_diver_original_paid_dives_count = m_diver.paid_dives;
@@ -211,7 +212,8 @@ void DiverEdit::UpdateUiFromDiver() {
   ui->le_phone->setText(m_diver.phone_number);
 
   /* -- Dive balance -- */
-  ui->sb_diveCount->setValue(m_dive_count);
+  ui->sb_diveCount->setValue(m_dive_count_in_last_season);
+  ui->sb_totalDiveCount->setValue(m_dive_count);
   UpdateUiSold();
   ui->cb_regulator->setChecked(m_diver.gear_regulator);
   ui->cb_suit->setChecked(m_diver.gear_suit);
@@ -260,6 +262,8 @@ void DiverEdit::OnPaymentValueChanged(int new_val) {
 
 void DiverEdit::UpdateUiSold() {
   ui->sb_sold->setValue(m_diver.paid_dives - m_dive_count);
+  ui->sb_sold->setStyleSheet(QString{"QSpinBox { background-color: %0; }"}.arg(
+      ui->sb_sold->value() >= 0 ? ::consts::colors::kBackgroundGreen.name() : ::consts::colors::kBackgroundRed.name()));
 }
 
 void DiverEdit::OnOk() {

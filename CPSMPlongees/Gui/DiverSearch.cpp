@@ -13,6 +13,7 @@ DiverSearch::DiverSearch(cpsm::DiversViewModel *model, QWidget *parent)
   SetModel(m_model);
 
   ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+  ui->tableView->setFocusPolicy(Qt::NoFocus);
 }
 
 DiverSearch::~DiverSearch() {

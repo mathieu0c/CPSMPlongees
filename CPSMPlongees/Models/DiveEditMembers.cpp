@@ -137,6 +137,7 @@ Qt::ItemFlags DiveEditMembers::flags(const QModelIndex &index) const {
   Qt::ItemFlags flags = QAbstractItemModel::flags(index);
   if (index.column() == ColumnId::kDivingType) {
     flags |= Qt::ItemIsEditable;
+    flags &= ~Qt::ItemIsSelectable;
   }
   return flags;
 }
@@ -236,6 +237,9 @@ size_t DiveEditMembers::RemoveDivers(const std::set<int> &diver_ids) {
 }
 
 QString DiveEditMembers::GetDivingTypeText(int diving_type_id) const {
+  if (diving_type_id == m_default_diving_type_id) {
+    return "";
+  }
   auto it{m_db_diving_types.find(diving_type_id)};
   if (it != m_db_diving_types.end()) {
     return it->second.type_name;
@@ -272,7 +276,7 @@ QVariant DiveEditMembers::GetBackgroundForIndex(const DiverWithDiveCount &comple
   std::ignore = complete_diver;
   switch (col) {
     case ColumnId::kDivingType: {
-      return ::consts::colors::GetColorForDivingType(member.diving_type_id);
+      return ::consts::colors::GetColorForDivingType(member.diving_type_id, m_default_diving_type_id);
     }
     default:
       break;

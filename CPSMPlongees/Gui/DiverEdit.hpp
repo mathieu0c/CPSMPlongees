@@ -19,7 +19,7 @@ class DiverEdit : public QWidget {
   explicit DiverEdit(QWidget *parent = nullptr);
   ~DiverEdit();
 
-  bool SetDiver(const cpsm::db::Diver &diver, int dive_count);
+  bool SetDiver(const cpsm::db::Diver &diver, int dive_count, int dive_count_in_last_season);
   void SetAddress(const cpsm::db::DiverAddress &address);
 
  public slots:
@@ -55,6 +55,7 @@ class DiverEdit : public QWidget {
   cpsm::db::Diver m_original_diver{};
   int32_t m_diver_original_paid_dives_count{};
   int32_t m_dive_count{};
+  int32_t m_dive_count_in_last_season{};
   cpsm::db::DiverAddress m_address{};
   cpsm::db::DiverAddress m_original_address{};
 

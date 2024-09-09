@@ -75,7 +75,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::EditDiver(const cpsm::DiverWithDiveCount &diver) {
   ui->statusbar->clearMessage();
-  ui->pg_editDiver->SetDiver(diver.diver, diver.dive_count);
+  ui->pg_editDiver->SetDiver(diver.diver, diver.dive_count, diver.dive_count_in_last_season);
   ui->tab_divers->setCurrentIndex(DiverTabPages::kEditDiver);
 }
 
@@ -148,6 +148,13 @@ void MainWindow::OnDiveEdited(std::optional<cpsm::db::DiveAndDivers> edit_opt) {
 
   const auto &dive{edit_opt.value().dive};
   auto database{db::Def()};
+
+  for (const auto kDiveMember : edit_opt->members) {
+    if (kDiveMember.diving_type_id == cpsm::DiveEditMembers::m_default_diving_type_id) {
+      QMessageBox::warning(this, tr("Erreur"), tr("Veuillez sélectionner un type de plongée pour chaque plongeur"));
+      return;
+    }
+  }
 
   const auto kStoreResult{cpsm::db::StoreDiveAndItsMembers(edit_opt.value())};
   if (kStoreResult) {

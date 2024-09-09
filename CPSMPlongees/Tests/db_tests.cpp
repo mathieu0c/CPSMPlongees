@@ -7,29 +7,6 @@
 #include "Database.hpp"
 #include "test_common.hpp"
 
-TEST(CPSMTests, DevTest) {
-  REINIT_DB;
-  //  utils::Chrono<std::chrono::microseconds> req_time0{};
-  //  auto results0{
-  //      db::readLFromDB<DiveMember>(DBT, db::ExtractDiveMember, "SELECT * FROM %0", {DiveMember::db_table}, {})};
-  //  SPDLOG_DEBUG("Got divers in {}µs", req_time0.Time());
-  //  for (const auto &e : results0) {
-  //    SPDLOG_DEBUG("{}", e);
-  //  }
-  //  return;
-
-  //  if (!DeleteDiveMember(DBT, test)) {
-  //    SPDLOG_ERROR("Failed to delete dive member: {}", test);
-  //  }
-
-  //  utils::Chrono<std::chrono::microseconds> req_time{};
-  //  auto results{db::readLFromDB<DiveMember>(DBT, db::ExtractDiveMember, "SELECT * FROM %0",
-  //  {DiveMember::db_table},
-  //  {})}; SPDLOG_DEBUG("Got divers in {}µs", req_time.Time()); for (const auto &e : results) {
-  //    SPDLOG_DEBUG("{}", e);
-  //  }
-}
-
 TEST(CPSMTests, DBInitTest) {
   REINIT_DB;
   SPDLOG_INFO("Using sql driver: <{}> open?<{}>", DBT.driverName(), DBT.driver()->isOpen());

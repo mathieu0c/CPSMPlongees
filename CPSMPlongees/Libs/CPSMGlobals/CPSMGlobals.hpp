@@ -41,6 +41,7 @@ constexpr bool kIsBuiltAsMockup{false};
 const auto kAppDataPath{QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/" + kAppName};
 const auto kCPSMDbFile{kIsBuiltAsMockup ? QString{"CPSMData_MOCKUP.db"} : QString{"CPSMData.db"}};
 const auto kCPSMDbPath{QString{"%0/%1"}.arg(kAppDataPath, kCPSMDbFile)};
+const auto kDBBackupPath{QString{"%0/DBBackup"}.arg(kAppDataPath)};
 
 /*#########################*/
 /*#                       #*/

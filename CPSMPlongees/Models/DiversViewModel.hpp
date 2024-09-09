@@ -11,6 +11,7 @@ namespace cpsm {
 struct DiverWithDiveCount {
   db::Diver diver{};
   int dive_count{};
+  int dive_count_in_last_season{};
 
   auto Balance() const {
     return diver.paid_dives - dive_count;
@@ -47,7 +48,7 @@ class DiversViewModel : public QAbstractTableModel, public DiverDisplayListOwner
   };
 
   static constexpr std::array kColumnsHeaders{
-      "Nom", "Prénom", "Dernière inscription", "Adhérent ?", "Certificat médical", "Niveau", "Solde (plongées)"};
+      "Nom", "Prénom", "Dernière inscription", "Adhérent ?", "Certificat médical", "Niveau", "Plongées dûes"};
 
  public:
   enum Filters : int32_t {

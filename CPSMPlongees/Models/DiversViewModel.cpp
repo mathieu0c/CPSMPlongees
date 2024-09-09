@@ -52,15 +52,25 @@ void DiversViewModel::LoadFromDB() {
                                                     //
                                                     auto diver{db::ExtractDiver(query)};
                                                     auto dive_count{query.value("dive_count").toInt()};
-                                                    return DiverWithDiveCount{diver, dive_count};
+                                                    auto dive_count_last_year{
+                                                        query.value("dive_count_last_year").toInt()};
+                                                    return DiverWithDiveCount{diver, dive_count, dive_count_last_year};
                                                   },
-                                                  "SELECT %0.*, COUNT(%1.%2) AS dive_count FROM %0 LEFT JOIN "
-                                                  "%1 ON %0.%3 = %1.%3 GROUP BY %0.%3 ORDER BY %0.%4;",
+                                                  "SELECT %0.*, COUNT(%1.%2) AS dive_count, "
+                                                  "(SELECT COUNT(DM.%2) "
+                                                  " FROM %1 DM "
+                                                  " JOIN %5 D ON DM.%2 = D.%2 "
+                                                  " WHERE DM.%3 = %0.%3 "
+                                                  " AND D.%6 >= date('now', '-1 year')) AS dive_count_last_year "
+                                                  "FROM %0 LEFT JOIN %1 ON %0.%3 = %1.%3 "
+                                                  "GROUP BY %0.%3 ORDER BY %0.%4;",
                                                   {db::Diver::db_table,
                                                    db::DiveMember::db_table,
                                                    db::DiveMember::dive_id_col,
                                                    db::Diver::diver_id_col,
-                                                   db::Diver::last_name_col},
+                                                   db::Diver::last_name_col,
+                                                   db::Dive::db_table,
+                                                   db::Dive::datetime_col},
                                                   {})};
 
   SetDivers(std::move(list));

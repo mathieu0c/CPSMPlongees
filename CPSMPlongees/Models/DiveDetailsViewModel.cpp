@@ -127,7 +127,7 @@ QVariant DiveDetailsViewModel::data(const QModelIndex &index, int role) const {
       break;
     case Qt::BackgroundRole:
 
-      return col == ColumnId::kDiveType ? ::consts::colors::GetColorForDivingType(diver.member.diving_type_id)
+      return col == ColumnId::kDiveType ? ::consts::colors::GetColorForDivingType(diver.member.diving_type_id, {})
                                         : QVariant{};
     case Qt::TextAlignmentRole:
       return col == ColumnId::kDiveType ? int(Qt::AlignLeft | Qt::AlignVCenter)

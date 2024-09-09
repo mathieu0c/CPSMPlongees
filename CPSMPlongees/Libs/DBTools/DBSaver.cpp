@@ -1,150 +1,146 @@
 #include "DBSaver.hpp"
-#include "Database.hpp"
 
 #include <QDate>
-#include <QJsonObject>
-#include <any>
-
 #include <QDir>
 #include <QDirIterator>
-#include <QFileInfo>
 #include <QFile>
-
+#include <QFileInfo>
+#include <QJsonObject>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
-
 #include <map>
+#include <set>
 
-namespace{
+#include "Database.hpp"
 
-inline
-    QDate RetrieveDateFromFilename(const QFileInfo& file, const QString& date_format){
-    return QDate::fromString(file.completeBaseName(),date_format);
-}
+namespace {
 
-bool p_refreshSave(const db::DBSaverInfo& info, const QString& targetSaveFolder, int saveInterval, size_t saveCount)
-{
-    const auto& usedDbPath{info.db_path};
-    QDate currentDate{QDate::currentDate()};
-    const QString todaySaveFileName{currentDate.toString(info.date_format)+"."
-                                    +QFileInfo{usedDbPath}.suffix()};
+constexpr auto kDBSaveDateTimeFormat{"yyyy-MM-dd_HH-mm-ss"};
 
-    if constexpr(db::kDebugQueries)
-    {
-        qDebug() << "------------- " << __PRETTY_FUNCTION__ << " --------------";
-    }
-
-    if(!QFileInfo::exists(targetSaveFolder))
-    {
-        if(!QDir::root().mkpath(targetSaveFolder))
-        {
-            throw std::runtime_error{std::string{__PRETTY_FUNCTION__} + " : Cannot create appData folder : <" + targetSaveFolder.toStdString() + ">"};
-        }
-    }
-
-    std::map<QDate,QString> saveMap{};
-    QDir freqDir{targetSaveFolder};
-    QDirIterator freqIt{freqDir};
-    while(freqIt.hasNext())
-    {
-        freqIt.next();
-        auto inf{freqIt.fileInfo()};
-        QDate saveDate{RetrieveDateFromFilename(inf,info.date_format)};
-        if(!saveDate.isValid())
-            continue;
-        saveMap[saveDate] = inf.fileName();
-    }
-
-    auto lastSaveDate{((size(saveMap) == 0)?QDate{2000,01,01}:rbegin(saveMap)->first)};
-
-    bool success{true};
-
-    if(lastSaveDate.addDays(saveInterval) < currentDate)//if the last save is outdated
-    {
-        QString saveFilePath{targetSaveFolder+todaySaveFileName};
-        success=QFile::copy(usedDbPath,saveFilePath);//copy the DB
-
-        qDebug() << __PRETTY_FUNCTION__ << "Copying :"<< usedDbPath;
-        qDebug() << __PRETTY_FUNCTION__ << "to :" << saveFilePath;
-
-        if(success)
-        {
-            saveMap[currentDate] = saveFilePath;
-        }
-    }
-
-
-    auto saveCountDiff{size(saveMap) - saveCount};
-    if(size(saveMap) < saveCount)
-        saveCountDiff = 0;
-    qDebug() << saveCountDiff;
-    if(saveCountDiff > 0)//if we have too many saves
-    {
-        QStringList filesToRemove{};
-        filesToRemove.reserve(saveCountDiff);
-        size_t toRemoveCount{};
-
-        for(const auto&[key,value] : saveMap)
-        {
-            if((++toRemoveCount) > saveCountDiff)
-                break;
-            filesToRemove.append(value);
-        }
-
-        for(const auto& target : filesToRemove)
-        {
-            auto tmpSuccess{QFile::remove(targetSaveFolder+target)};
-            qInfo() <<"Removing outdated :" <<target << " : " << tmpSuccess;
-        }
-    }
-
-    return success;//success of copying only. It is not a big matter if we can't delete old versions
-}
-
-}
+}  // namespace
 
 namespace db {
 
-//-------------------------------------------------------------------------------------------------
+bool CheckConditionsForDBBackup(const DBSaverConfiguration& config) {
+  if (!config.db_path.exists()) {
+    SPDLOG_WARN("DB file not found: {}", config.db_path.filePath().toStdString());
+    return false;
+  }
 
-bool refreshSave(const DBSaverInfo& info)
-{
-    return ::p_refreshSave(info,info.FrequentSaveFolder(),info.frequentSaveInterval,info.frequentSaveCount)&&
-           ::p_refreshSave(info,info.SpacedSaveFolder(),info.spacedSaveInterval,info.spacedSaveCount);
+  if (config.target_folder.exists()) {
+    return true;
+  }
+
+  /* else */
+  SPDLOG_INFO("Target folder does not exist: {}", config.target_folder.path().toStdString());
+  if (config.target_folder.mkpath(".")) {
+    SPDLOG_INFO("Created folder: <{}>", config.target_folder.absolutePath());
+    return true;
+  }
+  SPDLOG_ERROR("Failed to create folder: <{}>", config.target_folder.absolutePath());
+  return false;
 }
 
+ExistingBackupList SearchBackupFiles(const DBSaverConfiguration& config) {
+  ExistingBackupList matchingFiles;
+  QRegularExpression regex(R"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})");
 
-//-------------------------------------------------------------------------------------------------
+  QDirIterator it(config.target_folder.absolutePath(), QDir::Files, QDirIterator::NoIteratorFlags);
 
-//QJsonObject dbSaverInfoToJson(gens::SetPtr ptr)
-//{
-//    using namespace gens;
-//    auto v{settCast<DBSaverInfo>(ptr)};
-//    QJsonObject rval{};
-//    rval.insert("saveFolder",v->saveFolder);
+  while (it.hasNext()) {
+    it.next();
+    QFileInfo fileInfo = it.fileInfo();
+    QRegularExpressionMatch match = regex.match(fileInfo.fileName());
+    if (match.hasMatch()) {
+      QString dateTimeString = match.captured(0);
+      QDateTime dateTime = QDateTime::fromString(dateTimeString, kDBSaveDateTimeFormat);
+      if (dateTime.isValid()) {
+        matchingFiles[dateTime] = fileInfo.absoluteFilePath();
+      }
+    }
+  }
 
-//    rval.insert("frequentSaveCount",v->frequentSaveCount);
-//    rval.insert("spacedSaveCount",v->spacedSaveCount);
+  return matchingFiles;
+}
 
-//    rval.insert("frequentSaveInterval",v->frequentSaveInterval);
-//    rval.insert("spacedSaveInterval",v->spacedSaveInterval);
-//    return rval;
-//}
+std::tuple<std::vector<QString>, bool> GetBackupsUpdate(const ExistingBackupList& existingBackups) {
+  bool needNewBackup{false};
+  std::vector<QString> backupsToRemove;
+  std::set<QDateTime> backupsToKeep;
+  std::set<QDateTime> monthly_backups{};
+  QDateTime now = QDateTime::currentDateTime();
 
-//std::any dbSaverInfoFromJson(const QJsonObject& obj)
-//{
-////return std::any(obj.value("val").toVariant().value<T>());
-//    DBSaverInfo out{};
-//    out.saveFolder = obj.value("saveFolder").toString();
+  for (const auto& backup : existingBackups) {
+    QDateTime backupDate = backup.first;
+    int daysDiff = backupDate.daysTo(now);
 
-//    out.frequentSaveCount = obj.value("frequentSaveCount").toInt(-1);
-//    out.spacedSaveCount = obj.value("spacedSaveCount").toInt(-1);
+    if (daysDiff <= 7) {
+      backupsToKeep.insert(backupDate);
+    } else if (daysDiff <= 30) {
+      if (backupsToKeep.empty() || backupsToKeep.rbegin()->daysTo(backupDate) >= 7) {
+        backupsToKeep.insert(backupDate);
+      }
+    } else if (daysDiff <= 365) {
+      if (backupsToKeep.empty() || backupDate.date().day() == 1) {
+        backupsToKeep.insert(backupDate);
+      }
+    }
+  }
 
-//    out.frequentSaveInterval = obj.value("frequentSaveInterval").toInt(-1);
-//    out.spacedSaveInterval = obj.value("spacedSaveInterval").toInt(-1);
+  for (const auto& backup : existingBackups) {
+    if (backupsToKeep.find(backup.first) == backupsToKeep.end()) {
+      backupsToRemove.push_back(backup.second);
+    }
+  }
 
-//    return out;
-//}
+  needNewBackup = backupsToKeep.empty() || backupsToKeep.rbegin()->daysTo(now) > 0;
 
+  return {backupsToRemove, needNewBackup};
+}
 
-} // namespace db
+// void DBSaverThread::run() {
+//   if (!m_config.db_path.exists()) {
+//     SPDLOG_ERROR("DB file not found: {}",
+//     m_config.db_path.filePath().toStdString()); emit
+//     SaveDone(ExecReturnCode::kDbFileNotFound); return;
+//   }
+
+//   if (!m_config.target_folder.exists()) {
+//     SPDLOG_ERROR("Target folder does not exist: {}",
+//     m_config.target_folder.path().toStdString()); emit
+//     SaveDone(ExecReturnCode::kInvalidSaveFolder); return;
+//   }
+
+//   const auto kDbFile{m_config.db_path.fileName()};
+//   const auto kDbPath{m_config.db_path.filePath()};
+//   const auto kDbName{m_config.db_path.baseName()};
+//   const auto kDbSuffix{m_config.db_path.completeSuffix()};
+//   const auto kDbDate{QDate::currentDate().toString("yyyy-MM-dd")};
+
+//   const auto kSaveName{QString("%0_%1.%2").arg(kDbName, kDbDate, kDbSuffix)};
+//   const auto kSavePath{m_config.target_folder.filePath(kSaveName)};
+
+//   if (QFile::exists(kSavePath)) {
+//     SPDLOG_INFO("Save already exists: {}", kSavePath.toStdString());
+//     emit SaveDone(ExecReturnCode::kNoSaveNeeded);
+//     return;
+//   }
+
+//   if (!QFile::copy(kDbPath, kSavePath)) {
+//     SPDLOG_ERROR("Failed to copy db file to save location: {}",
+//     kSavePath.toStdString()); emit SaveDone(ExecReturnCode::kFailed); return;
+//   }
+
+//   SPDLOG_INFO("Save created: {}", kSavePath.toStdString());
+//   emit SaveDone(ExecReturnCode::kOk);
+// }
+
+QString GetNewBackupFileName(const QDateTime& date) {
+  return date.toString(kDBSaveDateTimeFormat) + kDBBackupExtension;
+}
+
+QString GetNewBackupFilePath(const DBSaverConfiguration& config, const QDateTime& date) {
+  return config.target_folder.filePath(GetNewBackupFileName(date));
+}
+
+}  // namespace db

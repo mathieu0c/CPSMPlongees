@@ -5,15 +5,73 @@
 #include <QApplication>
 #include <QFontDatabase>
 #include <QLocale>
+#include <QMessageBox>
 #include <QTranslator>
 
 #include <Logger/logger.hpp>
 #include <Logger/logger_setup.hpp>
+#include <Utils/AsyncFileCopyer.hpp>
 
+#include "DBSaver.hpp"
 #include "MainWindow.hpp"
 #include "ProgramInterrupts.hpp"
 
-int main(int argc, char *argv[]) {
+bool BlockingDBBackup(const QString& original_file, const QString& destination_file) {
+  std::atomic<utils::AsyncFileCopyer::ReturnCode> copy_result{utils::AsyncFileCopyer::ReturnCode::kFailed};
+  std::atomic_bool can_exit_this_function{false};
+
+  utils::AsyncFileCopyer copyer{QFileInfo{original_file}, QFileInfo{destination_file}, true, false};
+  SPDLOG_INFO("Making backup from <{}> to <{}>",
+              copyer.GetSource().absoluteFilePath(),
+              copyer.GetDestination().absoluteFilePath());
+
+  QProgressDialog progress{
+      QObject::tr("Sauvegarde en cours de la base de données"), QObject::tr("Annuler la sauvegarde"), 0, 1000};
+  QObject::connect(&progress, &QProgressDialog::canceled, &copyer, [&copyer]() { copyer.Cancel(); });
+
+  progress.setWindowModality(Qt::WindowModal);
+  QObject::connect(&copyer, &utils::AsyncFileCopyer::Progress, &copyer, [&progress](double progress_val) {
+    progress.setValue(int(progress_val * 1000));
+  });
+  QObject::connect(&copyer,
+                   &utils::AsyncFileCopyer::Ended,
+                   &copyer,
+                   [&progress, &copy_result, &can_exit_this_function](utils::AsyncFileCopyer::ReturnCode success) {
+                     copy_result = success;
+                     progress.close();
+                     can_exit_this_function = true;
+                   });
+
+  progress.show();
+  copyer.start();
+
+  while (!can_exit_this_function) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    QCoreApplication::processEvents();
+  }
+
+  const utils::AsyncFileCopyer::ReturnCode kDisplayResult{copy_result};
+  SPDLOG_INFO("Copy done with success: {}", utils::QtEnumToString(kDisplayResult));
+
+  return copy_result == utils::AsyncFileCopyer::ReturnCode::kSuccess ||
+         copy_result == utils::AsyncFileCopyer::ReturnCode::kAborted;
+}
+
+bool RemoveFileList(const std::vector<QString>& to_remove) {
+  SPDLOG_INFO("Removing {} old backups", to_remove.size());
+  bool success{true};
+  for (const auto& path : to_remove) {
+    if (!QFile::remove(path)) {
+      SPDLOG_ERROR("Failed to remove file: {}", path);
+      success = false;
+    } else {
+      SPDLOG_INFO("\tRemoved {}", path);
+    }
+  }
+  return success;
+}
+
+int main(int argc, char* argv[]) {
   /*#########################*/
   /*#                       #*/
   /*#       Base setup      #*/
@@ -30,6 +88,59 @@ int main(int argc, char *argv[]) {
 
   SPDLOG_INFO("\n\n\n - {} - Hello! Welcome to CPSM Gestion plongées\n\n", QDateTime::currentDateTime().toString());
   QApplication a(argc, argv);
+
+  /*#########################*/
+  /*#                       #*/
+  /*#       DB Backup       #*/
+  /*#                       #*/
+  /*#########################*/
+
+  const db::DBSaverConfiguration kDBSaverConfig{QFileInfo{cpsm::consts::kCPSMDbPath},
+                                                QDir{cpsm::consts::kDBBackupPath}};
+
+  SPDLOG_INFO("DB Backup configuration:\nDB_PATH={}\nBACKUP_FOLDER={}",
+              kDBSaverConfig.db_path.absoluteFilePath(),
+              kDBSaverConfig.target_folder.absolutePath());
+
+  if (!db::CheckConditionsForDBBackup(kDBSaverConfig)) {
+    QMessageBox::critical(nullptr,
+                          QObject::tr("Erreur"),
+                          QObject::tr("Erreur lors de la sauvegarde de la base de donnée (initialisation)"));
+    SPDLOG_ERROR("Could not check conditions for DB backup");
+  } else {
+    SPDLOG_INFO("DB backup conditions checked");
+
+    const auto kExistingBackups{db::SearchBackupFiles(kDBSaverConfig)};
+    for (const auto& [date, path] : kExistingBackups) {
+      SPDLOG_INFO("Found backup: {} - {}", date.toString(), path.toStdString());
+    }
+
+    const auto [kToRemove, kNeedBackup]{db::GetBackupsUpdate(kExistingBackups)};
+    SPDLOG_INFO(
+        "Need to remove {} backups. Is a new backup needed? <{}>", kToRemove.size(), kNeedBackup ? "yes" : "no");
+    for (const auto& path : kToRemove) {
+      SPDLOG_INFO("\tTo remove: {}", path);
+    }
+
+    if (kNeedBackup) {
+      if (!BlockingDBBackup(kDBSaverConfig.db_path.absoluteFilePath(),
+                            db::GetNewBackupFilePath(kDBSaverConfig, QDateTime::currentDateTime()))) {
+        QMessageBox::critical(nullptr,
+                              QObject::tr("Erreur"),
+                              QObject::tr("Erreur lors de la sauvegarde de la base de donnée (copie du fichier)"));
+        SPDLOG_ERROR("Failed to copy DB file for backup");
+      } else { /* If a new backup is needed, only remove old ones IF the new one is successful */
+        if (!RemoveFileList(kToRemove)) {
+          SPDLOG_ERROR("Failed to remove some of the remaining backups...");
+        }
+      }
+    } else {
+      if (!RemoveFileList(kToRemove)) {
+        SPDLOG_ERROR("Failed to remove some of the remaining backups...");
+      }
+    }
+  }
+  SPDLOG_INFO("DB Backup ends -------------\n\n");
 
   /*#########################*/
   /*#                       #*/

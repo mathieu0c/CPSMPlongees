@@ -13,6 +13,9 @@ class DiveEditMembers : public DiveEditNonMembers {
   static constexpr std::array kColumnsHeaders{"Nom", "Prénom", "Niveau", "Type de plongée"};
 
  public:
+  static constexpr int m_default_diving_type_id{
+      std::numeric_limits<int>::min()}; /* Should be made const... Cannot copy qobject anyway */
+
   enum ColumnId : int32_t { kLastName = 0, kFirstName = 1, kLevel = 2, kDivingType = 3 };
 
  signals:
@@ -42,11 +45,6 @@ class DiveEditMembers : public DiveEditNonMembers {
   size_t RemoveDivers(const QVector<DiverWithDiveCount> &divers);
   size_t RemoveDivers(const std::set<int> &diver_ids);
 
- public slots:
-  void SetDefaultDivingType(int diving_type_id) {
-    m_default_diving_type_id = diving_type_id;
-  }
-
  protected:
   QString GetDivingTypeText(int diving_type_id) const;
 
@@ -58,7 +56,6 @@ class DiveEditMembers : public DiveEditNonMembers {
 
  private:
   std::map<int, db::DivingType> m_db_diving_types{};
-  int m_default_diving_type_id{1};
 
   int m_dive_id{-1};
   std::map<int, db::DiveMember> m_diving_members{}; /* diver_id, diving_members */

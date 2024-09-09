@@ -12,6 +12,7 @@ const QColor kBackgroundInvisible{"#00000000"};
 
 const QColor kBackgroundGreen{"#eaffe8"};
 const QColor kBackgroundRed{"#ffe3e3"};
+const QColor kCriticalRed{"#ff0000"};
 
 const QColor kBackgroundYellow{"#ffffe0"};
 const QColor kBackgroundBlue{"#e3f2ff"};
@@ -23,7 +24,7 @@ const QColor kBackgroundNightPurple{"#C7CAFF"};
 const QColor kBackgroundPurple{"#f2e1f5"};
 const QColor kBackgroundCyan{"#ebfaf8"};
 
-QColor GetColorForDivingType(int diving_type_id);
+QColor GetColorForDivingType(int diving_type_id, int default_diving_type_id);
 
 }  // namespace colors
 

@@ -104,7 +104,7 @@ INSERT OR IGNORE INTO DiversLevels
     (7,"PA40"),
     (8,"PE60"),
     (9,"PA60"),
-    (10,"Sagiaire péda"),
+    (10,"Stagiaire péda"),
     (11,"E1"),
     (12,"E2"),
     (13,"E3"),

@@ -11,7 +11,7 @@ class DiveEditNonMembers : public DiversViewModel {
   Q_OBJECT
   enum ColumnId : int32_t { kLastName = 0, kFirstName = 1, kLevel = 2, kBalance = 3 };
 
-  static constexpr std::array kColumnsHeaders{"Nom", "Prénom", "Niveau", "Solde (plongées)"};
+  static constexpr std::array kColumnsHeaders{"Nom", "Prénom", "Niveau", "Plongées dûes"};
 
  public:
   explicit DiveEditNonMembers(QObject *parent = nullptr);
