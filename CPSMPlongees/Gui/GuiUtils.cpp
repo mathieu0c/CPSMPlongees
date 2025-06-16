@@ -18,3 +18,18 @@ void StatusLabel::setText(const QString &text) {
     this->show();
   }
 }
+
+QString WordStartUppercase(const QString &input) {
+  constexpr auto kRegex{R"(\b[a-z]{1})"};
+  QRegularExpression re(kRegex);
+  QString output = input;
+
+  auto match_iter = re.globalMatch(output);
+  while (match_iter.hasNext()) {
+    auto match = match_iter.next();
+    if (match.hasMatch()) {
+      output[match.capturedStart()] = output[match.capturedStart()].toUpper();
+    }
+  }
+  return output;
+}

@@ -17,6 +17,8 @@ class StatusLabel : public QLabel {
   void setText(const QString& text);
 };
 
+QString WordStartUppercase(const QString& input);
+
 template <typename T, typename ParentT>
   requires requires(T obj, ParentT parent) {
     obj.editingFinished();
