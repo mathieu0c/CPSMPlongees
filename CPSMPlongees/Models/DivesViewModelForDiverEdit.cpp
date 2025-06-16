@@ -28,8 +28,7 @@ QVariant DivesViewModelForDiverEdit::headerData(int section, Qt::Orientation ori
         break;
       }
     case Qt::TextAlignmentRole:
-      return section == ColumnId::kDiverCount ? int(Qt::AlignLeft | Qt::AlignVCenter)
-                                              : int(Qt::AlignHCenter | Qt::AlignVCenter);
+      return int(Qt::AlignHCenter | Qt::AlignVCenter);
     case Qt::FontRole: {
       static QFont default_font{};
       return default_font;
@@ -51,20 +50,12 @@ QVariant DivesViewModelForDiverEdit::data(const QModelIndex &index, int role) co
     case Qt::DisplayRole:
       return GetDisplayTextForIndex(dive, col);
     case Qt::FontRole:
-      // if (row == 0 && col == 0) {  // change font only for cell(0,0)
-      //     QFont boldFont;
-      //     boldFont.setBold(true);
-      //     return boldFont;
-      // }
       break;
     case Qt::BackgroundRole:
       return GetBackgroundForIndex(dive, col);
     case Qt::TextAlignmentRole:
-      return col == ColumnId::kDiverCount ? int(Qt::AlignLeft | Qt::AlignVCenter)
-                                          : int(Qt::AlignHCenter | Qt::AlignVCenter);
+      return int(Qt::AlignHCenter | Qt::AlignVCenter);
     case Qt::CheckStateRole:
-      // if (row == 1 && col == 0)  // add a checkbox to cell(1,0)
-      //   return Qt::Checked;
       break;
   }
   return QVariant();
@@ -80,9 +71,6 @@ QString DivesViewModelForDiverEdit::GetDisplayTextForIndex(const DisplayDive &di
     }
     case ColumnId::kSite: {
       return GetDivingSiteText(dive.dive.diving_site_id);
-    }
-    case ColumnId::kDiverCount: {
-      return QString::number(dive.diver_count);
     }
     case ColumnId::kType: {
       return dive.dive_types;

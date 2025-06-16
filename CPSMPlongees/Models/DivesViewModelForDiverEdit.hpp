@@ -6,9 +6,9 @@ namespace cpsm {
 
 class DivesViewModelForDiverEdit : public DivesViewModel {
   Q_OBJECT
-  enum ColumnId : int32_t { kDate = 0, kTime = 1, kSite = 2, kDiverCount = 3, kType = 4 };
+  enum ColumnId : int32_t { kDate = 0, kTime = 1, kSite = 2, kType = 3 };
 
-  static constexpr std::array kColumnsHeaders{"Date", "Heure", "Site", "Plongeurs", "Type"};
+  static constexpr std::array kColumnsHeaders{"Date", "Heure", "Site", "Type"};
 
  public:
   explicit DivesViewModelForDiverEdit(QObject *parent = nullptr);
