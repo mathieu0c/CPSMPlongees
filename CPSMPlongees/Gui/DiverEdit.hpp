@@ -24,6 +24,7 @@ class DiverEdit : public QWidget {
 
  public slots:
   void RefreshFromDB();
+  void FocusNext();
 
  private:
   bool AllGearChecked() const;
@@ -47,6 +48,7 @@ class DiverEdit : public QWidget {
   void UpdateUiFromDiver();
   void UpdateAddressUi();
   void SetLevelComboboxFromLevelId(int level_id);
+  void UpdateCertificateBackgroundColor(const QDate &date);
 
  private:
   Ui::DiverEdit *ui;

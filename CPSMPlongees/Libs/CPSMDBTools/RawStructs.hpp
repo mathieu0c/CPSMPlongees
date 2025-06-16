@@ -62,6 +62,7 @@ DB_DECLARE_STRUCT(Diver, Divers, val.diver_id <= 0, Diver_VAR_LIST)
 
 int GetDiverDiveCount(const Diver& diver);
 std::optional<int> GetDiverDiveBalance(const Diver& diver);
+bool IsDiverMedicalCertificateValid(const QDate& certif_date);
 bool IsDiverMedicalCertificateValid(const Diver& diver);
 bool IsDiverCurrentlyRegistered(const Diver& diver);
 bool IsDiverCurrentlyAMember(QDate diver_member_date);

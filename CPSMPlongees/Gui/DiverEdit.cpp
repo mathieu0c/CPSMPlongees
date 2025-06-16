@@ -1,10 +1,12 @@
 #include "DiverEdit.hpp"
 
 #include <QMessageBox>
+#include <QShortcut>
 
 #include <Models/DivesViewModelForDiverEdit.hpp>
 
 #include "Constants.hpp"
+#include "GuiUtils.hpp"
 #include "ui_DiverEdit.h"
 
 namespace gui {
@@ -56,6 +58,7 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   lambda_connect_editing_finished(ui->le_license, &cpsm::db::Diver::license_number);
   lambda_connect_editing_finished(ui->de_registration, &cpsm::db::Diver::registration_date);
   lambda_connect_editing_finished(ui->de_certificate, &cpsm::db::Diver::certif_date);
+  connect(ui->de_certificate, &QDateEdit::dateChanged, this, &DiverEdit::UpdateCertificateBackgroundColor);
   lambda_connect_editing_finished(ui->le_address, &cpsm::db::DiverAddress::address);
   lambda_connect_editing_finished(ui->le_city, &cpsm::db::DiverAddress::city);
   lambda_connect_editing_finished(ui->le_postalCode, &cpsm::db::DiverAddress::postal_code);
@@ -117,6 +120,11 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
     m_address.address_id = {};
     SetAddress(m_address);
   });
+
+  /* -- */
+  auto *focus_next_shortcut{new QShortcut{QKeySequence{tr("Return", "Focus next")}, this}};
+  connect(focus_next_shortcut, &QShortcut::activated, this, &DiverEdit::FocusNext);
+  connect(focus_next_shortcut, &QShortcut::activatedAmbiguously, this, &DiverEdit::FocusNext);
 }
 
 DiverEdit::~DiverEdit() {
@@ -132,6 +140,22 @@ void DiverEdit::RefreshFromDB() {
   }
 
   ui->diveSearch->RefreshFromDB(m_diver.diver_id);
+}
+
+void DiverEdit::FocusNext() {
+  auto *focused_widget{QApplication::focusWidget()};
+  if (focused_widget) {
+    if (auto *datetime_edit{qobject_cast<QDateTimeEdit *>(focused_widget)}; datetime_edit != nullptr) {
+      /* Go to next section instead of focusing next child */
+      const auto kCurrentSelectionIndex{datetime_edit->currentSectionIndex()};
+      if (kCurrentSelectionIndex < datetime_edit->sectionCount() - 1) {
+        datetime_edit->setCurrentSectionIndex(kCurrentSelectionIndex + 1);
+        return;
+      }
+    }
+  }
+
+  this->focusNextChild();
 }
 
 bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count, int dive_count_in_last_season) {
@@ -213,7 +237,6 @@ void DiverEdit::UpdateUiFromDiver() {
 
   /* -- Dive balance -- */
   ui->sb_diveCount->setValue(m_dive_count_in_last_season);
-  ui->sb_totalDiveCount->setValue(m_dive_count);
   UpdateUiSold();
   ui->cb_regulator->setChecked(m_diver.gear_regulator);
   ui->cb_suit->setChecked(m_diver.gear_suit);
@@ -237,6 +260,12 @@ void DiverEdit::SetLevelComboboxFromLevelId(int level_id) {
   } else {
     SPDLOG_WARN("Failed to find level id: <{}> in diver edit combobox", level_id);
   }
+}
+
+void DiverEdit::UpdateCertificateBackgroundColor(const QDate &date) {
+  const bool kIsValid{cpsm::db::IsDiverMedicalCertificateValid(date)};
+  ui->de_certificate->setStyleSheet(QString{"QDateEdit { background-color: %0; }"}.arg(
+      kIsValid ? ::consts::colors::kBackgroundGreen.name() : ::consts::colors::kBackgroundRed.name()));
 }
 
 bool DiverEdit::AllGearChecked() const {

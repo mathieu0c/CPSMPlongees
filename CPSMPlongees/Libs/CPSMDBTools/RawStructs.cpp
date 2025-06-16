@@ -33,6 +33,10 @@ std::optional<int> GetDiverDiveBalance(const Diver& diver) {
   return diver.paid_dives - GetDiverDiveCount(diver);
 }
 
+bool IsDiverMedicalCertificateValid(const QDate& certif_date) {
+  return certif_date.addYears(1) > QDate::currentDate();
+}
+
 bool IsDiverMedicalCertificateValid(const Diver& diver) {
   return diver.certif_date.addYears(1) > QDate::currentDate();
 }
