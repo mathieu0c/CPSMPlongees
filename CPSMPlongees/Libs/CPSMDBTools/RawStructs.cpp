@@ -42,7 +42,7 @@ bool IsDiverMedicalCertificateValid(const Diver& diver) {
 }
 
 bool IsDiverCurrentlyRegistered(const Diver& diver) {
-  return diver.registration_date.addYears(1) > QDate::currentDate();
+  return diver.registration_date.year() == QDate::currentDate().year();
 }
 bool IsDiverCurrentlyAMember(QDate diver_member_date) {
   return diver_member_date.year() == QDate::currentDate().year();
