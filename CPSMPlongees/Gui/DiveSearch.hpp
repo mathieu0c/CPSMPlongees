@@ -41,6 +41,7 @@ class DiveSearch : public QWidget {
 
  public slots:
   void RefreshFromDB(int diver_id = -1);
+  void RefreshDateFilter();
   void on_tableView_doubleClicked(const QModelIndex &);
 
  private slots:

@@ -218,6 +218,8 @@ void DivesViewModel::SetFilterNegate(Filters filter, bool negate) {
 }
 
 void DivesViewModel::SetDateFilter(const QDate &start, const QDate &end) {
+  qInfo() << "Setting date filter from " << start.toString(cpsm::consts::kDateUserFormat) << " to "
+          << end.toString(cpsm::consts::kDateUserFormat) << ".";
   m_filters[Filters::kFilterDate].filter = [start, end](const DisplayDive &dive) {
     return dive.dive.datetime.date() >= start && dive.dive.datetime.date() <= end;
   };

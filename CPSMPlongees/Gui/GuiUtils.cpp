@@ -33,3 +33,15 @@ QString WordStartUppercase(const QString &input) {
   }
   return output;
 }
+
+QDate GetCivilYearStart(QDate current_date) {
+  const auto kCurrentYear{current_date.year()};
+  const auto kFirstDayOfyear{QDate(kCurrentYear, 1, 1)};
+  return kFirstDayOfyear;
+}
+
+QDate GetCivilYearEnd(QDate current_date) {
+  const auto kCurrentYear{current_date.year()};
+  const auto kLastDayOfYear{QDate(kCurrentYear, 12, 31)};
+  return kLastDayOfYear;
+}

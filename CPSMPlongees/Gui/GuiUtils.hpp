@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QAbstractSpinBox>
+#include <QDate>
 #include <QDebug>
 #include <QLabel>
 #include <QLineEdit>
@@ -18,6 +19,8 @@ class StatusLabel : public QLabel {
 };
 
 QString WordStartUppercase(const QString& input);
+QDate GetCivilYearStart(QDate current_date);
+QDate GetCivilYearEnd(QDate current_date);
 
 template <typename T, typename ParentT>
   requires requires(T obj, ParentT parent) {

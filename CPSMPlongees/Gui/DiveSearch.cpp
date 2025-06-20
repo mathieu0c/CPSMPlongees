@@ -2,6 +2,7 @@
 
 #include <RawStructs.hpp>
 
+#include "Gui/GuiUtils.hpp"
 #include "ui_DiveSearch.h"
 
 namespace gui {
@@ -10,8 +11,6 @@ DiveSearch::DiveSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiveSearch
   ui->setupUi(this);
 
   SetModel(new cpsm::DivesViewModel{parent});
-
-  ui->de_end->setDate(QDate::currentDate());
 
   /* Disable useless graphical elements (I don't really want to remove them...) */
   ui->cb_morning->setVisible(false);
@@ -34,9 +33,10 @@ DiveSearch::DiveSearch(QWidget *parent) : QWidget(parent), ui(new Ui::DiveSearch
   connect(ui->cb_morning, &QCheckBox::stateChanged, this, lambda_refresh_morning_afternoon_filters);
   connect(ui->cb_afternoon, &QCheckBox::stateChanged, this, lambda_refresh_morning_afternoon_filters);
 
-  auto lambda_refresh_date_filter{[this]() { m_model->SetDateFilter(ui->de_start->date(), ui->de_end->date()); }};
-  connect(ui->de_start, &QDateEdit::dateChanged, this, lambda_refresh_date_filter);
-  connect(ui->de_end, &QDateEdit::dateChanged, this, lambda_refresh_date_filter);
+  connect(ui->de_start, &QDateEdit::dateChanged, this, &DiveSearch::RefreshDateFilter);
+  connect(ui->de_end, &QDateEdit::dateChanged, this, &DiveSearch::RefreshDateFilter);
+  ui->de_start->setDate(GetCivilYearStart(QDate::currentDate()));
+  ui->de_end->setDate(GetCivilYearEnd(QDate::currentDate()));
 
   auto lambda_refresh_type_filter{
       [this](auto) { m_model->SetTypeFilter(ui->combobox_type->currentText(), ui->cb_type->isChecked()); }};
@@ -153,6 +153,12 @@ void DiveSearch::RefreshFromDB(int diver_id) {
   for (const auto &type : kTypeList) {
     ui->combobox_type->addItem(type.type_name, type.diving_type_id);
   }
+
+  RefreshDateFilter();
+}
+
+void DiveSearch::RefreshDateFilter() {
+  m_model->SetDateFilter(ui->de_start->date(), ui->de_end->date());
 }
 
 QString DiveSearch::GetNameOfDivingSite(int diving_site_id) const {
