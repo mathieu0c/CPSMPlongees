@@ -97,10 +97,10 @@ QVariant DiveEditMembers::data(const QModelIndex &index, int role) const {
   switch (role) {
     case Qt::DisplayRole:
       return GetDisplayTextForIndex(diver, dive_member, col);
-    case Qt::EditRole:
-      if (col == ColumnId::kDivingType) {
-        return GetDisplayTextForIndex(diver, dive_member, col);
-      }
+    // case Qt::EditRole:
+    //   if (col == ColumnId::kDivingType) {
+    //     return GetDisplayTextForIndex(diver, dive_member, col);
+    //   }
     case Qt::FontRole:
       // if (row == 0 && col == 0) {  // change font only for cell(0,0)
       //     QFont boldFont;
@@ -114,29 +114,36 @@ QVariant DiveEditMembers::data(const QModelIndex &index, int role) const {
       return col == ColumnId::kDivingType ? int(Qt::AlignLeft | Qt::AlignVCenter)
                                           : int(Qt::AlignHCenter | Qt::AlignVCenter);
     case Qt::CheckStateRole:
-      // if (row == 1 && col == 0)  // add a checkbox to cell(1,0)
-      //   return Qt::Checked;
+      if (col == ColumnId::kDivingType) {
+        return GetInternalDivingType(
+                   m_diving_members.at(GetDisplayDivers().at(index.row()).diver.diver_id).diving_type_id) ==
+                       InternalDivingType::kTech
+                   ? Qt::Checked
+                   : Qt::Unchecked;
+      }
       break;
   }
   return QVariant();
 }
 
 bool DiveEditMembers::setData(const QModelIndex &index, const QVariant &value, int role) {
-  if (role == Qt::EditRole && index.column() == ColumnId::kDivingType) {
-    int row = index.row();
-    if (row < static_cast<int>(GetDivingMembers().size())) {
-      m_diving_members[GetDisplayDivers()[row].diver.diver_id].diving_type_id = value.toInt();
-      emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
-      return true;
-    }
-  }
+  // if (role == Qt::EditRole && index.column() == ColumnId::kDivingType) {
+  //   int row = index.row();
+  //   if (row < static_cast<int>(GetDivingMembers().size())) {
+  //     m_diving_members[GetDisplayDivers()[row].diver.diver_id].diving_type_id = value.toInt();
+  //     emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
+  //     return true;
+  //   }
+  // }
+
   return false;
 }
 
 Qt::ItemFlags DiveEditMembers::flags(const QModelIndex &index) const {
   Qt::ItemFlags flags = QAbstractItemModel::flags(index);
+
   if (index.column() == ColumnId::kDivingType) {
-    flags |= Qt::ItemIsEditable;
+    flags |= Qt::ItemIsUserCheckable;
     flags &= ~Qt::ItemIsSelectable;
   }
   return flags;
@@ -144,6 +151,35 @@ Qt::ItemFlags DiveEditMembers::flags(const QModelIndex &index) const {
 
 int DiveEditMembers::columnCount(const QModelIndex & /*parent*/) const {
   return kColumnsHeaders.size();
+}
+
+void DiveEditMembers::OnClicked(const QModelIndex &index) {
+  /* Manually handle checkstate set role to let user click the whole case instead of just the checkbox */
+  const auto kFlags{flags(index)};
+  const auto kIsCheckable{kFlags.testFlag(Qt::ItemIsUserCheckable) && kFlags.testFlag(Qt::ItemIsEnabled) &&
+                          !kFlags.testFlag(Qt::ItemIsSelectable)};
+  if (!kIsCheckable) {
+    return;
+  }
+
+  const bool kIsChecked{data(index, Qt::CheckStateRole).toInt() == Qt::Checked};
+  // setData(index, kIsChecked == Qt::Checked ? Qt::Unchecked : Qt::Checked, Qt::CheckStateRole);
+
+  /* Not on the diving type column or index out of range */
+  if (index.column() != ColumnId::kDivingType || index.row() >= static_cast<int>(GetDisplayDivers().size()) ||
+      index.row() < 0) {
+    return;
+  }
+
+  if (!kIsChecked) {
+    m_diving_members[GetDisplayDivers()[index.row()].diver.diver_id].diving_type_id =
+        GetDivingType(InternalDivingType::kTech).diving_type_id;
+  } else {
+    m_diving_members[GetDisplayDivers()[index.row()].diver.diver_id].diving_type_id =
+        GetDivingType(InternalDivingType::kExplo).diving_type_id;
+  }
+
+  dataChanged(index, index, {Qt::CheckStateRole});
 }
 
 void DiveEditMembers::SetDiveId(int dive_id) {
@@ -161,7 +197,7 @@ std::set<int> DiveEditMembers::GetMembersDiversIds() const {
 void DiveEditMembers::SetDivers(QVector<DiverWithDiveCount> divers) {
   std::map<int, db::DiveMember> members_list{};
   for (const auto &diver : divers) {
-    auto diving_type_id{m_db_diving_types.empty() ? 0 : m_default_diving_type_id};
+    auto diving_type_id{m_db_diving_types.empty() ? 0 : GetDivingType(InternalDivingType::kExplo).diving_type_id};
 
     if (const auto kIter{std::find_if(
             m_diving_members.cbegin(),
@@ -237,9 +273,6 @@ size_t DiveEditMembers::RemoveDivers(const std::set<int> &diver_ids) {
 }
 
 QString DiveEditMembers::GetDivingTypeText(int diving_type_id) const {
-  if (diving_type_id == m_default_diving_type_id) {
-    return "";
-  }
   auto it{m_db_diving_types.find(diving_type_id)};
   if (it != m_db_diving_types.end()) {
     return it->second.type_name;
@@ -276,7 +309,7 @@ QVariant DiveEditMembers::GetBackgroundForIndex(const DiverWithDiveCount &comple
   std::ignore = complete_diver;
   switch (col) {
     case ColumnId::kDivingType: {
-      return ::consts::colors::GetColorForDivingType(member.diving_type_id, m_default_diving_type_id);
+      return ::consts::colors::GetColorForDivingType(member.diving_type_id, 0);
     }
     default:
       break;
@@ -287,6 +320,39 @@ QVariant DiveEditMembers::GetBackgroundForIndex(const DiverWithDiveCount &comple
 void DiveEditMembers::SetDivingMembers(std::map<int, db::DiveMember> members) {
   m_diving_members = std::move(members);
   emit DiveMembersChanged();
+}
+
+const db::DivingType &DiveEditMembers::GetDivingType(InternalDivingType diving_type) const {
+  if (m_db_diving_types.empty()) {
+    SPDLOG_ERROR("Diving types are not loaded yet. Cannot get diving type for InternalDivingType: <{}>",
+                 static_cast<int>(diving_type));
+    static db::DivingType default_diving_type{1, "DefExplo"};
+    return default_diving_type;  // Default to Explo if not found
+  }
+
+  switch (diving_type) {
+    case InternalDivingType::kExplo:
+      return m_db_diving_types.at(1);
+    case InternalDivingType::kTech:
+      return m_db_diving_types.at(2);
+  }
+
+  return m_db_diving_types.at(1);  // Default to Explo if not found
+}
+
+DiveEditMembers::InternalDivingType DiveEditMembers::GetInternalDivingType(int diving_type_id) const {
+  if (m_db_diving_types.empty()) {
+    SPDLOG_ERROR("Diving types are not loaded yet. Cannot get InternalDivingType for diving_type_id: <{}>",
+                 diving_type_id);
+    return InternalDivingType::kExplo;  // Default to Explo if not found
+  }
+
+  if (diving_type_id == 1) {
+    return InternalDivingType::kExplo;
+  } else if (diving_type_id == 2) {
+    return InternalDivingType::kTech;
+  }
+  return InternalDivingType::kExplo;  // Default to Explo if not found
 }
 
 }  // namespace cpsm

@@ -8,16 +8,8 @@
 
 namespace gui {
 
-DiveEdit::DiveEdit(QWidget *parent)
-    : QWidget(parent), ui(new Ui::DiveEdit), m_diving_type_delegate{new DivingTypeDelegate{{}, parent}} {
+DiveEdit::DiveEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiveEdit) {
   ui->setupUi(this);
-
-  connect(&m_members_model,
-          &cpsm::DiveEditMembers::DivingTypesUpdated,
-          this,
-          [this](const std::map<int, cpsm::db::DivingType> &diving_types) {
-            m_diving_type_delegate->SetDivingTypes(diving_types);
-          });
 
   connect(ui->pb_time_preset_morning, &QPushButton::clicked, this, [this]() { ui->te_diveTime->setTime(QTime(9, 0)); });
   connect(
@@ -35,7 +27,6 @@ DiveEdit::DiveEdit(QWidget *parent)
 
   ui->diverSearch_global->SetModel(&m_non_members_model);
   ui->diverSearch_dive->SetModel(&m_members_model);
-  ui->diverSearch_dive->SetItemDelegateForColumn(cpsm::DiveEditMembers::kDivingType, m_diving_type_delegate);
 
   connect(&m_members_model, &cpsm::DiveEditMembers::DiveMembersChanged, this, &DiveEdit::OnDiveMembersChanged);
   connect(

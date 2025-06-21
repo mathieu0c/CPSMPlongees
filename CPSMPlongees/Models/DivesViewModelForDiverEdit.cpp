@@ -73,7 +73,7 @@ QString DivesViewModelForDiverEdit::GetDisplayTextForIndex(const DisplayDive &di
       return GetDivingSiteText(dive.dive.diving_site_id);
     }
     case ColumnId::kType: {
-      return dive.dive_types;
+      return dive.diving_types.join(",");
     }
     default:
       SPDLOG_WARN("Unknown column title index: <{}>", col);
@@ -91,6 +91,14 @@ QVariant DivesViewModelForDiverEdit::GetBackgroundForIndex(const DisplayDive &co
     }
     case ColumnId::kTime: {
       return BackgroundColorFromTime(dive.datetime.time());
+    }
+    case ColumnId::kType: {
+      if (complete_dive.diving_type_ids.empty() || complete_dive.diving_type_ids.size() != 1) {
+        break;
+      }
+      const auto &diving_type_id{complete_dive.diving_type_ids.front()};
+      const auto kBgColor{::consts::colors::GetColorForDivingType(diving_type_id, 0)};
+      return kBgColor;
     }
     default:
       break;

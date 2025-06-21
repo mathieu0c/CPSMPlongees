@@ -65,7 +65,8 @@ void DivesViewModel::LoadFromDB(int diver_id) {
       db::DivingSite::diving_site_id_col, /* 8 */
       db::DiveMember::diving_type_id_col, /* 9 */
       db::DivingType::diving_type_id_col, /* 10 */
-      db::Dive::datetime_col              /* 11 */
+      db::Dive::datetime_col,             /* 11 */
+      db::DivingType::diving_type_id_col  /* 12 */
   };
   QVariantList args{};
 
@@ -74,6 +75,7 @@ void DivesViewModel::LoadFromDB(int diver_id) {
         "SELECT "
         "     *,"
         "     GROUP_CONCAT(DISTINCT %0.%1) AS dive_types,"
+        "     GROUP_CONCAT(DISTINCT %0.%12) AS diving_type_ids,"
         "     COUNT(%2.%3) AS diver_count "
         "FROM %4"
         "     LEFT JOIN "
@@ -89,6 +91,7 @@ void DivesViewModel::LoadFromDB(int diver_id) {
         "SELECT "
         "     *,"
         "     %0.%1 AS dive_types,"
+        "     %0.%12 AS diving_type_ids,"
         "     COUNT(%2.%3) AS diver_count "
         "FROM %4"
         "     LEFT JOIN "
@@ -98,9 +101,9 @@ void DivesViewModel::LoadFromDB(int diver_id) {
         "     LEFT JOIN "
         "         %0 ON %2.%9 = %0.%10 "
         "GROUP BY %4.%6 "
-        "HAVING COUNT(DISTINCT CASE WHEN %2.%12 = ? THEN 1 END) > 0 "
+        "HAVING COUNT(DISTINCT CASE WHEN %2.%13 = ? THEN 1 END) > 0 "
         "ORDER BY %4.%11 DESC;";
-    str_args.append(db::DiveMember::diver_id_col); /* 12 */
+    str_args.append(db::DiveMember::diver_id_col); /* 13 */
 
     args.append(diver_id);
   }
@@ -110,8 +113,27 @@ void DivesViewModel::LoadFromDB(int diver_id) {
       [&](const QSqlQuery &query) {
         auto dive{db::ExtractDive(query)};
         auto diver_count{query.value("diver_count").toInt()};
-        auto diving_types{query.value("dive_types").toString()};
-        return DisplayDive{.dive = std::move(dive), .diver_count = diver_count, .dive_types = std::move(diving_types)};
+        auto diving_types_str{query.value("dive_types").toString()};
+        auto diving_type_ids_str{query.value("diving_type_ids").toString()};
+
+        QStringList diving_types{diving_types_str.split(',', Qt::SkipEmptyParts)};
+        const auto kSplittedIds{diving_type_ids_str.split(',', Qt::SkipEmptyParts)};
+        std::vector<int32_t> diving_type_ids{};
+        diving_type_ids.reserve(kSplittedIds.size());
+        for (const auto &id_str : kSplittedIds) {
+          bool ok{false};
+          const auto id{id_str.toInt(&ok)};
+          if (ok) {
+            diving_type_ids.emplace_back(id);
+          } else {
+            SPDLOG_WARN("Failed to convert diving type id <{}> to int", id_str);
+          }
+        }
+
+        return DisplayDive{.dive = std::move(dive),
+                           .diver_count = diver_count,
+                           .diving_types = std::move(diving_types),
+                           .diving_type_ids = std::move(diving_type_ids)};
       },
       base_query,
       str_args,
@@ -218,8 +240,6 @@ void DivesViewModel::SetFilterNegate(Filters filter, bool negate) {
 }
 
 void DivesViewModel::SetDateFilter(const QDate &start, const QDate &end) {
-  qInfo() << "Setting date filter from " << start.toString(cpsm::consts::kDateUserFormat) << " to "
-          << end.toString(cpsm::consts::kDateUserFormat) << ".";
   m_filters[Filters::kFilterDate].filter = [start, end](const DisplayDive &dive) {
     return dive.dive.datetime.date() >= start && dive.dive.datetime.date() <= end;
   };
@@ -231,7 +251,7 @@ void DivesViewModel::SetTypeFilter(const QString &type_str, bool active) {
   const auto kOldActive{m_filters[Filters::kFilterType].active};
   m_filters[Filters::kFilterType].active = active;
   m_filters[Filters::kFilterType].filter = [type_str](const DisplayDive &dive) {
-    return dive.dive_types.contains(type_str);
+    return dive.diving_types.contains(type_str);
   };
 
   if (!active && kOldActive == active) {

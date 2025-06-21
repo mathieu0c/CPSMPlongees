@@ -10,7 +10,9 @@ namespace cpsm {
 struct DisplayDive {
   db::Dive dive{};
   int32_t diver_count{};
-  QString dive_types{};
+
+  QStringList diving_types{};
+  std::vector<int32_t> diving_type_ids{};
 };
 
 class DivesViewModel : public QAbstractTableModel {

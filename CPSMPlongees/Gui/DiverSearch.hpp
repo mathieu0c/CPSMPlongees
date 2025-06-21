@@ -26,7 +26,6 @@ class DiverSearch : public QWidget {
   QVector<cpsm::DiverWithDiveCount> GetSelectedDivers() const;
 
   void SetSectionResizeMode(QHeaderView::ResizeMode mode);
-  void SetItemDelegateForColumn(int column, QAbstractItemDelegate *delegate);
 
   void SetModel(cpsm::DiversViewModel *model);
 

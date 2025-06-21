@@ -50,8 +50,6 @@ class DiveEdit : public QWidget {
   cpsm::DiveEditNonMembers m_non_members_model{};
   cpsm::DiveEditMembers m_members_model{};
   std::set<int> m_previous_dive_members{};
-
-  DivingTypeDelegate *m_diving_type_delegate{nullptr};
 };
 
 }  // namespace gui

@@ -12,10 +12,12 @@ class DiveEditMembers : public DiveEditNonMembers {
 
   static constexpr std::array kColumnsHeaders{"Nom", "Prénom", "Niveau", "Type de plongée"};
 
- public:
-  static constexpr int m_default_diving_type_id{
-      std::numeric_limits<int>::min()}; /* Should be made const... Cannot copy qobject anyway */
+  enum class InternalDivingType {
+    kExplo,
+    kTech,
+  };
 
+ public:
   enum ColumnId : int32_t { kLastName = 0, kFirstName = 1, kLevel = 2, kDivingType = 3 };
 
  signals:
@@ -32,6 +34,8 @@ class DiveEditMembers : public DiveEditNonMembers {
   bool setData(const QModelIndex &index, const QVariant &value, int role) override;
   Qt::ItemFlags flags(const QModelIndex &index) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
+  void OnClicked(const QModelIndex &index) override;
 
   void SetDiveId(int dive_id); /* LoadFromDB should be called after this function to refresh info */
 
@@ -53,6 +57,9 @@ class DiveEditMembers : public DiveEditNonMembers {
   QVariant GetBackgroundForIndex(const DiverWithDiveCount &complete_diver, const db::DiveMember &member, int col) const;
 
   void SetDivingMembers(std::map<int, db::DiveMember> members);
+
+  const db::DivingType &GetDivingType(InternalDivingType diving_type) const;
+  InternalDivingType GetInternalDivingType(int diving_type_id) const;
 
  private:
   std::map<int, db::DivingType> m_db_diving_types{};

@@ -51,11 +51,6 @@ void DiverSearch::SetSectionResizeMode(QHeaderView::ResizeMode mode) {
   ui->tableView->horizontalHeader()->setSectionResizeMode(mode);
 }
 
-void DiverSearch::SetItemDelegateForColumn(int column, QAbstractItemDelegate *delegate) {
-  ui->tableView->setItemDelegateForColumn(column, delegate);
-  SPDLOG_DEBUG("Delegate set!");
-}
-
 void DiverSearch::SetModel(cpsm::DiversViewModel *model) {
   disconnect(m_model, nullptr, this, nullptr); /* Disconnect old model from widget */
 
@@ -102,6 +97,8 @@ void DiverSearch::SetModel(cpsm::DiversViewModel *model) {
   };
   connect(m_model, &cpsm::DiversViewModel::rowsInserted, this, lambda_update_result_count);
   connect(m_model, &cpsm::DiversViewModel::rowsRemoved, this, lambda_update_result_count);
+
+  connect(ui->tableView, &QTableView::clicked, m_model, &cpsm::DiversViewModel::OnClicked);
 
   if (db::Def().isOpen()) {
     RefreshFromDB();

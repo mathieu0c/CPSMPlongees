@@ -82,6 +82,8 @@ class DiversViewModel : public QAbstractTableModel, public DiverDisplayListOwner
   void SetNameFilter(const QString &name);
   void SetHideDiversIdsFilter(std::set<int> divers_ids);
 
+  virtual void OnClicked(const QModelIndex &index) {}
+
  private:
   void InitFilters();
 
