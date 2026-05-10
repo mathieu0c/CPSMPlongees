@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS Divers (
   license_number TEXT,
   certif_date TEXT,
   diver_level_id INTEGER,
+  first_registration_date TEXT,
   registration_date TEXT,
   member_date TEXT,
   paid_dives INTEGER,

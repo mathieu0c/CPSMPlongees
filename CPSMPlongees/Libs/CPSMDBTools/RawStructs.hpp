@@ -40,23 +40,24 @@ struct MultipleStoreResult {
 DB_DECLARE_STRUCT(DBInfo, DBInfo, val.dbinfo_id <= 0, DBInfo_VAR_LIST)
 
 /* Diver */
-#define Diver_VAR_LIST(COLUMN)                    \
-  COLUMN(diver_id, DBType::INTEGER, true);        \
-  COLUMN(first_name, DBType::TEXT, false);        \
-  COLUMN(last_name, DBType::TEXT, false);         \
-  COLUMN(birth_date, DBType::DATE, false);        \
-  COLUMN(email, DBType::TEXT, false);             \
-  COLUMN(phone_number, DBType::TEXT, false);      \
-  COLUMN(address_id, DBType::INTEGER, false);     \
-  COLUMN(license_number, DBType::TEXT, false);    \
-  COLUMN(certif_date, DBType::DATE, false);       \
-  COLUMN(diver_level_id, DBType::INTEGER, false); \
-  COLUMN(registration_date, DBType::DATE, false); \
-  COLUMN(member_date, DBType::DATE, false);       \
-  COLUMN(paid_dives, DBType::INTEGER, false);     \
-  COLUMN(gear_regulator, DBType::INTEGER, false); \
-  COLUMN(gear_suit, DBType::INTEGER, false);      \
-  COLUMN(gear_computer, DBType::INTEGER, false);  \
+#define Diver_VAR_LIST(COLUMN)                          \
+  COLUMN(diver_id, DBType::INTEGER, true);              \
+  COLUMN(first_name, DBType::TEXT, false);              \
+  COLUMN(last_name, DBType::TEXT, false);               \
+  COLUMN(birth_date, DBType::DATE, false);              \
+  COLUMN(email, DBType::TEXT, false);                   \
+  COLUMN(phone_number, DBType::TEXT, false);            \
+  COLUMN(address_id, DBType::INTEGER, false);           \
+  COLUMN(license_number, DBType::TEXT, false);          \
+  COLUMN(certif_date, DBType::DATE, false);             \
+  COLUMN(diver_level_id, DBType::INTEGER, false);       \
+  COLUMN(first_registration_date, DBType::DATE, false); \
+  COLUMN(registration_date, DBType::DATE, false);       \
+  COLUMN(member_date, DBType::DATE, false);             \
+  COLUMN(paid_dives, DBType::INTEGER, false);           \
+  COLUMN(gear_regulator, DBType::INTEGER, false);       \
+  COLUMN(gear_suit, DBType::INTEGER, false);            \
+  COLUMN(gear_computer, DBType::INTEGER, false);        \
   COLUMN(gear_jacket, DBType::INTEGER, false);
 DB_DECLARE_STRUCT(Diver, Divers, val.diver_id <= 0, Diver_VAR_LIST)
 
