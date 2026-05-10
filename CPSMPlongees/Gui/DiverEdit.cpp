@@ -1,11 +1,16 @@
 #include "DiverEdit.hpp"
 
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QLabel>
 #include <QMessageBox>
 #include <QShortcut>
+#include <QVBoxLayout>
 
 #include <Models/DivesViewModelForDiverEdit.hpp>
 
 #include "Constants.hpp"
+#include "DiverSearch.hpp"
 #include "GuiUtils.hpp"
 #include "ui_DiverEdit.h"
 
@@ -17,30 +22,39 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   ui->diveSearch->SetModel(new cpsm::DivesViewModelForDiverEdit{this});
 
   auto lambda_connect_editing_finished_sub{
-      [this]<typename Editor, typename EditorBis, typename MemberType, typename ReturnType>(
-          Editor *edit, ReturnType (EditorBis::*editor_data_func)() const, auto MemberType::*target_member) {
-        connect(edit, &Editor::editingFinished, this, [this, target_member, edit, editor_data_func]() {
-          const auto &data{(edit->*editor_data_func)()};
-          if constexpr (std::is_base_of_v<cpsm::db::Diver, MemberType>) {
-            m_diver.*target_member = data;
-          } else {
-            m_address.*target_member = data;
-          }
-        });
+      [this]<typename Editor, typename EditorBis, typename MemberType,
+             typename ReturnType>(
+          Editor *edit, ReturnType (EditorBis::*editor_data_func)() const,
+          auto MemberType::*target_member) {
+        connect(
+            edit, &Editor::editingFinished, this,
+            [this, target_member, edit, editor_data_func]() {
+              const auto &data{(edit->*editor_data_func)()};
+              if constexpr (std::is_base_of_v<cpsm::db::Diver, MemberType>) {
+                m_diver.*target_member = data;
+              } else {
+                m_address.*target_member = data;
+              }
+            });
       }};
 
-  auto lambda_connect_editing_finished{[lambda_connect_editing_finished_sub]<typename Editor, typename MemberType>(
-                                           Editor *edit, auto MemberType::*target_member) {
-    if constexpr (std::is_base_of_v<QLineEdit, Editor>) {
-      lambda_connect_editing_finished_sub(edit, &Editor::text, target_member);
-    }
+  auto lambda_connect_editing_finished{
+      [lambda_connect_editing_finished_sub]<typename Editor,
+                                            typename MemberType>(
+          Editor *edit, auto MemberType::*target_member) {
+        if constexpr (std::is_base_of_v<QLineEdit, Editor>) {
+          lambda_connect_editing_finished_sub(edit, &Editor::text,
+                                              target_member);
+        }
 
-    else if constexpr (std::is_base_of_v<QDateEdit, Editor>) {
-      lambda_connect_editing_finished_sub(edit, &QDateEdit::date, target_member);
-    }
-  }};
+        else if constexpr (std::is_base_of_v<QDateEdit, Editor>) {
+          lambda_connect_editing_finished_sub(edit, &QDateEdit::date,
+                                              target_member);
+        }
+      }};
 
-  auto lambda_connect_checkbox{[this](QCheckBox *cb, int cpsm::db::Diver::*target_member) {
+  auto lambda_connect_checkbox{[this](QCheckBox *cb,
+                                      int cpsm::db::Diver::*target_member) {
     connect(cb, &QCheckBox::toggled, this, [this, target_member](bool checked) {
       m_diver.*target_member = checked;
       if (!m_inhibit_all_gear_checkbox_change) {
@@ -50,30 +64,40 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   }};
 
   lambda_connect_editing_finished(ui->le_lastname, &cpsm::db::Diver::last_name);
-  lambda_connect_editing_finished(ui->le_firstname, &cpsm::db::Diver::first_name);
-  lambda_connect_editing_finished(ui->de_birthDate, &cpsm::db::Diver::birth_date);
+  lambda_connect_editing_finished(ui->le_firstname,
+                                  &cpsm::db::Diver::first_name);
+  lambda_connect_editing_finished(ui->de_birthDate,
+                                  &cpsm::db::Diver::birth_date);
   connect(ui->de_birthDate, &QDateEdit::dateChanged, this, [this]() {
-    ui->lbl_age->setText(QString::number(cpsm::db::GetDiverAge(ui->de_birthDate->date())));
+    ui->lbl_age->setText(
+        QString::number(cpsm::db::GetDiverAge(ui->de_birthDate->date())));
   });
-  lambda_connect_editing_finished(ui->le_license, &cpsm::db::Diver::license_number);
-  lambda_connect_editing_finished(ui->de_registration, &cpsm::db::Diver::registration_date);
-  lambda_connect_editing_finished(ui->de_certificate, &cpsm::db::Diver::certif_date);
-  connect(ui->de_certificate, &QDateEdit::dateChanged, this, &DiverEdit::UpdateCertificateBackgroundColor);
-  lambda_connect_editing_finished(ui->le_address, &cpsm::db::DiverAddress::address);
+  lambda_connect_editing_finished(ui->le_license,
+                                  &cpsm::db::Diver::license_number);
+  lambda_connect_editing_finished(ui->de_registration,
+                                  &cpsm::db::Diver::registration_date);
+  lambda_connect_editing_finished(ui->de_certificate,
+                                  &cpsm::db::Diver::certif_date);
+  connect(ui->de_certificate, &QDateEdit::dateChanged, this,
+          &DiverEdit::UpdateCertificateBackgroundColor);
+  lambda_connect_editing_finished(ui->le_address,
+                                  &cpsm::db::DiverAddress::address);
   lambda_connect_editing_finished(ui->le_city, &cpsm::db::DiverAddress::city);
-  lambda_connect_editing_finished(ui->le_postalCode, &cpsm::db::DiverAddress::postal_code);
+  lambda_connect_editing_finished(ui->le_postalCode,
+                                  &cpsm::db::DiverAddress::postal_code);
   lambda_connect_editing_finished(ui->le_mail, &cpsm::db::Diver::email);
   lambda_connect_editing_finished(ui->le_phone, &cpsm::db::Diver::phone_number);
 
   /* -- Manual connections -- */
 
   /* Registration */
-  connect(ui->pb_become_member, &QPushButton::clicked, this, [this](bool ignore) {
-    std::ignore = ignore;
-    m_diver.member_date = QDate::currentDate();
+  connect(ui->pb_become_member, &QPushButton::clicked, this,
+          [this](bool ignore) {
+            std::ignore = ignore;
+            m_diver.member_date = QDate::currentDate();
 
-    UpdateUiFromDiver();
-  });
+            UpdateUiFromDiver();
+          });
 
   connect(ui->pb_register, &QPushButton::clicked, this, [this](bool ignore) {
     std::ignore = ignore;
@@ -87,16 +111,16 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   lambda_connect_checkbox(ui->cb_jacket, &cpsm::db::Diver::gear_jacket);
   lambda_connect_checkbox(ui->cb_regulator, &cpsm::db::Diver::gear_regulator);
   lambda_connect_checkbox(ui->cb_suit, &cpsm::db::Diver::gear_suit);
-  connect(ui->cb_gear_global, &QCheckBox::clicked, this, &DiverEdit::SetAllGearChecked);
+  connect(ui->cb_gear_global, &QCheckBox::clicked, this,
+          &DiverEdit::SetAllGearChecked);
 
   /* Payments */
-  connect(ui->sb_payment, &QSpinBox::valueChanged, this, &DiverEdit::OnPaymentValueChanged);
-  connect(ui->pb_paymentPlus, &QPushButton::clicked, this, [this]() {
-    ui->sb_payment->setValue(ui->sb_payment->value() + 1);
-  });
-  connect(ui->pb_paymentMinus, &QPushButton::clicked, this, [this]() {
-    ui->sb_payment->setValue(ui->sb_payment->value() - 1);
-  });
+  connect(ui->sb_payment, &QSpinBox::valueChanged, this,
+          &DiverEdit::OnPaymentValueChanged);
+  connect(ui->pb_paymentPlus, &QPushButton::clicked, this,
+          [this]() { ui->sb_payment->setValue(ui->sb_payment->value() + 1); });
+  connect(ui->pb_paymentMinus, &QPushButton::clicked, this,
+          [this]() { ui->sb_payment->setValue(ui->sb_payment->value() - 1); });
 
   /* Level */
   connect(ui->cb_level, &QComboBox::activated, this, [this](int index) {
@@ -104,31 +128,99 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   });
 
   /* Member */
-  connect(ui->pb_become_member, &QPushButton::clicked, this, [this](bool ignore) {
-    std::ignore = ignore;
-    m_diver.member_date = QDate::currentDate();
-  });
+  connect(ui->pb_become_member, &QPushButton::clicked, this,
+          [this](bool ignore) {
+            std::ignore = ignore;
+            m_diver.member_date = QDate::currentDate();
+          });
 
   /* Address */
+  connect(ui->pb_family, &QPushButton::clicked, this, [this]() {
+    auto *dialog{new QDialog{this}};
+    dialog->setWindowTitle(tr("Rejoindre une famille"));
+    auto *layout{new QVBoxLayout{dialog}};
+
+    auto *lbl{new QLabel{
+        tr("Sélectionnez le plongeur dont vous souhaitez partager l'adresse :"),
+        dialog}};
+    lbl->setWordWrap(true);
+    layout->addWidget(lbl);
+
+    /* Build the set of diver IDs to hide: the current diver + anyone already
+     * sharing the same address */
+    std::set<int> ids_to_hide{};
+    if (m_diver.diver_id > 0) {
+      ids_to_hide.insert(m_diver.diver_id);
+    }
+    if (m_diver.address_id > 0) {
+      const auto kFamilyMembers{db::readLFromDB<cpsm::db::Diver>(
+          db::Def(), cpsm::db::ExtractDiver, "SELECT * FROM %0 WHERE %1 = ?",
+          {cpsm::db::Diver::db_table, cpsm::db::Diver::address_id_col},
+          {m_diver.address_id})};
+      for (const auto &member : kFamilyMembers) {
+        ids_to_hide.insert(member.diver_id);
+      }
+    }
+
+    auto *model{new cpsm::DiversViewModel{dialog}};
+    model->SetHideDiversIdsFilter(ids_to_hide);
+
+    auto *diver_search{new DiverSearch{model, dialog}};
+    layout->addWidget(diver_search);
+
+    auto *buttons{new QDialogButtonBox{
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, dialog}};
+    layout->addWidget(buttons);
+
+    connect(buttons, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
+    connect(diver_search, &DiverSearch::DoubleClickOnDiver, dialog,
+            &QDialog::accept);
+
+    dialog->resize(700, 500);
+    if (dialog->exec() != QDialog::Accepted) {
+      return;
+    }
+
+    const auto kSelectedDiver{diver_search->GetSelectedDiver()};
+    if (!kSelectedDiver.has_value()) {
+      QMessageBox::warning(this, tr("Attention"),
+                           tr("Aucun plongeur sélectionné."));
+      return;
+    }
+
+    const auto kAddressId{kSelectedDiver->diver.address_id};
+    if (kAddressId <= 0) {
+      QMessageBox::warning(
+          this, tr("Attention"),
+          tr("Le plongeur sélectionné n'a pas d'adresse enregistrée."));
+      return;
+    }
+
+    SetDiverAddressFromId(kAddressId);
+  });
+
   connect(ui->pb_quit_family, &QPushButton::clicked, this, [this]() {
     m_address.address_id = {};
     SetAddress(m_address);
   });
 
   /* -- */
-  auto *focus_next_shortcut{new QShortcut{QKeySequence{tr("Return", "Focus next")}, this}};
-  connect(focus_next_shortcut, &QShortcut::activated, this, &DiverEdit::FocusNext);
-  connect(focus_next_shortcut, &QShortcut::activatedAmbiguously, this, &DiverEdit::FocusNext);
+  auto *focus_next_shortcut{
+      new QShortcut{QKeySequence{tr("Return", "Focus next")}, this}};
+  connect(focus_next_shortcut, &QShortcut::activated, this,
+          &DiverEdit::FocusNext);
+  connect(focus_next_shortcut, &QShortcut::activatedAmbiguously, this,
+          &DiverEdit::FocusNext);
 }
 
-DiverEdit::~DiverEdit() {
-  delete ui;
-}
+DiverEdit::~DiverEdit() { delete ui; }
 
 void DiverEdit::RefreshFromDB() {
   /* Fill diver level cb */
   const auto kLevelList{db::readLFromDB<cpsm::db::DiverLevel>(
-      db::Def(), cpsm::db::ExtractDiverLevel, "SELECT * FROM %0", {cpsm::db::DiverLevel::db_table}, {})};
+      db::Def(), cpsm::db::ExtractDiverLevel, "SELECT * FROM %0",
+      {cpsm::db::DiverLevel::db_table}, {})};
   for (const auto &e : kLevelList) {
     ui->cb_level->addItem(e.level_name, e.diver_level_id);
   }
@@ -139,7 +231,8 @@ void DiverEdit::RefreshFromDB() {
 void DiverEdit::FocusNext() {
   auto *focused_widget{QApplication::focusWidget()};
   if (focused_widget) {
-    if (auto *datetime_edit{qobject_cast<QDateTimeEdit *>(focused_widget)}; datetime_edit != nullptr) {
+    if (auto *datetime_edit{qobject_cast<QDateTimeEdit *>(focused_widget)};
+        datetime_edit != nullptr) {
       /* Go to next section instead of focusing next child */
       const auto kCurrentSelectionIndex{datetime_edit->currentSectionIndex()};
       if (kCurrentSelectionIndex < datetime_edit->sectionCount() - 1) {
@@ -152,7 +245,8 @@ void DiverEdit::FocusNext() {
   this->focusNextChild();
 }
 
-bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count, int dive_count_in_last_season) {
+bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count,
+                         int dive_count_in_last_season) {
   m_dive_count = dive_count;
   m_dive_count_in_last_season = dive_count_in_last_season;
   m_diver = diver;
@@ -169,26 +263,24 @@ bool DiverEdit::SetDiver(const cpsm::db::Diver &diver, int dive_count, int dive_
 void DiverEdit::SetAddress(const cpsm::db::DiverAddress &address) {
   m_address = address;
   m_original_address = address;
-  m_diver.address_id = address.address_id; /* Shouldn't be required... But meh */
+  m_diver.address_id =
+      address.address_id; /* Shouldn't be required... But meh */
   UpdateAddressUi();
 
   auto database{db::Def()};
   const auto kDiverWithAddressCount{
-      db::queryCount(database,
-                     "SELECT %0 FROM %1 WHERE %2 = ?",
-                     {cpsm::db::Diver::diver_id_col, cpsm::db::Diver::db_table, cpsm::db::Diver::address_id_col},
+      db::queryCount(database, "SELECT %0 FROM %1 WHERE %2 = ?",
+                     {cpsm::db::Diver::diver_id_col, cpsm::db::Diver::db_table,
+                      cpsm::db::Diver::address_id_col},
                      {m_diver.address_id})};
-  if (kDiverWithAddressCount > 1) {
-    ui->lbl_disp_diver_with_address_count->setVisible(true);
-    ui->lbl_diver_with_address_count->setVisible(true);
-    ui->pb_quit_family->setVisible(true);
-  } else {
-    ui->lbl_disp_diver_with_address_count->setVisible(false);
-    ui->lbl_diver_with_address_count->setVisible(false);
-    ui->pb_quit_family->setVisible(false);
-  }
+  const bool kIsInFamily{kDiverWithAddressCount > 1};
+  ui->lbl_disp_diver_with_address_count->setVisible(kIsInFamily);
+  ui->lbl_diver_with_address_count->setVisible(kIsInFamily);
+  ui->pb_quit_family->setVisible(kIsInFamily);
+  ui->pb_family->setEnabled(!kIsInFamily);
 
-  ui->lbl_diver_with_address_count->setText(QString::number(kDiverWithAddressCount - 1));
+  ui->lbl_diver_with_address_count->setText(
+      QString::number(kDiverWithAddressCount - 1));
 }
 
 bool DiverEdit::WasEdited() const {
@@ -206,7 +298,10 @@ bool DiverEdit::SetDiverAddressFromId(int address_id) {
     }
   }
 
-  SetAddress(addr.has_value() ? addr.value() : cpsm::db::DiverAddress{}); /* If not found or new, set empty address */
+  SetAddress(addr.has_value()
+                 ? addr.value()
+                 : cpsm::db::DiverAddress{}); /* If not found or new, set empty
+                                                 address */
 
   UpdateAddressUi();
   return true;
@@ -216,7 +311,8 @@ void DiverEdit::UpdateUiFromDiver() {
   ui->le_firstname->setText(m_diver.first_name);
   ui->le_lastname->setText(m_diver.last_name.toUpper());
   ui->de_birthDate->setDate(m_diver.birth_date);
-  ui->lbl_age->setText(QString::number(cpsm::db::GetDiverAge(ui->de_birthDate->date())));
+  ui->lbl_age->setText(
+      QString::number(cpsm::db::GetDiverAge(ui->de_birthDate->date())));
   ui->le_license->setText(m_diver.license_number);
   ui->de_registration->setDate(m_diver.registration_date);
   SetLevelComboboxFromLevelId(m_diver.diver_level_id);
@@ -254,19 +350,22 @@ void DiverEdit::SetLevelComboboxFromLevelId(int level_id) {
   if (kFindResults != -1) {
     ui->cb_level->setCurrentIndex(kFindResults);
   } else {
-    SPDLOG_WARN("Failed to find level id: <{}> in diver edit combobox", level_id);
+    SPDLOG_WARN("Failed to find level id: <{}> in diver edit combobox",
+                level_id);
   }
 }
 
 void DiverEdit::UpdateCertificateBackgroundColor(const QDate &date) {
   const bool kIsValid{cpsm::db::IsDiverMedicalCertificateValid(date)};
-  ui->de_certificate->setStyleSheet(QString{"QDateEdit { background-color: %0; }"}.arg(
-      kIsValid ? ::consts::colors::kBackgroundGreen.name() : ::consts::colors::kBackgroundRed.name()));
+  ui->de_certificate->setStyleSheet(
+      QString{"QDateEdit { background-color: %0; }"}.arg(
+          kIsValid ? ::consts::colors::kBackgroundGreen.name()
+                   : ::consts::colors::kBackgroundRed.name()));
 }
 
 bool DiverEdit::AllGearChecked() const {
-  return ui->cb_computer->isChecked() && ui->cb_jacket->isChecked() && ui->cb_regulator->isChecked() &&
-         ui->cb_suit->isChecked();
+  return ui->cb_computer->isChecked() && ui->cb_jacket->isChecked() &&
+         ui->cb_regulator->isChecked() && ui->cb_suit->isChecked();
 }
 
 void DiverEdit::SetAllGearChecked(bool checked) {
@@ -288,32 +387,35 @@ void DiverEdit::OnPaymentValueChanged(int new_val) {
 void DiverEdit::UpdateUiSold() {
   ui->sb_sold->setValue(m_diver.paid_dives - m_dive_count);
   ui->sb_sold->setStyleSheet(QString{"QSpinBox { background-color: %0; }"}.arg(
-      ui->sb_sold->value() >= 0 ? ::consts::colors::kBackgroundGreen.name() : ::consts::colors::kBackgroundRed.name()));
+      ui->sb_sold->value() >= 0 ? ::consts::colors::kBackgroundGreen.name()
+                                : ::consts::colors::kBackgroundRed.name()));
 }
 
 void DiverEdit::OnOk() {
   /* Only if there was modifications on the address */
   if (m_original_address != m_address) {
     auto database{db::Def()};
-    const auto kDiverWithAddressCount{
-        db::queryCount(database,
-                       "SELECT %0 FROM %1 WHERE %2 = ?",
-                       {cpsm::db::Diver::diver_id_col, cpsm::db::Diver::db_table, cpsm::db::Diver::address_id_col},
-                       {m_diver.address_id})};
+    const auto kDiverWithAddressCount{db::queryCount(
+        database, "SELECT %0 FROM %1 WHERE %2 = ?",
+        {cpsm::db::Diver::diver_id_col, cpsm::db::Diver::db_table,
+         cpsm::db::Diver::address_id_col},
+        {m_diver.address_id})};
     if (kDiverWithAddressCount < 0) {
-      SPDLOG_ERROR("Failed to count diver with address id: <{}>", m_diver.address_id);
-      QMessageBox::critical(this,
-                            tr("Erreur"),
-                            tr("Impossible de vérifier le nombre de plongeurs impactés par l'adresse "
-                               "modifiée.\nAnnulation de la sauvegarde des modifications par sécurité."));
+      SPDLOG_ERROR("Failed to count diver with address id: <{}>",
+                   m_diver.address_id);
+      QMessageBox::critical(this, tr("Erreur"),
+                            tr("Impossible de vérifier le nombre de plongeurs "
+                               "impactés par l'adresse "
+                               "modifiée.\nAnnulation de la sauvegarde des "
+                               "modifications par sécurité."));
       return;
     }
 
     if (kDiverWithAddressCount > 1) {
       auto ans{
-          QMessageBox::warning(this,
-                               tr("Attention"),
-                               tr("La modification de l'adresse va impacter %0 autre(s) plongeur(s).\nÊtes-vous sûr ?")
+          QMessageBox::warning(this, tr("Attention"),
+                               tr("La modification de l'adresse va impacter %0 "
+                                  "autre(s) plongeur(s).\nÊtes-vous sûr ?")
                                    .arg(kDiverWithAddressCount - 1),
                                QMessageBox::Ok | QMessageBox::Cancel)};
       if (ans == QMessageBox::Cancel) {
@@ -322,7 +424,8 @@ void DiverEdit::OnOk() {
     }
   }
 
-  if (m_diver.registration_date < m_diver.first_registration_date || !m_diver.first_registration_date.isValid()) {
+  if (m_diver.registration_date < m_diver.first_registration_date ||
+      !m_diver.first_registration_date.isValid()) {
     m_diver.first_registration_date = m_diver.registration_date;
   }
 
@@ -336,21 +439,17 @@ void DiverEdit::OnCancelled() {
     return;
   }
   auto ans{QMessageBox::question(
-      this,
-      tr("Confirmation"),
-      tr("Toute modification sera définitivement perdue.\nSouhaitez-vous abandonner toutes les modifications ?"),
+      this, tr("Confirmation"),
+      tr("Toute modification sera définitivement perdue.\nSouhaitez-vous "
+         "abandonner toutes les modifications ?"),
       QMessageBox::Yes | QMessageBox::No)};
   if (ans == QMessageBox::Yes) {
     emit DiverEdited({});
   }
 }
 
-void DiverEdit::on_buttonBox_accepted() {
-  OnOk();
-}
+void DiverEdit::on_buttonBox_accepted() { OnOk(); }
 
-void DiverEdit::on_buttonBox_rejected() {
-  OnCancelled();
-}
+void DiverEdit::on_buttonBox_rejected() { OnCancelled(); }
 
-}  // namespace gui
+} // namespace gui
