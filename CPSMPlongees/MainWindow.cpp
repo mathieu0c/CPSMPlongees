@@ -285,6 +285,7 @@ void MainWindow::on_pb_newDiver_clicked() {
   default_diver.diver.birth_date = QDate::currentDate().addYears(-30);
   default_diver.diver.certif_date = QDate::currentDate();
   default_diver.diver.registration_date = QDate::currentDate();
+  default_diver.diver.first_registration_date = QDate::currentDate();
   default_diver.diver.member_date = cpsm::consts::kEpochDate;
   EditDiver(default_diver);
 }

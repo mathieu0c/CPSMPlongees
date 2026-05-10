@@ -617,26 +617,6 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QFormLayout" name="formLayout">
-          <item row="3" column="0">
-           <widget class="QLabel" name="lbl_disp_level">
-            <property name="text">
-             <string>Niveau</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QComboBox" name="cb_level"/>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="lbl_disp_certificate">
-            <property name="text">
-             <string>Certificat médical</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QDateEdit" name="de_certificate"/>
-          </item>
           <item row="0" column="0">
            <widget class="QLabel" name="lbl_disp_license">
             <property name="text">
@@ -659,19 +639,62 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QDateEdit" name="de_registration"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDateEdit" name="de_member">
-            <property name="displayFormat">
-             <string>yyyy</string>
+           <widget class="QDateEdit" name="de_registration">
+            <property name="enabled">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="cb_member">
+          <item row="2" column="0" colspan="2">
+           <widget class="QPushButton" name="pb_register">
             <property name="text">
-             <string>Adhérent pour l'année</string>
+             <string>Inscrire aujourd'hui</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="lbl_disp_level">
+            <property name="text">
+             <string>Niveau</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QComboBox" name="cb_level"/>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="lbl_disp_certificate">
+            <property name="text">
+             <string>Certificat médical</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QDateEdit" name="de_certificate"/>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QPushButton" name="pb_become_member">
+            <property name="text">
+             <string>Adhérer aujourd'hui</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QLabel" name="lbl_member">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(234, 255, 232);</string>
+            </property>
+            <property name="text">
+             <string>Est déjà adhérent</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -772,8 +795,6 @@
   <tabstop>cb_jacket</tabstop>
   <tabstop>le_license</tabstop>
   <tabstop>de_registration</tabstop>
-  <tabstop>cb_member</tabstop>
-  <tabstop>de_member</tabstop>
   <tabstop>cb_level</tabstop>
   <tabstop>de_certificate</tabstop>
  </tabstops>
