@@ -24,6 +24,7 @@ public:
   bool SetDiver(const cpsm::db::Diver &diver, int dive_count,
                 int dive_count_in_last_season);
   void SetAddress(const cpsm::db::DiverAddress &address);
+  bool WasEdited() const;
 
 public slots:
   void RefreshFromDB();
@@ -47,8 +48,6 @@ private slots:
   void on_buttonBox_rejected(); /* NOLINT */
 
 private:
-  bool WasEdited() const;
-
   bool SetDiverAddressFromId(int address_id);
   void UpdateUiFromDiver();
   void UpdateAddressUi();

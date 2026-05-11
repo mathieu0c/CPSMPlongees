@@ -445,3 +445,34 @@ void MainWindow::on_pb_newDive_clicked() {
   default_dive.dive.datetime = QDateTime::currentDateTime();
   EditDive(default_dive);
 }
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+  const bool kDiverHasUnsaved{ui->pg_editDiver->WasEdited()};
+  const bool kDiveHasUnsaved{ui->pg_editDive->WasEdited()};
+
+  if (!kDiverHasUnsaved && !kDiveHasUnsaved) {
+    event->accept();
+    return;
+  }
+
+  QString details{};
+  if (kDiverHasUnsaved) {
+    details += tr("\n  • Fiche plongeur en cours d'édition");
+  }
+  if (kDiveHasUnsaved) {
+    details += tr("\n  • Plongée en cours d'édition");
+  }
+
+  const auto kAnswer{QMessageBox::warning(
+      this, tr("Modifications non sauvegardées"),
+      tr("Des modifications non sauvegardées seront perdues :%0"
+         "\n\nVoulez-vous quand même quitter ?")
+          .arg(details),
+      QMessageBox::Yes | QMessageBox::No, QMessageBox::No)};
+
+  if (kAnswer == QMessageBox::Yes) {
+    event->accept();
+  } else {
+    event->ignore();
+  }
+}

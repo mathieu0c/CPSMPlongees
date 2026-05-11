@@ -2,6 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include <Constants.hpp>
+#include <QCloseEvent>
 #include <QItemSelection>
 #include <QMainWindow>
 #include <QPushButton>
@@ -19,7 +20,7 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
- private:
+private:
   enum DiverTabPages : int32_t {
     kBrowseDivers = 0,
     kEditDiver = 1,
@@ -34,20 +35,26 @@ class MainWindow : public QMainWindow {
     kDives = 1,
   };
 
- signals:
+signals:
   void DBLoaded();
 
- public:
+public:
   const QColor kBaseBlueColor{25, 180, 255};
 
   MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
 
- private slots:
-  void EditDiver(const cpsm::DiverWithDiveCount &diver);
-  void OnDiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress>> edit_opt);
+protected:
+  void closeEvent(QCloseEvent *event) override;
 
-  void OnMainDiveSearchSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+private slots:
+  void EditDiver(const cpsm::DiverWithDiveCount &diver);
+  void OnDiverEdited(
+      std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress>>
+          edit_opt);
+
+  void OnMainDiveSearchSelectionChanged(const QItemSelection &selected,
+                                        const QItemSelection &deselected);
   void EditDive(const cpsm::DisplayDive &dive);
   void OnDiveEdited(std::optional<cpsm::db::DiveAndDivers> edit_opt);
 
@@ -65,7 +72,7 @@ class MainWindow : public QMainWindow {
 
   void on_pb_newDive_clicked();
 
- private:
+private:
   Ui::MainWindow *ui;
 
   const QString c_appdata_folder;
@@ -73,4 +80,4 @@ class MainWindow : public QMainWindow {
 
   updt::UpdateHandler *m_updateHandler;
 };
-#endif  // MAINWINDOW_HPP
+#endif // MAINWINDOW_HPP

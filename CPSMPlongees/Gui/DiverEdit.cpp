@@ -457,6 +457,8 @@ void DiverEdit::OnCancelled() {
          "abandonner toutes les modifications ?"),
       QMessageBox::Yes | QMessageBox::No)};
   if (ans == QMessageBox::Yes) {
+    m_diver = m_original_diver;
+    m_address = m_original_address;
     emit DiverEdited({});
   }
 }

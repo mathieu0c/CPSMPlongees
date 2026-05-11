@@ -25,10 +25,9 @@ public:
   void RefreshFromDB();
   void RefreshNonMembersFromDB();
   bool SetDive(const cpsm::db::Dive &dive);
-
-private:
   bool WasEdited() const;
 
+private:
   void UpdateUiFromDive();
   void SetDivingSiteComboboxFromSiteId(int site_id);
 

@@ -139,6 +139,7 @@ void DiveEdit::OnCancelled() {
          "abandonner toutes les modifications ?"),
       QMessageBox::Yes | QMessageBox::No)};
   if (ans == QMessageBox::Yes) {
+    m_dive = m_original_dive;
     emit DiveEdited({});
   }
 }
