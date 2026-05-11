@@ -12,24 +12,29 @@ class DiverEdit;
 class DiverEdit : public QWidget {
   Q_OBJECT
 
- signals:
-  void DiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress>> edit_opt);
+signals:
+  void
+  DiverEdited(std::optional<std::tuple<cpsm::db::Diver, cpsm::db::DiverAddress>>
+                  edit_opt);
 
- public:
+public:
   explicit DiverEdit(QWidget *parent = nullptr);
   ~DiverEdit();
 
-  bool SetDiver(const cpsm::db::Diver &diver, int dive_count, int dive_count_in_last_season);
+  bool SetDiver(const cpsm::db::Diver &diver, int dive_count,
+                int dive_count_in_last_season);
   void SetAddress(const cpsm::db::DiverAddress &address);
 
- public slots:
+public slots:
   void RefreshFromDB();
+  void RefreshDiveListFromDB(); /* Reload only the dive list for the current
+                                   diver (safe to call while editing) */
   void FocusNext();
 
- private:
+private:
   bool AllGearChecked() const;
 
- private slots:
+private slots:
   void SetAllGearChecked(bool checked);
 
   void OnPaymentValueChanged(int new_val);
@@ -41,7 +46,7 @@ class DiverEdit : public QWidget {
   void on_buttonBox_accepted(); /* NOLINT */
   void on_buttonBox_rejected(); /* NOLINT */
 
- private:
+private:
   bool WasEdited() const;
 
   bool SetDiverAddressFromId(int address_id);
@@ -50,7 +55,7 @@ class DiverEdit : public QWidget {
   void SetLevelComboboxFromLevelId(int level_id);
   void UpdateCertificateBackgroundColor(const QDate &date);
 
- private:
+private:
   Ui::DiverEdit *ui;
 
   cpsm::db::Diver m_diver{};
@@ -61,7 +66,8 @@ class DiverEdit : public QWidget {
   cpsm::db::DiverAddress m_address{};
   cpsm::db::DiverAddress m_original_address{};
 
-  bool m_inhibit_all_gear_checkbox_change{false}; /* Avoid spam when check the all gear checkbox */
+  bool m_inhibit_all_gear_checkbox_change{
+      false}; /* Avoid spam when check the all gear checkbox */
 };
 
-}  // namespace gui
+} // namespace gui

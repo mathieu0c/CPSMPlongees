@@ -216,6 +216,19 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
 
 DiverEdit::~DiverEdit() { delete ui; }
 
+void DiverEdit::RefreshDiveListFromDB() {
+  ui->diveSearch->RefreshFromDB(m_diver.diver_id);
+  /* Also refresh the dive balance, since a newly saved dive may have changed
+   * the count */
+  if (m_diver.diver_id > 0) {
+    const auto kNewCount{cpsm::db::GetDiverDiveCount(m_diver)};
+    if (kNewCount >= 0) {
+      m_dive_count = kNewCount;
+      UpdateUiSold();
+    }
+  }
+}
+
 void DiverEdit::RefreshFromDB() {
   /* Fill diver level cb */
   const auto kLevelList{db::readLFromDB<cpsm::db::DiverLevel>(

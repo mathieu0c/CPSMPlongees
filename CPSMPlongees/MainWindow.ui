@@ -24,10 +24,10 @@
        <bool>true</bool>
       </property>
       <property name="tabPosition">
-       <enum>QTabWidget::West</enum>
+       <enum>QTabWidget::TabPosition::West</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="usesScrollButtons">
        <bool>true</bool>
@@ -59,7 +59,7 @@
          <item>
           <layout class="QHBoxLayout" name="hlay_diverEdit">
            <property name="sizeConstraint">
-            <enum>QLayout::SetNoConstraint</enum>
+            <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
            </property>
            <item>
             <widget class="QPushButton" name="pb_deleteDiver">
@@ -128,10 +128,10 @@
             <string notr="true">QSplitter::handle { background-color: rgb(213, 213, 213)}</string>
            </property>
            <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
+            <enum>QFrame::Shape::NoFrame</enum>
            </property>
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <widget class="gui::DiveSearch" name="mainDiveSearch" native="true">
             <property name="sizePolicy">
@@ -206,29 +206,6 @@
         </layout>
        </widget>
       </widget>
-      <widget class="QWidget" name="tab">
-       <attribute name="title">
-        <string>Page</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <widget class="QTableView" name="tw_test">
-          <property name="editTriggers">
-           <set>QAbstractItemView::NoEditTriggers</set>
-          </property>
-          <property name="showDropIndicator" stdset="0">
-           <bool>false</bool>
-          </property>
-          <property name="alternatingRowColors">
-           <bool>true</bool>
-          </property>
-          <property name="selectionMode">
-           <enum>QAbstractItemView::NoSelection</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
      </widget>
     </item>
    </layout>
@@ -239,7 +216,7 @@
      <x>0</x>
      <y>0</y>
      <width>1053</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuTools">

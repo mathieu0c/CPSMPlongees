@@ -15,23 +15,24 @@ class DiveEdit;
 class DiveEdit : public QWidget {
   Q_OBJECT
 
- signals:
+signals:
   void DiveEdited(std::optional<cpsm::db::DiveAndDivers> edit_opt);
 
- public:
+public:
   explicit DiveEdit(QWidget *parent = nullptr);
   ~DiveEdit();
 
   void RefreshFromDB();
+  void RefreshNonMembersFromDB();
   bool SetDive(const cpsm::db::Dive &dive);
 
- private:
+private:
   bool WasEdited() const;
 
   void UpdateUiFromDive();
   void SetDivingSiteComboboxFromSiteId(int site_id);
 
- private slots:
+private slots:
   void OnOk();
   void OnCancelled();
 
@@ -41,7 +42,7 @@ class DiveEdit : public QWidget {
   void MoveSelectedDiversFromNonMembersToMembers();
   void MoveSelectedDiversFromMembersToNonMembers();
 
- private:
+private:
   Ui::DiveEdit *ui;
 
   cpsm::db::DiveAndDivers m_dive{};
@@ -52,4 +53,4 @@ class DiveEdit : public QWidget {
   std::set<int> m_previous_dive_members{};
 };
 
-}  // namespace gui
+} // namespace gui
