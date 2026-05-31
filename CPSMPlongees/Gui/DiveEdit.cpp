@@ -87,7 +87,7 @@ void DiveEdit::RefreshFromDB() {
       {cpsm::db::DivingSite::db_table}, {})};
   std::sort(level_list.begin(), level_list.end(),
             [](const auto &lhs, const auto &rhs) {
-              return lhs.site_name < rhs.site_name;
+              return lhs.display_order < rhs.display_order;
             });
   if (!level_list.empty()) {
     ui->cb_diveSite->clear();

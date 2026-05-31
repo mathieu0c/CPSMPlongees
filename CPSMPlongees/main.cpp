@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
   /*#                       #*/
   /*#########################*/
 
-  const auto kLoadDbSuccess{cpsm::db::InitDB<true, true>(cpsm::consts::kCPSMDbPath)};
+  const auto kLoadDbSuccess{cpsm::db::InitDB<false, false>(cpsm::consts::kCPSMDbPath)};
   CPSM_ABORT_IF_FOR(!kLoadDbSuccess, nullptr, cpsm::AbortReason::kCouldNotInitDB);
 
   /* -- DB retrieving db information -- */

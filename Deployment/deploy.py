@@ -65,7 +65,7 @@ def checkFile(path: str) -> bool:
 
 
 def getReleaseDir(rootPath: str = ".") -> str:
-    tmpList = ls(rootPath, ".*build-.*Desktop_Qt_6.*MinGW.*_64.*-Release")
+    tmpList = ls(rootPath, r".*Desktop_Qt_6.*MinGW.*64.*-Release")
     # tmpList = ls()
     for i, dir in enumerate(tmpList):
         tmpList[i] = dir + "/Bin"
@@ -100,7 +100,7 @@ def getAbsolute(path: str) -> str:
 def main():
     global GLOB_TARGET_EXE_NAME
     CONFIG_outputDir = "AUTO"  # the dir will have the name of the found executable
-    QT_VERSION = "6.6.0"
+    QT_VERSION = "6.8.0"
     MINGW_VERSION = "mingw1120_64"
     CONFIG_WINDEPLOYQT_PATH = getAbsolute(
         f"C:/Qt/{QT_VERSION}/mingw_64/bin/windeployqt.exe")
@@ -120,7 +120,7 @@ def main():
 
     print("------------------------------------------------------")
 
-    releaseDir = getAbsolute(getReleaseDir(".."))
+    releaseDir = getAbsolute(getReleaseDir("../CPSMPlongees/build"))
     if (not releaseDir):
         errorOccured("Cannot find release dir", True)
     print("Found build release dir at : {}".format(releaseDir))
@@ -161,7 +161,7 @@ def main():
     print("Done\n")
 
     simpleUpdaterExeFile = getAbsolute(
-        getExePath(releaseDir, ".*SimpleUpdater\.exe"))
+        getExePath(releaseDir, r".*SimpleUpdater\.exe"))
     print("Copying SimpleUpdater exe...")
     try:
         shutil.copy(simpleUpdaterExeFile, CONFIG_outputDir)

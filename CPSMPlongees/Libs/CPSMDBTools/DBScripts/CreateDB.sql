@@ -74,7 +74,8 @@ CREATE TABLE IF NOT EXISTS DivesMembers (
 
 CREATE TABLE IF NOT EXISTS DivingSites (
   diving_site_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  site_name TEXT
+  site_name TEXT,
+  display_order INTEGER DEFAULT 0
 );
 
 -- DivingType definition
@@ -114,17 +115,25 @@ INSERT OR IGNORE INTO DiversLevels
 
 --  Diving sites
 INSERT OR IGNORE INTO DivingSites
-    (diving_site_id, site_name) VALUES
-    (1,"Les deux frères"),
-    (2,"L'Arroyo"),
-    (3,"La sèche du pêcheur"),
-    (4,"La sèche de Saint-Elme"),
-    (5,"La roche à l'ancre"),
-    (6,"La vallée aux gorgones"),
-    (7,"Le Tromblon"),
-    (8,"Le SMBD2"),
-    (9,"Le Dornier"),
-    (10,"La Corée");
+    (diving_site_id, site_name, display_order) VALUES
+    (1,"Plan d'O",1),
+    (2,"Les deux Frères",2),
+    (3,"Sèche de Saint-Elme",3),
+    (4,"Sèche des pécheurs",4),
+    (5,"Pierre à Pierre",5),
+    (6,"Corée",6),
+    (7,"Vallée aux gorgones",7),
+    (8,"Roche à l'ancre",8),
+    (9,"Arroyo",9),
+    (10,"Dornier",10),
+    (11,"Tromblon",11),
+    (12,"Jardins de l'Arroyo",12),
+    (13,"Cabine du Dornier",13),
+    (14,"SMB2",14),
+    (15,"Marauder",15),
+    (16,"Chaînettes",16),
+    (17,"Pointe Maregau",17),
+    (18,"Fabregas",18);
 
 
 --  Diving types

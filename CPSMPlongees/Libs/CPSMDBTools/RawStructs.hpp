@@ -125,7 +125,8 @@ StoreDiveAndDiversResult StoreDiveAndItsMembers(const DiveAndDivers& dive);
 
 #define DivingSites_VAR_LIST(COLUMN)             \
   COLUMN(diving_site_id, DBType::INTEGER, true); \
-  COLUMN(site_name, DBType::TEXT, false);
+  COLUMN(site_name, DBType::TEXT, false);        \
+  COLUMN(display_order, DBType::INTEGER, false);
 DB_DECLARE_STRUCT(DivingSite, DivingSites, val.diving_site_id <= 0, DivingSites_VAR_LIST)
 
 #define DivingTypes_VAR_LIST(COLUMN)             \
