@@ -16,7 +16,7 @@
 #include "MainWindow.hpp"
 #include "ProgramInterrupts.hpp"
 
-bool BlockingDBBackup(const QString& original_file, const QString& destination_file) {
+bool BlockingDBBackup(const QString &original_file, const QString &destination_file) {
   std::atomic<utils::AsyncFileCopyer::ReturnCode> copy_result{utils::AsyncFileCopyer::ReturnCode::kFailed};
   std::atomic_bool can_exit_this_function{false};
 
@@ -57,10 +57,10 @@ bool BlockingDBBackup(const QString& original_file, const QString& destination_f
          copy_result == utils::AsyncFileCopyer::ReturnCode::kAborted;
 }
 
-bool RemoveFileList(const std::vector<QString>& to_remove) {
+bool RemoveFileList(const std::vector<QString> &to_remove) {
   SPDLOG_INFO("Removing {} old backups", to_remove.size());
   bool success{true};
-  for (const auto& path : to_remove) {
+  for (const auto &path : to_remove) {
     if (!QFile::remove(path)) {
       SPDLOG_ERROR("Failed to remove file: {}", path);
       success = false;
@@ -71,7 +71,7 @@ bool RemoveFileList(const std::vector<QString>& to_remove) {
   return success;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   /*#########################*/
   /*#                       #*/
   /*#       Base setup      #*/
@@ -105,20 +105,21 @@ int main(int argc, char* argv[]) {
   if (!db::CheckConditionsForDBBackup(kDBSaverConfig)) {
     QMessageBox::critical(nullptr,
                           QObject::tr("Erreur"),
-                          QObject::tr("Erreur lors de la sauvegarde de la base de donnée (initialisation)"));
+                          QObject::tr("Erreur lors de la sauvegarde de la base "
+                                      "de donnée (initialisation)"));
     SPDLOG_ERROR("Could not check conditions for DB backup");
   } else {
     SPDLOG_INFO("DB backup conditions checked");
 
     const auto kExistingBackups{db::SearchBackupFiles(kDBSaverConfig)};
-    for (const auto& [date, path] : kExistingBackups) {
+    for (const auto &[date, path] : kExistingBackups) {
       SPDLOG_INFO("Found backup: {} - {}", date.toString(), path.toStdString());
     }
 
     const auto [kToRemove, kNeedBackup]{db::GetBackupsUpdate(kExistingBackups)};
     SPDLOG_INFO(
         "Need to remove {} backups. Is a new backup needed? <{}>", kToRemove.size(), kNeedBackup ? "yes" : "no");
-    for (const auto& path : kToRemove) {
+    for (const auto &path : kToRemove) {
       SPDLOG_INFO("\tTo remove: {}", path);
     }
 
@@ -127,9 +128,11 @@ int main(int argc, char* argv[]) {
                             db::GetNewBackupFilePath(kDBSaverConfig, QDateTime::currentDateTime()))) {
         QMessageBox::critical(nullptr,
                               QObject::tr("Erreur"),
-                              QObject::tr("Erreur lors de la sauvegarde de la base de donnée (copie du fichier)"));
+                              QObject::tr("Erreur lors de la sauvegarde de la "
+                                          "base de donnée (copie du fichier)"));
         SPDLOG_ERROR("Failed to copy DB file for backup");
-      } else { /* If a new backup is needed, only remove old ones IF the new one is successful */
+      } else { /* If a new backup is needed, only remove old ones IF the new one
+                  is successful */
         if (!RemoveFileList(kToRemove)) {
           SPDLOG_ERROR("Failed to remove some of the remaining backups...");
         }
@@ -178,23 +181,27 @@ int main(int argc, char* argv[]) {
     case migration::NeedsMigrationState::kUpgradeNeeded: /* We'll check that later for lisibility reason */
       break;
     case migration::NeedsMigrationState::kDowngradeNeeded: {
-      const auto kShouldExecute{QMessageBox::critical(
-          nullptr,
-          QObject::tr("ATTENTION"),
-          QObject::tr("La base de donnée a dernièrement été ouverte avec une version du logiciel plus récente (%0).\n"
-                      "L'ouvrir avec cette version plus ancienne (%1) va probablement causer une corruption des "
-                      "données irrémédiable.\n"
-                      "\n"
-                      "Souhaitez-vous malgré tout lancer le logiciel ?")
-              .arg(to_string(kLastDBSoftVersion), to_string(cpsm::consts::kCurrentVersion)),
-          QMessageBox::Yes | QMessageBox::No,
-          QMessageBox::No)};
+      const auto kShouldExecute{
+          QMessageBox::critical(nullptr,
+                                QObject::tr("ATTENTION"),
+                                QObject::tr("La base de donnée a dernièrement été ouverte avec une "
+                                            "version du logiciel plus récente (%0).\n"
+                                            "L'ouvrir avec cette version plus ancienne (%1) va "
+                                            "probablement causer une corruption des "
+                                            "données irrémédiable.\n"
+                                            "\n"
+                                            "Souhaitez-vous malgré tout lancer le logiciel ?")
+                                    .arg(to_string(kLastDBSoftVersion), to_string(cpsm::consts::kCurrentVersion)),
+                                QMessageBox::Yes | QMessageBox::No,
+                                QMessageBox::No)};
       if (kShouldExecute == QMessageBox::No) {
         return 0;
       }
-      SPDLOG_WARN("User decided to open the software with a lower version ({}) than the one used last time ({})",
-                  cpsm::consts::kCurrentVersion,
-                  kLastDBSoftVersion);
+      SPDLOG_WARN(
+          "User decided to open the software with a lower version ({}) "
+          "than the one used last time ({})",
+          cpsm::consts::kCurrentVersion,
+          kLastDBSoftVersion);
       break;
     }
     default:
@@ -204,6 +211,14 @@ int main(int argc, char* argv[]) {
   }
 
   if (kNeedsMigration == migration::NeedsMigrationState::kUpgradeNeeded) {
+    const auto kBackupName{QString{"%0/migration_%1_to_%2.db"}.arg(
+        cpsm::consts::kDBBackupPath, to_string(kLastDBSoftVersion), to_string(cpsm::consts::kCurrentVersion))};
+    SPDLOG_INFO("Creating pre-migration backup: {}", kBackupName);
+    if (!BlockingDBBackup(cpsm::consts::kCPSMDbPath, kBackupName)) {
+      SPDLOG_ERROR("Failed to create pre-migration backup, aborting migration");
+      CPSM_ABORT_FOR(nullptr, cpsm::AbortReason::kDBMigrationFailed);
+    }
+
     if (!migration::MigrateDB(kLastDBSoftVersion, cpsm::consts::kCurrentVersion, database)) {
       /* Make sure we rollback to prevent problems on next opening */
       CPSM_ABORT_IF_FOR(!database.rollback(), nullptr, cpsm::AbortReason::kCouldNotRollback);
