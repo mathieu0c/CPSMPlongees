@@ -126,6 +126,10 @@ DiverEdit::DiverEdit(QWidget *parent) : QWidget(parent), ui(new Ui::DiverEdit) {
   connect(ui->cb_level, &QComboBox::activated, this, [this](int index) {
     m_diver.diver_level_id = ui->cb_level->itemData(index).toInt();
   });
+  connect(ui->cb_level_nitrox, &QComboBox::activated, this, [this](int index) {
+    m_diver.nitrox_diver_level_id =
+        ui->cb_level_nitrox->itemData(index).toInt();
+  });
 
   /* Member */
   connect(ui->pb_become_member, &QPushButton::clicked, this,
@@ -238,6 +242,13 @@ void DiverEdit::RefreshFromDB() {
     ui->cb_level->addItem(e.level_name, e.diver_level_id);
   }
 
+  const auto kNitroxLevelList{db::readLFromDB<cpsm::db::NitroxDiverLevel>(
+      db::Def(), cpsm::db::ExtractNitroxDiverLevel, "SELECT * FROM %0",
+      {cpsm::db::NitroxDiverLevel::db_table}, {})};
+  for (const auto &e : kNitroxLevelList) {
+    ui->cb_level_nitrox->addItem(e.level_name, e.nitrox_diver_level_id);
+  }
+
   ui->diveSearch->RefreshFromDB(m_diver.diver_id);
 }
 
@@ -329,6 +340,7 @@ void DiverEdit::UpdateUiFromDiver() {
   ui->le_license->setText(m_diver.license_number);
   ui->de_registration->setDate(m_diver.registration_date);
   SetLevelComboboxFromLevelId(m_diver.diver_level_id);
+  SetNitroxLevelComboboxFromLevelId(m_diver.nitrox_diver_level_id);
   ui->de_certificate->setDate(m_diver.certif_date);
 
   /* -- Member -- */
@@ -358,13 +370,22 @@ void DiverEdit::UpdateAddressUi() {
 }
 
 void DiverEdit::SetLevelComboboxFromLevelId(int level_id) {
-  //
   const auto kFindResults{ui->cb_level->findData(level_id)};
   if (kFindResults != -1) {
     ui->cb_level->setCurrentIndex(kFindResults);
   } else {
     SPDLOG_WARN("Failed to find level id: <{}> in diver edit combobox",
                 level_id);
+  }
+}
+
+void DiverEdit::SetNitroxLevelComboboxFromLevelId(int nitrox_level_id) {
+  const auto kFindResults{ui->cb_level_nitrox->findData(nitrox_level_id)};
+  if (kFindResults != -1) {
+    ui->cb_level_nitrox->setCurrentIndex(kFindResults);
+  } else if (nitrox_level_id != 0) {
+    SPDLOG_WARN("Failed to find nitrox level id: <{}> in diver edit combobox",
+                nitrox_level_id);
   }
 }
 
@@ -443,6 +464,7 @@ void DiverEdit::OnOk() {
   }
 
   emit DiverEdited({{m_diver, m_address}});
+  m_original_diver = m_diver;
   m_original_address = m_address;
 }
 

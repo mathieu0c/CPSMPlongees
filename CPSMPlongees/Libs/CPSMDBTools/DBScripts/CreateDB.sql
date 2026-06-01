@@ -15,6 +15,11 @@ CREATE TABLE IF NOT EXISTS "DiversLevels" (
   level_name TEXT UNIQUE
 );
 
+CREATE TABLE IF NOT EXISTS "NitroxDiversLevels" (
+  nitrox_diver_level_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  level_name TEXT UNIQUE
+);
+
 -- Divers definition
 
 CREATE TABLE IF NOT EXISTS Divers (
@@ -28,6 +33,7 @@ CREATE TABLE IF NOT EXISTS Divers (
   license_number TEXT,
   certif_date TEXT,
   diver_level_id INTEGER,
+  nitrox_diver_level_id INTEGER,
   first_registration_date TEXT,
   registration_date TEXT,
   member_date TEXT,
@@ -37,6 +43,7 @@ CREATE TABLE IF NOT EXISTS Divers (
   gear_computer INTEGER DEFAULT (0),
   gear_jacket INTEGER DEFAULT (0),
   CONSTRAINT Divers_DiverLevels_FK FOREIGN KEY (diver_level_id) REFERENCES "DiversLevels"(diver_level_id) ON DELETE SET DEFAULT ON UPDATE SET DEFAULT,
+  CONSTRAINT Divers_NitroxDiversLevels_FK FOREIGN KEY (nitrox_diver_level_id) REFERENCES "NitroxDiversLevels"(nitrox_diver_level_id) ON DELETE SET DEFAULT ON UPDATE SET DEFAULT,
   CONSTRAINT Divers_DiversAddresses_FK FOREIGN KEY (address_id) REFERENCES DiversAddresses(address_id) ON DELETE SET NULL
 );
 
@@ -112,6 +119,12 @@ INSERT OR IGNORE INTO DiversLevels
     (13,"E3"),
     (14,"E4");
 
+INSERT OR IGNORE INTO NitroxDiversLevels
+    (nitrox_diver_level_id,level_name) VALUES
+    (1,"VIDE"),
+    (2,"BASE"),
+    (3,"CONFIRMÉ"),
+    (4,"MONITEUR");
 
 --  Diving sites
 INSERT OR IGNORE INTO DivingSites
@@ -141,3 +154,5 @@ INSERT OR IGNORE INTO DivingTypes
     (diving_type_id,type_name) VALUES
     (1,"Explo"),
     (2,"Tech");
+
+

@@ -7,14 +7,15 @@
 namespace cpsm::db {
 
 template <bool kDeleteOnCreation = false, bool kFillDBWithTestsValues = false>
-bool InitDB(const auto& kFileName) {
+bool InitDB(const auto &kFileName) {
   SPDLOG_INFO("--------- DB init function ---------");
 
   SPDLOG_INFO("Using db file: {}", QFileInfo{kFileName}.absoluteFilePath());
 
 #ifndef CMAKE_DEBUG_MODE
   if constexpr (kDeleteOnCreation && !consts::kIsBuiltAsMockup) {
-    SPDLOG_WARN("We don't want to delete the database when we are not in debug!!!!");
+    SPDLOG_WARN(
+        "We don't want to delete the database when we are not in debug!!!!");
     throw std::runtime_error{"Trying to delete DB in non-debug mode"};
   }
 #endif
@@ -23,7 +24,8 @@ bool InitDB(const auto& kFileName) {
 #ifndef CMAKE_DEBUG_MODE
 #warning "Requesting to delete db file not in DEBUG mode"
 #endif
-    SPDLOG_WARN("Deleting DB file: {}: success? {}", kFileName, QFile::remove(kFileName));
+    SPDLOG_WARN("Deleting DB file: {}: success? {}", kFileName,
+                QFile::remove(kFileName));
   }
 
   if (!::db::OpenLocal(kFileName)) {
@@ -63,4 +65,4 @@ bool InitDB(const auto& kFileName) {
   return true;
 }
 
-}  // namespace cpsm::db
+} // namespace cpsm::db
