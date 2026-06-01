@@ -273,7 +273,8 @@ QString DiversViewModel::GetDisplayTextForIndex(const DiverWithDiveCount &comple
       return lambda_bool(cpsm::db::IsDiverCurrentlyAMember(diver));
     }
     case ColumnId::kValidCertificate: {
-      return diver.certif_date.toString(cpsm::consts::kDateUserFormat);
+      return diver.certif_date == QDate::fromJulianDay(0) ? ""
+                                                          : diver.certif_date.toString(cpsm::consts::kDateUserFormat);
     }
     case ColumnId::kLevel: {
       return GetLevelText(diver.diver_level_id);
