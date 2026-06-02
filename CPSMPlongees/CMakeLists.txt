@@ -15,7 +15,7 @@ endif(UNIX)
 ######################
 
 option(CPSM_BUILD_AS_MOCKUP "Build as mockup" ON)
-set(CPSM_BUILD_AS_MOCKUP ON)
+set(CPSM_BUILD_AS_MOCKUP OFF)
 
 #VERSION = MAJOR.MINOR.PATCH
 set(ENV{MAIN_VERSIONING_MAJOR} 1)#incompatible update
