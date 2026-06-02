@@ -33,6 +33,9 @@ MainWindow::MainWindow(QWidget *parent)
                                               cpsm::consts::kPostUpdateCommand, true, this)} {
   ui->setupUi(this);
 
+  QLabel *versionLabel{new QLabel{tr("v%0").arg(to_string(cpsm::consts::kCurrentVersion)), this}};
+  ui->statusbar->addPermanentWidget(versionLabel);
+
   if (cpsm::consts::kIsBuiltAsMockup && !btype::HasDebInfo()) {
     QMessageBox::warning(this,
                          tr("Attention"),
